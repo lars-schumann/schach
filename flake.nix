@@ -23,7 +23,7 @@
       devShells.${system}.default = pkgs.mkShell {
         packages = with pkgs; [
           # Rust toolchain with the wasm32-unknown-unknown target
-          (rust-bin.stable.latest.default.override {
+          (rust-bin.nightly.latest.default.override {
             targets = [ "wasm32-unknown-unknown" ];
           })
           rust-analyzer
@@ -36,6 +36,8 @@
 
           nixfmt
           nixd
+
+          nodejs
         ];
         env = {
           RUST_BACKTRACE = "1";

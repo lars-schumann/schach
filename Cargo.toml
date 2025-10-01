@@ -1,7 +1,3 @@
-[package]
-edition = "2024"
-name = "chess"
-version = "0.1.0"
-
-[dependencies]
-yew = { version = "0.21", features = ["csr"] }
+[workspace]
+resolver = "3"
+members = ["everychessgame", "schach"]
