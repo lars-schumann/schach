@@ -1,8 +1,0 @@
-[package]
-edition = "2024"
-name = "everychessgame"
-version = "0.1.0"
-
-[dependencies]
-yew = { version = "0.21", features = ["csr"] }
-schach = { path = "../schach" }
