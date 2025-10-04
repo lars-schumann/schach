@@ -166,7 +166,45 @@ impl std::fmt::Display for Square {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+pub struct DebugBoard {
+    pub inner: Board,
+    pub attacked_squares: Vec<Square>,
+}
+impl Debug for DebugBoard {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f)?;
+        for row in Row::ROWS.into_iter().rev() {
+            write!(f, "{}", i32::from(row) + 1)?;
+            for col in Col::COLS {
+                if self.attacked_squares.contains(&Square { col, row }) {
+                    write!(f, "\x1B[31m",)?;
+                }
+                match self.inner.lookup(Square { col, row }) {
+                    None => {
+                        if (i32::from(row) + i32::from(col)) % 2 == 0 {
+                            write!(f, "□ ",)?;
+                        } else {
+                            write!(f, "■ ",)?;
+                        }
+                    }
+
+                    Some(piece) => write!(f, "{piece} ")?,
+                }
+                if self.attacked_squares.contains(&Square { col, row }) {
+                    write!(f, "\x1B[0m",)?;
+                }
+            }
+            writeln!(f)?;
+        }
+        write!(f, "  ")?;
+        for col in Col::COLS {
+            write!(f, "{} ", i32::from(col) + 1)?;
+        }
+        Ok(())
+    }
+}
+
+#[derive(Copy, Clone)]
 pub struct Board(pub [[Option<Piece>; ROW_COUNT]; COL_COUNT]);
 impl Board {
     #[must_use]
@@ -230,6 +268,32 @@ impl Board {
         board
     }
 }
+impl Debug for Board {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f)?;
+        for row in Row::ROWS.into_iter().rev() {
+            write!(f, "{}", i32::from(row) + 1)?;
+            for col in Col::COLS {
+                match self.lookup(Square { col, row }) {
+                    None => {
+                        if (i32::from(row) + i32::from(col)) % 2 == 0 {
+                            write!(f, "□ ",)?;
+                        } else {
+                            write!(f, "■ ",)?;
+                        }
+                    }
+                    Some(piece) => write!(f, "{piece} ")?,
+                }
+            }
+            writeln!(f)?;
+        }
+        write!(f, "  ")?;
+        for col in Col::COLS {
+            write!(f, "{} ", i32::from(col) + 1)?;
+        }
+        Ok(())
+    }
+}
 
 #[derive(Debug, Copy, Clone, PartialEq, strum::Display)]
 pub enum PieceKind {
@@ -245,6 +309,20 @@ pub enum PieceKind {
 pub struct Piece {
     pub kind: PieceKind,
     pub owner: PlayerKind,
+}
+impl Piece {
+    #[must_use]
+    pub const fn threat_directions(&self) -> (&[Offset], Range) {
+        match (self.kind, self.owner) {
+            (PieceKind::Pawn, PlayerKind::White) => (&Offset::PAWN_UP_DIAGONAL, Range::One),
+            (PieceKind::Pawn, PlayerKind::Black) => (&Offset::PAWN_DOWN_DIAGONAL, Range::One),
+            (PieceKind::Knight, _) => (&Offset::KNIGHT, Range::One),
+            (PieceKind::Bishop, _) => (&Offset::BISHOP, Range::Unlimited),
+            (PieceKind::Rook, _) => (&Offset::ROOK, Range::Unlimited),
+            (PieceKind::Queen, _) => (&Offset::QUEEN, Range::Unlimited),
+            (PieceKind::King, _) => (&Offset::KING_DIRECT, Range::One),
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, strum::Display)]
@@ -284,10 +362,10 @@ pub struct Offset {
 }
 #[allow(clippy::upper_case_acronyms)]
 impl Offset {
-    pub const U: Self = Self { col: 1, row: 0 };
-    pub const D: Self = Self { col: -1, row: 0 };
-    pub const L: Self = Self { col: 0, row: -1 };
-    pub const R: Self = Self { col: 0, row: 1 };
+    pub const U: Self = Self { col: 0, row: 1 };
+    pub const D: Self = Self { col: 0, row: -1 };
+    pub const L: Self = Self { col: -1, row: 0 };
+    pub const R: Self = Self { col: 1, row: 0 };
     pub const UL: Self = Self::U + Self::L;
     pub const UR: Self = Self::U + Self::R;
     pub const DL: Self = Self::D + Self::L;
@@ -297,7 +375,7 @@ impl Offset {
     pub const ULL: Self = Self::UL + Self::L;
     pub const URR: Self = Self::UR + Self::R;
     pub const DDL: Self = Self::D + Self::DL;
-    pub const DDR: Self = Self::D + Self::DL;
+    pub const DDR: Self = Self::D + Self::DR;
     pub const DLL: Self = Self::DL + Self::L;
     pub const DRR: Self = Self::DR + Self::R;
     pub const UU: Self = Self::U + Self::U;
@@ -439,5 +517,33 @@ impl std::fmt::Display for Move {
 impl Debug for Move {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}: {} => {}", self.kind, self.start, self.end)
+    }
+}
+
+pub struct Threat {
+    pub piece: Piece,
+    pub starting_square: Square,
+    pub target_square: Square,
+}
+
+pub enum Range {
+    One,
+    Unlimited,
+}
+impl From<Range> for i32 {
+    fn from(value: Range) -> Self {
+        match value {
+            Range::One => 1,
+            Range::Unlimited => i32::MAX,
+        }
+    }
+}
+impl Debug for Threat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}: {} => {}",
+            self.piece, self.starting_square, self.target_square
+        )
     }
 }
