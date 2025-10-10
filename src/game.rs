@@ -1,9 +1,8 @@
-use std::fmt::Debug;
-
+use std::ops::Not;
 pub static COL_COUNT: usize = 8;
 pub static ROW_COUNT: usize = 8;
 
-#[derive(Debug, Copy, Clone, PartialEq, strum::Display)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, strum::Display)]
 pub enum Col {
     C1,
     C2,
@@ -27,7 +26,7 @@ impl Col {
     ];
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, strum::Display)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, strum::Display)]
 pub enum Row {
     R1,
     R2,
@@ -155,14 +154,28 @@ impl const From<Col> for usize {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Square {
-    pub col: Col,
-    pub row: Row,
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub struct Square(pub Col, pub Row);
+impl Square {
+    #[must_use]
+    pub const fn col(&self) -> Col {
+        self.0
+    }
+    #[must_use]
+    pub const fn row(&self) -> Row {
+        self.1
+    }
 }
 impl std::fmt::Display for Square {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}, {}", self.col, self.row)
+        write!(f, "{}, {}", self.col(), self.row())
+    }
+}
+impl Square {
+    fn all() -> impl Iterator<Item = Self> {
+        Col::COLS
+            .into_iter()
+            .flat_map(|col| Row::ROWS.into_iter().map(move |row| Self(col, row)))
     }
 }
 
@@ -170,16 +183,16 @@ pub struct DebugBoard {
     pub inner: Board,
     pub attacked_squares: Vec<Square>,
 }
-impl Debug for DebugBoard {
+impl std::fmt::Debug for DebugBoard {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f)?;
         for row in Row::ROWS.into_iter().rev() {
             write!(f, "{}", i32::from(row) + 1)?;
             for col in Col::COLS {
-                if self.attacked_squares.contains(&Square { col, row }) {
+                if self.attacked_squares.contains(&Square(col, row)) {
                     write!(f, "\x1B[31m",)?;
                 }
-                match self.inner.lookup(Square { col, row }) {
+                match self.inner[Square(col, row)] {
                     None => {
                         if (i32::from(row) + i32::from(col)) % 2 == 0 {
                             write!(f, "□ ",)?;
@@ -190,7 +203,7 @@ impl Debug for DebugBoard {
 
                     Some(piece) => write!(f, "{piece} ")?,
                 }
-                if self.attacked_squares.contains(&Square { col, row }) {
+                if self.attacked_squares.contains(&Square(col, row)) {
                     write!(f, "\x1B[0m",)?;
                 }
             }
@@ -212,17 +225,89 @@ impl Board {
         Self([[None; ROW_COUNT]; COL_COUNT])
     }
 
-    #[allow(clippy::cast_sign_loss)]
-    pub const fn place(&mut self, square: Square, piece: Piece) {
-        let col = usize::from(square.col);
-        let row = usize::from(square.row);
-        self.0[col][row] = Some(piece);
-    }
     #[must_use]
-    pub const fn lookup(&self, square: Square) -> Option<Piece> {
-        let col = usize::from(square.col);
-        let row = usize::from(square.row);
-        self.0[col][row]
+    pub fn threatening_moves(&self, threatened_by: PlayerKind) -> Vec<Threat> {
+        Square::all()
+            .flat_map(|square| attacked_squares(self, square, threatened_by))
+            .collect()
+    }
+
+    #[must_use]
+    pub fn threatened_squares(&self, threatened_by: PlayerKind) -> Vec<Square> {
+        Square::all()
+            .flat_map(|square| {
+                attacked_squares(self, square, threatened_by)
+                    .iter()
+                    .map(|threat| threat.target)
+                    .collect::<Vec<Square>>()
+            })
+            .collect()
+    }
+
+    #[must_use]
+    pub fn king_position(&self, king_owner: PlayerKind) -> Square {
+        Square::all()
+            .find(|square| {
+                self[*square]
+                    == Some(Piece {
+                        kind: PieceKind::King,
+                        owner: king_owner,
+                    })
+            })
+            .expect("where did the king go?")
+    }
+
+    #[must_use]
+    pub fn is_king_checked(&self, king_owner: PlayerKind) -> bool {
+        self.threatened_squares(king_owner.opponent())
+            .contains(&self.king_position(king_owner))
+    }
+
+    #[allow(clippy::cast_sign_loss)]
+    pub const fn movee(&mut self, start: Square, target: Square) {
+        let start_col = usize::from(start.col());
+        let start_row = usize::from(start.row());
+        let target_col = usize::from(target.col());
+        let target_row = usize::from(target.row());
+        self.0[target_col][target_row] = self.0[start_col][start_row];
+        self.0[start_col][start_row] = None;
+    }
+
+    #[must_use]
+    #[rustfmt::skip]
+    pub fn filled(with_pawns: bool) -> Self {
+        use PieceKind::{Pawn, Knight, Bishop, Rook, King, Queen};
+        use PlayerKind::{White, Black};
+        use Row::{R1, R2, R7, R8};
+        use Col::{C1, C2, C3, C4, C5, C6, C7, C8};
+        let mut board = Self::new();
+
+        board[Square( C1,  R1 )] = Some( Piece{ kind: Rook,   owner: White });
+        board[Square( C2,  R1 )] = Some( Piece{ kind: Knight, owner: White });
+        board[Square( C3,  R1 )] = Some( Piece{ kind: Bishop, owner: White });
+        board[Square( C4,  R1 )] = Some( Piece{ kind: Queen,  owner: White });
+        board[Square( C5,  R1 )] = Some( Piece{ kind: King,   owner: White });
+        board[Square( C6,  R1 )] = Some( Piece{ kind: Bishop, owner: White });
+        board[Square( C7,  R1 )] = Some( Piece{ kind: Knight, owner: White });
+        board[Square( C8,  R1 )] = Some( Piece{ kind: Rook,   owner: White });
+
+        board[Square( C1,  R8 )] = Some( Piece{ kind: Rook,   owner: Black });
+        board[Square( C2,  R8 )] = Some( Piece{ kind: Knight, owner: Black });
+        board[Square( C3,  R8 )] = Some( Piece{ kind: Bishop, owner: Black });
+        board[Square( C4,  R8 )] = Some( Piece{ kind: Queen,  owner: Black });
+        board[Square( C5,  R8 )] = Some( Piece{ kind: King,   owner: Black });
+        board[Square( C6,  R8 )] = Some( Piece{ kind: Bishop, owner: Black });
+        board[Square( C7,  R8 )] = Some( Piece{ kind: Knight, owner: Black });
+        board[Square( C8,  R8 )] = Some( Piece{ kind: Rook,   owner: Black });
+
+        if with_pawns{
+            for col in Col::COLS {
+                board[Square( col,  R2 )] = Some( Piece { kind: Pawn, owner: White });
+                board[Square( col,  R7 )] = Some( Piece { kind: Pawn, owner: Black });
+            }
+        }
+
+        board
     }
 }
 impl Default for Board {
@@ -230,51 +315,13 @@ impl Default for Board {
         Self::new()
     }
 }
-impl Board {
-    #[must_use]
-    #[rustfmt::skip]
-    pub fn filled(with_pawns: bool) -> Self {
-        use PieceKind::{Pawn, Knight, Bishop, Rook, King, Queen};
-        use PlayerKind::{White, Black};
-        use Row::{R1, R2, R3, R4, R5, R6, R7, R8};
-        use Col::{C1, C2, C3, C4, C5, C6, C7, C8};
-        let mut board = Self::new();
-
-        board.place(Square{ col: C1, row: R1 }, Piece{ kind: Rook,   owner: White });
-        board.place(Square{ col: C2, row: R1 }, Piece{ kind: Knight, owner: White });
-        board.place(Square{ col: C3, row: R1 }, Piece{ kind: Bishop, owner: White });
-        board.place(Square{ col: C4, row: R1 }, Piece{ kind: Queen,  owner: White });
-        board.place(Square{ col: C5, row: R1 }, Piece{ kind: King,   owner: White });
-        board.place(Square{ col: C6, row: R1 }, Piece{ kind: Bishop, owner: White });
-        board.place(Square{ col: C7, row: R1 }, Piece{ kind: Knight, owner: White });
-        board.place(Square{ col: C8, row: R1 }, Piece{ kind: Rook,   owner: White });
-
-        board.place(Square{ col: C1, row: Row::R8 }, Piece{ kind: Rook,   owner: Black });
-        board.place(Square{ col: C2, row: Row::R8 }, Piece{ kind: Knight, owner: Black });
-        board.place(Square{ col: C3, row: Row::R8 }, Piece{ kind: Bishop, owner: Black });
-        board.place(Square{ col: C4, row: Row::R8 }, Piece{ kind: Queen,  owner: Black });
-        board.place(Square{ col: C5, row: Row::R8 }, Piece{ kind: King,   owner: Black });
-        board.place(Square{ col: C6, row: Row::R8 }, Piece{ kind: Bishop, owner: Black });
-        board.place(Square{ col: C7, row: Row::R8 }, Piece{ kind: Knight, owner: Black });
-        board.place(Square{ col: C8, row: Row::R8 }, Piece{ kind: Rook,   owner: Black });
-
-        if with_pawns{
-            for col in Col::COLS {
-                board.place(Square{ col, row: R2 }, Piece { kind: Pawn, owner: White });
-                board.place(Square{ col, row: R7 }, Piece { kind: Pawn, owner: Black });
-            }
-        }
-
-        board
-    }
-}
-impl Debug for Board {
+impl std::fmt::Debug for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f)?;
         for row in Row::ROWS.into_iter().rev() {
             write!(f, "{}", i32::from(row) + 1)?;
             for col in Col::COLS {
-                match self.lookup(Square { col, row }) {
+                match self[Square(col, row)] {
                     None => {
                         if (i32::from(row) + i32::from(col)) % 2 == 0 {
                             write!(f, "□ ",)?;
@@ -294,8 +341,23 @@ impl Debug for Board {
         Ok(())
     }
 }
+impl std::ops::Index<Square> for Board {
+    type Output = Option<Piece>;
+    fn index(&self, index: Square) -> &Self::Output {
+        let col = usize::from(index.col());
+        let row = usize::from(index.row());
+        &self.0[col][row]
+    }
+}
+impl std::ops::IndexMut<Square> for Board {
+    fn index_mut(&mut self, index: Square) -> &mut Self::Output {
+        let col = usize::from(index.col());
+        let row = usize::from(index.row());
+        &mut self.0[col][row]
+    }
+}
 
-#[derive(Debug, Copy, Clone, PartialEq, strum::Display)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, strum::Display)]
 pub enum PieceKind {
     Pawn,
     Knight,
@@ -305,7 +367,7 @@ pub enum PieceKind {
     King,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Piece {
     pub kind: PieceKind,
     pub owner: PlayerKind,
@@ -325,10 +387,64 @@ impl Piece {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, strum::Display)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, strum::Display)]
 pub enum PlayerKind {
     White,
     Black,
+}
+impl PlayerKind {
+    #[must_use]
+    pub const fn opponent(self) -> Self {
+        match self {
+            Self::White => Self::Black,
+            Self::Black => Self::White,
+        }
+    }
+
+    #[must_use]
+    pub const fn pawn_starting_row(self) -> Row {
+        match self {
+            Self::White => Row::R2,
+            Self::Black => Row::R7,
+        }
+    }
+
+    #[must_use]
+    pub const fn pawn_promotion_row(self) -> Row {
+        match self {
+            Self::White => Row::R8,
+            Self::Black => Row::R1,
+        }
+    }
+
+    #[must_use]
+    pub fn castling_non_check_needed_squares(self, castling_side: CastlingSide) -> Vec<Square> {
+        match (self, castling_side) {
+            (Self::White, CastlingSide::Kingside) => vec![
+                Square(Col::C5, Row::R1),
+                Square(Col::C6, Row::R1),
+                Square(Col::C7, Row::R1),
+            ],
+            (Self::White, CastlingSide::Queenside) => vec![
+                Square(Col::C5, Row::R1),
+                Square(Col::C4, Row::R1),
+                Square(Col::C3, Row::R1),
+                Square(Col::C2, Row::R1),
+            ],
+            (Self::Black, CastlingSide::Kingside) => vec![
+                Square(Col::C4, Row::R8),
+                Square(Col::C3, Row::R8),
+                Square(Col::C2, Row::R8),
+            ],
+
+            (Self::Black, CastlingSide::Queenside) => vec![
+                Square(Col::C4, Row::R8),
+                Square(Col::C5, Row::R8),
+                Square(Col::C6, Row::R8),
+                Square(Col::C7, Row::R8),
+            ],
+        }
+    }
 }
 
 impl std::fmt::Display for Piece {
@@ -355,7 +471,7 @@ impl std::fmt::Display for Piece {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Offset {
     pub col: i32,
     pub row: i32,
@@ -381,9 +497,9 @@ impl Offset {
     pub const UU: Self = Self::U + Self::U;
     pub const DD: Self = Self::D + Self::D;
 
-    pub const ROOK: [Offset; 4] = [Self::U, Self::D, Self::L, Self::R];
-    pub const BISHOP: [Offset; 4] = [Self::UL, Self::UR, Self::DL, Self::DR];
-    pub const QUEEN: [Offset; 8] = [
+    pub const ROOK: [Self; 4] = [Self::U, Self::D, Self::L, Self::R];
+    pub const BISHOP: [Self; 4] = [Self::UL, Self::UR, Self::DL, Self::DR];
+    pub const QUEEN: [Self; 8] = [
         Self::U,
         Self::D,
         Self::L,
@@ -393,7 +509,7 @@ impl Offset {
         Self::DL,
         Self::DR,
     ];
-    pub const KING_DIRECT: [Offset; 8] = [
+    pub const KING_DIRECT: [Self; 8] = [
         Self::U,
         Self::D,
         Self::L,
@@ -403,15 +519,15 @@ impl Offset {
         Self::DL,
         Self::DR,
     ];
-    pub const PAWN_UP_SINGLE: [Offset; 1] = [Self::U];
-    pub const PAWN_UP_DOUBLE: [Offset; 1] = [Self::UU];
-    pub const PAWN_UP_DIAGONAL: [Offset; 2] = [Self::UL, Self::UR];
+    pub const PAWN_UP_SINGLE: [Self; 1] = [Self::U];
+    pub const PAWN_UP_DOUBLE: [Self; 1] = [Self::UU];
+    pub const PAWN_UP_DIAGONAL: [Self; 2] = [Self::UL, Self::UR];
 
-    pub const PAWN_DOWN_SINGLE: [Offset; 1] = [Self::D];
-    pub const PAWN_DOWN_DOUBLE: [Offset; 1] = [Self::D];
-    pub const PAWN_DOWN_DIAGONAL: [Offset; 2] = [Self::DL, Self::DR];
+    pub const PAWN_DOWN_SINGLE: [Self; 1] = [Self::D];
+    pub const PAWN_DOWN_DOUBLE: [Self; 1] = [Self::D];
+    pub const PAWN_DOWN_DIAGONAL: [Self; 2] = [Self::DL, Self::DR];
 
-    pub const KNIGHT: [Offset; 8] = [
+    pub const KNIGHT: [Self; 8] = [
         Self::UUL,
         Self::UUR,
         Self::ULL,
@@ -444,86 +560,42 @@ impl const std::ops::Mul<i32> for Offset {
 impl const std::ops::Add<Offset> for Square {
     type Output = Result<Self, ()>;
     fn add(self, rhs: Offset) -> Self::Output {
-        Ok(Self {
-            col: (self.col + rhs.col)?,
-            row: (self.row + rhs.row)?,
-        })
+        Ok(Self((self.col() + rhs.col)?, (self.row() + rhs.row)?))
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, strum::Display)]
-pub enum MoveKind {
-    Pawn(PawnMove),
-    Knight(KnightMove),
-    Bishop(BishopMove),
-    Rook(RookMove),
-    Queen(QueenMove),
-    King(KingMove),
+#[derive(Debug, Copy, Clone, PartialEq, Eq, strum::Display)]
+pub enum CastlingSide {
+    Kingside,
+    Queenside,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, strum::Display)]
-pub enum PawnMove {
-    Step,
-    DoubleStep,
-    Capture,
-    EnPassant,
-    StepPromote,
-    CapturePromote,
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, strum::Display)]
-pub enum KnightMove {
-    Move,
-    Capture,
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, strum::Display)]
-pub enum BishopMove {
-    Move,
-    Capture,
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, strum::Display)]
-pub enum RookMove {
-    Move,
-    Capture,
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, strum::Display)]
-pub enum QueenMove {
-    Move,
-    Capture,
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, strum::Display)]
-pub enum KingMove {
-    Move,
-    Capture,
-    CastleShort,
-    CastleLong,
-}
-
-#[derive(Copy, Clone, PartialEq)]
-pub struct Move {
-    pub kind: MoveKind,
-    pub start: Square,
-    pub end: Square,
-}
-impl std::fmt::Display for Move {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}: {} => {}", self.kind, self.start, self.end)
-    }
-}
-impl Debug for Move {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}: {} => {}", self.kind, self.start, self.end)
-    }
+#[derive(Debug, Copy, Clone, PartialEq, Eq, strum::Display)]
+pub enum Move {
+    Normal {
+        piece_kind: PieceKind,
+        start: Square,
+        target: Square,
+        is_capture: bool,
+    },
+    Promotion {
+        start: Square,
+        target: Square,
+        is_capture: bool,
+        replacement: PieceKind,
+    },
+    EnPassant {
+        start: Square,
+        target: Square,
+        affected_square: Square,
+    },
+    Castling(CastlingSide),
 }
 
 pub struct Threat {
     pub piece: Piece,
-    pub starting_square: Square,
-    pub target_square: Square,
+    pub start: Square,
+    pub target: Square,
 }
 
 pub enum Range {
@@ -534,16 +606,290 @@ impl From<Range> for i32 {
     fn from(value: Range) -> Self {
         match value {
             Range::One => 1,
-            Range::Unlimited => i32::MAX,
+            Range::Unlimited => Self::MAX,
         }
     }
 }
-impl Debug for Threat {
+impl std::fmt::Debug for Threat {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}: {} => {}",
-            self.piece, self.starting_square, self.target_square
-        )
+        write!(f, "{}: {} => {}", self.piece, self.start, self.target)
     }
+}
+
+pub struct GameState {
+    pub board: Board,
+    pub round_of_last_pawn_move_or_capture: u32,
+    pub white_castling_rights: CastlingRights,
+    pub black_castling_rights: CastlingRights,
+    pub position_history: Vec<Position>,
+    pub last_double_pawn_move: Option<DoublePawnMove>,
+}
+impl GameState {
+    #[must_use]
+    pub fn round(&self) -> u64 {
+        u64::try_from(self.position_history.len()).expect("welcome to the future")
+    }
+
+    #[must_use]
+    pub fn active_player(&self) -> PlayerKind {
+        match self.round() % 2 {
+            0 => PlayerKind::White,
+            1 => PlayerKind::Black,
+            _ => unreachable!(),
+        }
+    }
+
+    #[must_use]
+    pub fn castling_right(&self, castling_side: CastlingSide) -> bool {
+        match (self.active_player(), castling_side) {
+            (PlayerKind::White, CastlingSide::Kingside) => self.white_castling_rights.kingside,
+            (PlayerKind::White, CastlingSide::Queenside) => self.white_castling_rights.queenside,
+            (PlayerKind::Black, CastlingSide::Kingside) => self.black_castling_rights.kingside,
+            (PlayerKind::Black, CastlingSide::Queenside) => self.black_castling_rights.queenside,
+        }
+    }
+
+    #[must_use]
+    #[allow(clippy::too_many_lines)]
+    pub fn legal_moves(&self) -> Vec<Move> {
+        let board = self.board;
+        let active_player = self.active_player();
+        let threatening_moves = board.threatening_moves(active_player);
+
+        let mut move_candidates: Vec<Move> = threatening_moves
+            .into_iter()
+            .map(
+                |Threat {
+                     piece,
+                     start,
+                     target,
+                 }| Move::Normal {
+                    piece_kind: piece.kind,
+                    start,
+                    target,
+                    is_capture: board[target].is_some(),
+                },
+            )
+            .filter_map(|mv| match mv {
+                Move::Castling(_) | Move::Promotion { .. } | Move::EnPassant { .. } => {
+                    unreachable!()
+                }
+                Move::Normal {
+                    piece_kind:
+                        PieceKind::Knight
+                        | PieceKind::Bishop
+                        | PieceKind::Rook
+                        | PieceKind::Queen
+                        | PieceKind::King,
+                    start: _,
+                    target: _,
+                    is_capture: _,
+                } => Some(mv),
+                Move::Normal {
+                    piece_kind: PieceKind::Pawn,
+                    start,
+                    target,
+                    is_capture,
+                } => {
+                    if is_capture {
+                        Some(mv)
+                    } else {
+                        let last_double_pawn_move = self.last_double_pawn_move?;
+                        if self.round() != last_double_pawn_move.round + 1 {
+                            return None;
+                        }
+
+                        let row_offset = if self.active_player() == PlayerKind::White {
+                            -1
+                        } else {
+                            1
+                        };
+
+                        let Ok(one_back_from_pawn_target) = (target
+                            + Offset {
+                                col: 0,
+                                row: row_offset,
+                            })
+                        else {
+                            panic!("this is inside the board by construction");
+                        };
+
+                        if one_back_from_pawn_target == last_double_pawn_move.square {
+                            Some(Move::EnPassant {
+                                start,
+                                target,
+                                affected_square: one_back_from_pawn_target,
+                            })
+                        } else {
+                            None
+                        }
+                    }
+                }
+            })
+            .collect();
+
+        for square in Square::all() {
+            let player = self.active_player();
+            if !(self.board[square]
+                == Some(Piece {
+                    kind: PieceKind::Pawn,
+                    owner: player,
+                }))
+            {
+                continue;
+            }
+            let (column_offset, pawn_starting_row) = if player == PlayerKind::White {
+                (Offset { col: 1, row: 0 }, Row::R2)
+            } else {
+                (Offset { col: -1, row: 0 }, Row::R7)
+            };
+
+            let one_in_front =
+                (square + column_offset).expect("a pawn cannot exist on the last row");
+
+            if self.board[one_in_front].is_some() {
+                continue; //pawns cant capture moving forward!
+            }
+
+            move_candidates.push(Move::Normal {
+                piece_kind: PieceKind::Pawn,
+                start: square,
+                target: one_in_front,
+                is_capture: false,
+            });
+
+            let Ok(two_in_front) = square + column_offset else {
+                continue; //this one can def be out of range.
+            };
+
+            if two_in_front.row() != pawn_starting_row {
+                continue; // pawns can only double-move when they havent moved yet!
+            }
+
+            if self.board[two_in_front].is_some() {
+                continue; //pawns cant capture moving forward!
+            }
+
+            move_candidates.push(Move::Normal {
+                piece_kind: PieceKind::Pawn,
+                start: square,
+                target: two_in_front,
+                is_capture: false,
+            });
+        }
+
+        let castling_moves = [CastlingSide::Kingside, CastlingSide::Queenside]
+            .into_iter()
+            .filter(|castling_side| self.castling_right(*castling_side))
+            .filter(|castling_side| {
+                let threatened_squares = board.threatened_squares(self.active_player().opponent());
+                self.active_player()
+                    .castling_non_check_needed_squares(*castling_side)
+                    .iter()
+                    .any(|square| threatened_squares.contains(square))
+                    .not()
+            })
+            .map(Move::Castling);
+
+        move_candidates.extend(castling_moves);
+        move_candidates.into_iter().filter(|_| todo!()).collect()
+    }
+
+    #[must_use]
+    pub fn apply_move(mut self, mv: Move) -> Self {
+        match mv {
+            Move::Normal {
+                piece_kind: _,
+                start,
+                target,
+                is_capture: _,
+            } => self.board.movee(start, target),
+            Move::EnPassant {
+                start,
+                target,
+                affected_square,
+            } => {
+                self.board.movee(start, target);
+                self.board[affected_square] = None;
+            }
+            Move::Promotion {
+                start,
+                target,
+                is_capture,
+                replacement,
+            } => {
+                self.board.movee(start, target);
+                self.board[target] = Some(Piece {
+                    kind: replacement,
+                    owner: self.active_player(),
+                });
+            }
+            Move::Castling(castling_side) => todo!(),
+        }
+        self
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct CastlingRights {
+    pub kingside: bool,
+    pub queenside: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct Position {
+    pub board: Board,
+    pub possible_moves: Vec<Move>,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct DoublePawnMove {
+    square: Square,
+    round: u64,
+}
+
+fn attacked_squares(
+    board: &Board,
+    starting_square: Square,
+    active_player: PlayerKind,
+) -> Vec<Threat> {
+    let Some(piece) = board[starting_square] else {
+        return vec![];
+    };
+    if piece.owner != active_player {
+        return vec![];
+    }
+    let (directions, range_upper_bound) = piece.threat_directions();
+    let range_upper_bound = i32::from(range_upper_bound);
+
+    let rays = directions.iter().map(move |direction| {
+        (0..range_upper_bound)
+            .map(move |i| starting_square + *direction * (i + 1))
+            .take_while(Result::is_ok) //}
+            .map(Result::unwrap) //} FIXME: uh this cant be right
+    });
+
+    let mut out = vec![];
+    for ray in rays {
+        for target_square in ray {
+            match board[target_square] {
+                None => out.push(target_square),
+                Some(piece) if piece.owner == active_player => {
+                    break;
+                }
+                Some(piece) if piece.owner != active_player => {
+                    out.push(target_square);
+                    break;
+                }
+                _ => unreachable!(),
+            }
+        }
+    }
+    out.into_iter()
+        .map(|target_square| Threat {
+            piece,
+            start: starting_square,
+            target: target_square,
+        })
+        .collect()
 }
