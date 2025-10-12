@@ -2,65 +2,12 @@ use crate::game::*;
 
 #[test]
 fn test() {
-    let starting_square = Square(Col::C3, Row::R4);
-    let white = PlayerKind::White;
-    let black = PlayerKind::Black;
-    test_piece(
-        Piece {
-            kind: PieceKind::Pawn,
-            owner: white,
-        },
-        starting_square,
-        white,
-    );
-    test_piece(
-        Piece {
-            kind: PieceKind::Pawn,
-            owner: black,
-        },
-        starting_square,
-        black,
-    );
-    test_piece(
-        Piece {
-            kind: PieceKind::Knight,
-            owner: white,
-        },
-        starting_square,
-        white,
-    );
-    test_piece(
-        Piece {
-            kind: PieceKind::Bishop,
-            owner: white,
-        },
-        starting_square,
-        white,
-    );
-    test_piece(
-        Piece {
-            kind: PieceKind::Rook,
-            owner: white,
-        },
-        starting_square,
-        white,
-    );
-    test_piece(
-        Piece {
-            kind: PieceKind::Queen,
-            owner: white,
-        },
-        starting_square,
-        white,
-    );
-    test_piece(
-        Piece {
-            kind: PieceKind::King,
-            owner: white,
-        },
-        starting_square,
-        white,
-    );
+    let game = GameState::testing();
+
+    let moves: Vec<Move> = game.legal_moves().collect();
+
+    dbg!(&moves);
+    dbg!(moves.len());
 }
 fn test_piece(piece: Piece, starting_square: Square, active_player: PlayerKind) {
     let mut board = Board::new();
