@@ -1,13 +1,57 @@
 use crate::game::*;
+use rayon::prelude::*;
+use std::sync::Mutex;
 
 #[test]
 fn test() {
-    let game = GameState::testing();
+    let game = GameState::new();
 
-    let moves: Vec<Move> = game.legal_moves().collect();
+    let terminated_games: Mutex<Vec<GameState>> = Mutex::new(vec![]); //push-only 
+    let mut continued_games: Mutex<Vec<GameState>> = Mutex::new(vec![game]); //reset every turn
+    let new_continued_games: Mutex<Vec<GameState>> = Mutex::new(vec![]);
 
-    dbg!(&moves);
-    dbg!(moves.len());
+    let en_passant_count = Mutex::new(0);
+
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(1)
+        .build_global()
+        .unwrap();
+
+    for i in 0..4 {
+        continued_games
+            .lock()
+            .unwrap()
+            .clone()
+            .into_iter()
+            .for_each(|game| {
+                let legal_moves: Vec<Move> = game.legal_moves().collect();
+                for mov in legal_moves.clone() {
+                    if matches!(mov, Move::EnPassant { .. }) {
+                        *en_passant_count.lock().unwrap() += 1;
+                    }
+                    match game.clone().step(mov, legal_moves.clone()) {
+                        StepResult::Terminated(GameResult {
+                            kind: _,
+                            final_game_state,
+                        }) => terminated_games.lock().unwrap().push(final_game_state),
+                        StepResult::Continued(game_state) => {
+                            new_continued_games.lock().unwrap().push(game_state);
+                        }
+                    }
+                }
+            });
+        continued_games
+            .lock()
+            .unwrap()
+            .clone_from(&new_continued_games.lock().unwrap());
+
+        new_continued_games.lock().unwrap().clear();
+
+        dbg!(format!("{i}: "));
+        dbg!(terminated_games.lock().unwrap().len());
+        dbg!(continued_games.lock().unwrap().len());
+        dbg!(&en_passant_count);
+    }
 }
 fn test_piece(piece: Piece, starting_square: Square, active_player: PlayerKind) {
     let mut board = Board::new();

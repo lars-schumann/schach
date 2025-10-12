@@ -38,6 +38,8 @@
           nixd
 
           nodejs
+
+          samply
         ];
         env = {
           RUST_BACKTRACE = "1";

@@ -713,9 +713,19 @@ pub enum DrawKind {
     ThreefoldRepetition,
     FiftyMove,
 }
-pub enum GameResult {
+
+pub enum GameResultKind {
     Draw(DrawKind),
     Win,
+}
+pub struct GameResult {
+    pub kind: GameResultKind,
+    pub final_game_state: GameState,
+}
+
+pub enum StepResult {
+    Terminated(GameResult),
+    Continued(GameState),
 }
 
 #[derive(Clone, Default)]
@@ -726,6 +736,7 @@ pub struct GameState {
     pub black_castling_rights: CastlingRights,
     pub position_history: Vec<Position>,
     pub last_double_pawn_move: Option<DoublePawnMove>,
+    pub round: u64,
 }
 impl GameState {
     #[must_use]
@@ -740,14 +751,10 @@ impl GameState {
             ..Default::default()
         }
     }
-    #[must_use]
-    pub fn round(&self) -> u64 {
-        u64::try_from(self.position_history.len()).expect("welcome to the future")
-    }
 
     #[must_use]
     pub fn active_player(&self) -> PlayerKind {
-        match self.round() % 2 {
+        match self.round % 2 {
             0 => PlayerKind::White,
             1 => PlayerKind::Black,
             _ => unreachable!(),
@@ -794,105 +801,115 @@ impl GameState {
             })
     }
 
-    pub fn advance(&self) {
-        let legal_moves = self.legal_moves();
+    #[must_use]
+    pub fn step(self, mov: Move, all_legal_moves: Vec<Move>) -> StepResult {
+        let mut new_game = self.clone().apply_move_to_board(mov);
 
-        for mov in legal_moves.clone() {
-            let mut new_game = self.clone().apply_move_to_board(mov);
+        let current_position = Position {
+            board: new_game.board,
+            possible_moves: all_legal_moves,
+        };
 
-            match mov {
-                Move::Normal {
-                    piece_kind: PieceKind::Pawn,
-                    start: _,
-                    target: _,
-                    is_capture: _,
-                }
-                | Move::DoubleStep { .. }
-                | Move::Normal {
-                    piece_kind: _,
-                    start: _,
-                    target: _,
-                    is_capture: true,
-                }
-                | Move::Promotion { .. }
-                | Move::EnPassant { .. } => {
-                    new_game.round_of_last_pawn_move_or_capture = self.round();
-                }
-                Move::Normal { .. } | Move::Castling(_) => {} //nothing
+        new_game.position_history.push(current_position.clone());
+
+        match mov {
+            Move::Normal {
+                piece_kind: PieceKind::Pawn,
+                start: _,
+                target: _,
+                is_capture: _,
             }
+            | Move::DoubleStep { .. }
+            | Move::Normal {
+                piece_kind: _,
+                start: _,
+                target: _,
+                is_capture: true,
+            }
+            | Move::Promotion { .. }
+            | Move::EnPassant { .. } => {
+                new_game.round_of_last_pawn_move_or_capture = self.round;
+            }
+            Move::Normal { .. } | Move::Castling(_) => {} //nothing
+        }
 
-            match mov {
-                Move::Castling(_)
-                | Move::Normal {
-                    piece_kind: PieceKind::King,
-                    start: _,
-                    target: _,
-                    is_capture: _,
-                } => {
-                    new_game.deny_castling(CastlingSide::Kingside);
-                    new_game.deny_castling(CastlingSide::Queenside);
-                }
-                Move::Normal {
-                    piece_kind: PieceKind::Rook,
-                    start,
-                    target: _,
-                    is_capture: _,
-                } => {
-                    for castling_side in [CastlingSide::Kingside, CastlingSide::Queenside] {
-                        if start == new_game.active_player().rook_start(castling_side) {
-                            new_game.deny_castling(castling_side);
-                        }
+        match mov {
+            Move::Castling(_)
+            | Move::Normal {
+                piece_kind: PieceKind::King,
+                start: _,
+                target: _,
+                is_capture: _,
+            } => {
+                new_game.deny_castling(CastlingSide::Kingside);
+                new_game.deny_castling(CastlingSide::Queenside);
+            }
+            Move::Normal {
+                piece_kind: PieceKind::Rook,
+                start,
+                target: _,
+                is_capture: _,
+            } => {
+                for castling_side in [CastlingSide::Kingside, CastlingSide::Queenside] {
+                    if start == new_game.active_player().rook_start(castling_side) {
+                        new_game.deny_castling(castling_side);
                     }
                 }
-                Move::Normal { .. }
-                | Move::DoubleStep { .. }
-                | Move::Promotion { .. }
-                | Move::EnPassant { .. } => {} //nothing
             }
-
-            if let Move::DoubleStep { start: _, target } = mov {
-                new_game.last_double_pawn_move = Some(DoublePawnMove {
-                    target,
-                    round: new_game.round(),
-                });
-            }
-
-            let current_position = Position {
-                board: new_game.board,
-                possible_moves: legal_moves.clone().collect(),
-            };
-
-            if new_game
-                .position_history
-                .iter()
-                .filter(|&position| *position == current_position)
-                .count()
-                == REPETITIONS_TO_DRAW_COUNT - 1
-            {
-                todo!("this leads to a draw!")
-            }
-
-            if new_game.round() - new_game.round_of_last_pawn_move_or_capture
-                == FIFTY_MOVE_RULE_COUNT
-            {
-                todo!("also a draw!")
-            }
-
-            let future = new_game.clone();
-            if future.legal_moves().count() == 0 {
-                if future
-                    .board
-                    .is_king_checked(self.active_player().opponent())
-                {
-                    todo!("checkmate!")
-                } else {
-                    todo!("stalemate!")
-                }
-            }
-
-            //this has to happen last, in order to not fuck up the active player / current round
-            new_game.position_history.push(current_position);
+            Move::Normal { .. }
+            | Move::DoubleStep { .. }
+            | Move::Promotion { .. }
+            | Move::EnPassant { .. } => {} //nothing
         }
+
+        if let Move::DoubleStep { start: _, target } = mov {
+            new_game.last_double_pawn_move = Some(DoublePawnMove {
+                target,
+                round: new_game.round,
+            });
+        }
+
+        if new_game
+            .position_history
+            .iter()
+            .filter(|&position| *position == current_position)
+            .count()
+            == REPETITIONS_TO_DRAW_COUNT
+        {
+            return StepResult::Terminated(GameResult {
+                kind: GameResultKind::Draw(DrawKind::ThreefoldRepetition),
+                final_game_state: new_game,
+            });
+        }
+
+        if new_game.round - new_game.round_of_last_pawn_move_or_capture == FIFTY_MOVE_RULE_COUNT {
+            return StepResult::Terminated(GameResult {
+                kind: GameResultKind::Draw(DrawKind::FiftyMove),
+                final_game_state: new_game,
+            });
+        }
+
+        let mut future = new_game.clone();
+        future.round += 1;
+        if future.legal_moves().count() == 0 {
+            return if future
+                .board
+                .is_king_checked(self.active_player().opponent())
+            {
+                StepResult::Terminated(GameResult {
+                    kind: GameResultKind::Win,
+                    final_game_state: new_game,
+                })
+            } else {
+                StepResult::Terminated(GameResult {
+                    kind: GameResultKind::Draw(DrawKind::Stalemate),
+                    final_game_state: new_game,
+                })
+            };
+        }
+
+        new_game.round += 1;
+        StepResult::Continued(new_game)
     }
 
     fn castle_candidates(&self) -> impl Iterator<Item = Move> + Clone {
@@ -970,7 +987,7 @@ impl GameState {
                 let Some(last_double_pawn_move) = self.last_double_pawn_move else {
                     return vec![];
                 };
-                if self.round() != last_double_pawn_move.round + 1 {
+                if self.round != last_double_pawn_move.round + 1 {
                     return vec![];
                 }
 
@@ -1037,7 +1054,7 @@ impl GameState {
                 continue; // this one can def be out of range.
             };
 
-            if dbg!(square).row() != self.active_player().pawn_starting_row() {
+            if square.row() != self.active_player().pawn_starting_row() {
                 continue; // pawns can only double-move when they havent moved yet!
             }
 
