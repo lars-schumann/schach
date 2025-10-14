@@ -737,6 +737,7 @@ pub struct GameState {
     pub position_history: Vec<Position>,
     pub last_double_pawn_move: Option<DoublePawnMove>,
     pub round: u64,
+    pub is_perft: bool,
 }
 impl GameState {
     #[must_use]
@@ -748,6 +749,14 @@ impl GameState {
     pub fn testing() -> Self {
         Self {
             board: Board::filled(false),
+            ..Default::default()
+        }
+    }
+
+    #[must_use]
+    pub fn perft() -> Self {
+        Self {
+            is_perft: true,
             ..Default::default()
         }
     }
@@ -802,6 +811,7 @@ impl GameState {
     }
 
     #[must_use]
+    #[allow(clippy::too_many_lines)]
     pub fn step(self, mov: Move, all_legal_moves: Vec<Move>) -> StepResult {
         let mut new_game = self.clone().apply_move_to_board(mov);
 
@@ -809,8 +819,6 @@ impl GameState {
             board: new_game.board,
             possible_moves: all_legal_moves,
         };
-
-        new_game.position_history.push(current_position.clone());
 
         match mov {
             Move::Normal {
@@ -869,24 +877,29 @@ impl GameState {
             });
         }
 
-        if new_game
-            .position_history
-            .iter()
-            .filter(|&position| *position == current_position)
-            .count()
-            == REPETITIONS_TO_DRAW_COUNT
-        {
-            return StepResult::Terminated(GameResult {
-                kind: GameResultKind::Draw(DrawKind::ThreefoldRepetition),
-                final_game_state: new_game,
-            });
-        }
+        if self.is_perft.not() {
+            new_game.position_history.push(current_position.clone());
 
-        if new_game.round - new_game.round_of_last_pawn_move_or_capture == FIFTY_MOVE_RULE_COUNT {
-            return StepResult::Terminated(GameResult {
-                kind: GameResultKind::Draw(DrawKind::FiftyMove),
-                final_game_state: new_game,
-            });
+            if new_game
+                .position_history
+                .iter()
+                .filter(|&position| *position == current_position)
+                .count()
+                == REPETITIONS_TO_DRAW_COUNT
+            {
+                return StepResult::Terminated(GameResult {
+                    kind: GameResultKind::Draw(DrawKind::ThreefoldRepetition),
+                    final_game_state: new_game,
+                });
+            }
+
+            if new_game.round - new_game.round_of_last_pawn_move_or_capture == FIFTY_MOVE_RULE_COUNT
+            {
+                return StepResult::Terminated(GameResult {
+                    kind: GameResultKind::Draw(DrawKind::FiftyMove),
+                    final_game_state: new_game,
+                });
+            }
         }
 
         let mut future = new_game.clone();
