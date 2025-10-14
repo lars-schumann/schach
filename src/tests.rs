@@ -1,5 +1,4 @@
 use crate::game::*;
-use rayon::prelude::*;
 use std::sync::Mutex;
 
 #[test]
@@ -7,7 +6,7 @@ fn test() {
     let game = GameState::new();
 
     let terminated_games: Mutex<Vec<GameState>> = Mutex::new(vec![]); //push-only 
-    let mut continued_games: Mutex<Vec<GameState>> = Mutex::new(vec![game]); //reset every turn
+    let continued_games: Mutex<Vec<GameState>> = Mutex::new(vec![game]); //reset every turn
     let new_continued_games: Mutex<Vec<GameState>> = Mutex::new(vec![]);
 
     let en_passant_count = Mutex::new(0);
