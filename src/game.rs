@@ -902,10 +902,10 @@ impl GameState {
             }
         }
 
-        let mut future = new_game.clone();
-        future.round += 1;
-        if future.legal_moves().count() == 0 {
-            return if future
+        new_game.round += 1;
+
+        if new_game.legal_moves().count() == 0 {
+            return if new_game
                 .board
                 .is_king_checked(self.active_player().opponent())
             {
@@ -921,7 +921,6 @@ impl GameState {
             };
         }
 
-        new_game.round += 1;
         StepResult::Continued(new_game)
     }
 
