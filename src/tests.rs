@@ -2,7 +2,7 @@ use crate::game::*;
 
 #[test]
 fn test() {
-    let game = GameState::new();
+    let game = GameState::perft();
 
     let mut terminated_games: Vec<GameState> = vec![]; //push-only 
     let mut continued_games: Vec<GameState> = vec![game]; //reset every turn
