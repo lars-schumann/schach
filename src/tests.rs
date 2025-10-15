@@ -30,7 +30,8 @@ fn test() {
                 }
             }
         });
-        continued_games.clone_from(&new_continued_games);
+
+        std::mem::swap(&mut continued_games, &mut new_continued_games);
         new_continued_games.clear();
 
         println!("depth: {depth}");
