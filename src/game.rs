@@ -929,18 +929,19 @@ impl GameState {
             .into_iter()
             .filter(|castling_side| self.is_castling_allowed(*castling_side))
             .filter(|castling_side| {
-                let mut threatened_squares = self
+                let threatened_squares = self
                     .board
-                    .threatened_squares_by(self.active_player().opponent());
+                    .threatened_squares_by(self.active_player().opponent())
+                    .collect::<Vec<_>>();
 
                 self.active_player()
                     .castling_non_check_needed_squares(*castling_side)
                     .iter()
-                    .any(|castle_square| {
+                    .all(|castle_square| {
                         threatened_squares
-                            .any(|threatened_square| &threatened_square == castle_square)
+                            .iter()
+                            .all(|threatened_square| threatened_square != castle_square)
                     })
-                    .not()
             })
             .map(Move::Castling)
     }

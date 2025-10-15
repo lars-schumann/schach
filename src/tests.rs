@@ -4,7 +4,8 @@ use crate::game::*;
 fn test() {
     let game = GameState::perft();
 
-    let mut terminated_games: Vec<GameState> = vec![]; //push-only 
+    let mut terminated_games_checkmate: Vec<GameState> = vec![]; //push-only 
+    let mut terminated_games_draw: Vec<GameState> = vec![]; //push-only 
     let mut continued_games: Vec<GameState> = vec![game]; //reset every turn
     let mut new_continued_games: Vec<GameState> = vec![];
 
@@ -21,9 +22,13 @@ fn test() {
                 }
                 match game.clone().step(mov, legal_moves.clone()) {
                     StepResult::Terminated(GameResult {
-                        kind: _,
+                        kind: GameResultKind::Win,
                         final_game_state,
-                    }) => terminated_games.push(final_game_state),
+                    }) => terminated_games_checkmate.push(final_game_state),
+                    StepResult::Terminated(GameResult {
+                        kind: GameResultKind::Draw(_),
+                        final_game_state,
+                    }) => terminated_games_draw.push(final_game_state),
                     StepResult::Continued(game_state) => {
                         new_continued_games.push(game_state);
                     }
@@ -35,7 +40,9 @@ fn test() {
         new_continued_games.clear();
 
         println!("depth: {depth}");
-        println!("terminated games: {}", terminated_games.len());
+        println!("check mate games: {}", terminated_games_checkmate.len());
+        println!("draw games: {}", terminated_games_draw.len());
+
         println!("continued games: {}", continued_games.len());
         println!("en passant count:{}", &en_passant_count);
     }
