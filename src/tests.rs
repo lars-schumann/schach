@@ -1,57 +1,48 @@
 use crate::game::*;
-use std::sync::Mutex;
 
 #[test]
 fn test() {
     let game = GameState::new();
 
-    let terminated_games: Mutex<Vec<GameState>> = Mutex::new(vec![]); //push-only 
-    let continued_games: Mutex<Vec<GameState>> = Mutex::new(vec![game]); //reset every turn
-    let new_continued_games: Mutex<Vec<GameState>> = Mutex::new(vec![]);
+    let mut terminated_games: Vec<GameState> = vec![]; //push-only 
+    let mut continued_games: Vec<GameState> = vec![game]; //reset every turn
+    let mut new_continued_games: Vec<GameState> = vec![];
 
-    let en_passant_count = Mutex::new(0);
+    let mut en_passant_count = 0;
 
-    rayon::ThreadPoolBuilder::new()
-        .num_threads(1)
-        .build_global()
-        .unwrap();
+    let before = std::time::Instant::now();
 
-    for i in 0..4 {
-        continued_games
-            .lock()
-            .unwrap()
-            .clone()
-            .into_iter()
-            .for_each(|game| {
-                let legal_moves: Vec<Move> = game.legal_moves().collect();
-                for mov in legal_moves.clone() {
-                    if matches!(mov, Move::EnPassant { .. }) {
-                        *en_passant_count.lock().unwrap() += 1;
-                    }
-                    match game.clone().step(mov, legal_moves.clone()) {
-                        StepResult::Terminated(GameResult {
-                            kind: _,
-                            final_game_state,
-                        }) => terminated_games.lock().unwrap().push(final_game_state),
-                        StepResult::Continued(game_state) => {
-                            new_continued_games.lock().unwrap().push(game_state);
-                        }
+    for depth in 0..4 {
+        continued_games.clone().into_iter().for_each(|game| {
+            let legal_moves: Vec<Move> = game.legal_moves().collect();
+            for mov in legal_moves.clone() {
+                if matches!(mov, Move::EnPassant { .. }) {
+                    en_passant_count += 1;
+                }
+                match game.clone().step(mov, legal_moves.clone()) {
+                    StepResult::Terminated(GameResult {
+                        kind: _,
+                        final_game_state,
+                    }) => terminated_games.push(final_game_state),
+                    StepResult::Continued(game_state) => {
+                        new_continued_games.push(game_state);
                     }
                 }
-            });
-        continued_games
-            .lock()
-            .unwrap()
-            .clone_from(&new_continued_games.lock().unwrap());
+            }
+        });
+        continued_games.clone_from(&new_continued_games);
+        new_continued_games.clear();
 
-        new_continued_games.lock().unwrap().clear();
-
-        dbg!(format!("{i}: "));
-        dbg!(terminated_games.lock().unwrap().len());
-        dbg!(continued_games.lock().unwrap().len());
-        dbg!(&en_passant_count);
+        println!("depth: {depth}");
+        println!("terminated games: {}", terminated_games.len());
+        println!("continued games: {}", continued_games.len());
+        println!("en passant count:{}", &en_passant_count);
     }
+
+    let after = std::time::Instant::now();
+    println!("took: {:?}", after - before);
 }
+
 fn test_piece(piece: Piece, starting_square: Square, active_player: PlayerKind) {
     let mut board = Board::new();
     board[starting_square] = Some(piece);
