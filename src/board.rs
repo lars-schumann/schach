@@ -121,15 +121,15 @@ impl std::fmt::Debug for Board {
 impl const std::ops::Index<Square> for Board {
     type Output = Option<Piece>;
     fn index(&self, index: Square) -> &Self::Output {
-        let col = usize::from(index.col);
-        let row = usize::from(index.row);
+        let col = usize::from(index.col) - 1;
+        let row = usize::from(index.row) - 1;
         &self.0[col][row]
     }
 }
 impl const std::ops::IndexMut<Square> for Board {
     fn index_mut(&mut self, index: Square) -> &mut Self::Output {
-        let col = usize::from(index.col);
-        let row = usize::from(index.row);
+        let col = usize::from(index.col) - 1;
+        let row = usize::from(index.row) - 1;
         &mut self.0[col][row]
     }
 }

@@ -12,7 +12,7 @@ macro_rules! square {
             pub const [<$square_col $square_row>]: Self = Self{col: match Col::try_from(letter_to_number!($square_col)){
                 Ok(val) => val,
                 Err(_) => panic!("illegal Column Index")
-            }, row: match Row::try_from($square_row-1){
+            }, row: match Row::try_from($square_row){
                 Ok(val) => val,
                 Err(_) => panic!("illegal Row Index")
             }};
@@ -22,14 +22,14 @@ macro_rules! square {
 
 #[rustfmt::skip]
 macro_rules! letter_to_number {
-    (A) => { 0 };
-    (B) => { 1 };
-    (C) => { 2 };
-    (D) => { 3 };
-    (E) => { 4 };
-    (F) => { 5 };
-    (G) => { 6 };
-    (H) => { 7 };
+    (A) => { 1 };
+    (B) => { 2 };
+    (C) => { 3 };
+    (D) => { 4 };
+    (E) => { 5 };
+    (F) => { 6 };
+    (G) => { 7 };
+    (H) => { 8 };
 }
 
 impl Square {
@@ -184,14 +184,14 @@ impl const TryFrom<i32> for Row {
     type Error = ();
     fn try_from(value: i32) -> Result<Self, Self::Error> {
         match value {
-            0 => Ok(Self::R1),
-            1 => Ok(Self::R2),
-            2 => Ok(Self::R3),
-            3 => Ok(Self::R4),
-            4 => Ok(Self::R5),
-            5 => Ok(Self::R6),
-            6 => Ok(Self::R7),
-            7 => Ok(Self::R8),
+            1 => Ok(Self::R1),
+            2 => Ok(Self::R2),
+            3 => Ok(Self::R3),
+            4 => Ok(Self::R4),
+            5 => Ok(Self::R5),
+            6 => Ok(Self::R6),
+            7 => Ok(Self::R7),
+            8 => Ok(Self::R8),
             _ => Err(()),
         }
     }
@@ -200,14 +200,14 @@ impl const TryFrom<i32> for Col {
     type Error = ();
     fn try_from(value: i32) -> Result<Self, Self::Error> {
         match value {
-            0 => Ok(Self::C1),
-            1 => Ok(Self::C2),
-            2 => Ok(Self::C3),
-            3 => Ok(Self::C4),
-            4 => Ok(Self::C5),
-            5 => Ok(Self::C6),
-            6 => Ok(Self::C7),
-            7 => Ok(Self::C8),
+            1 => Ok(Self::C1),
+            2 => Ok(Self::C2),
+            3 => Ok(Self::C3),
+            4 => Ok(Self::C4),
+            5 => Ok(Self::C5),
+            6 => Ok(Self::C6),
+            7 => Ok(Self::C7),
+            8 => Ok(Self::C8),
             _ => Err(()),
         }
     }
@@ -215,14 +215,14 @@ impl const TryFrom<i32> for Col {
 impl const From<Row> for i32 {
     fn from(value: Row) -> Self {
         match value {
-            Row::R1 => 0,
-            Row::R2 => 1,
-            Row::R3 => 2,
-            Row::R4 => 3,
-            Row::R5 => 4,
-            Row::R6 => 5,
-            Row::R7 => 6,
-            Row::R8 => 7,
+            Row::R1 => 1,
+            Row::R2 => 2,
+            Row::R3 => 3,
+            Row::R4 => 4,
+            Row::R5 => 5,
+            Row::R6 => 6,
+            Row::R7 => 7,
+            Row::R8 => 8,
         }
     }
 }
@@ -230,28 +230,28 @@ impl const From<Row> for i32 {
 impl const From<Col> for i32 {
     fn from(value: Col) -> Self {
         match value {
-            Col::C1 => 0,
-            Col::C2 => 1,
-            Col::C3 => 2,
-            Col::C4 => 3,
-            Col::C5 => 4,
-            Col::C6 => 5,
-            Col::C7 => 6,
-            Col::C8 => 7,
+            Col::C1 => 1,
+            Col::C2 => 2,
+            Col::C3 => 3,
+            Col::C4 => 4,
+            Col::C5 => 5,
+            Col::C6 => 6,
+            Col::C7 => 7,
+            Col::C8 => 8,
         }
     }
 }
 impl const From<Row> for usize {
     fn from(value: Row) -> Self {
         match value {
-            Row::R1 => 0,
-            Row::R2 => 1,
-            Row::R3 => 2,
-            Row::R4 => 3,
-            Row::R5 => 4,
-            Row::R6 => 5,
-            Row::R7 => 6,
-            Row::R8 => 7,
+            Row::R1 => 1,
+            Row::R2 => 2,
+            Row::R3 => 3,
+            Row::R4 => 4,
+            Row::R5 => 5,
+            Row::R6 => 6,
+            Row::R7 => 7,
+            Row::R8 => 8,
         }
     }
 }
@@ -259,14 +259,14 @@ impl const From<Row> for usize {
 impl const From<Col> for usize {
     fn from(value: Col) -> Self {
         match value {
-            Col::C1 => 0,
-            Col::C2 => 1,
-            Col::C3 => 2,
-            Col::C4 => 3,
-            Col::C5 => 4,
-            Col::C6 => 5,
-            Col::C7 => 6,
-            Col::C8 => 7,
+            Col::C1 => 1,
+            Col::C2 => 2,
+            Col::C3 => 3,
+            Col::C4 => 4,
+            Col::C5 => 5,
+            Col::C6 => 6,
+            Col::C7 => 7,
+            Col::C8 => 8,
         }
     }
 }
