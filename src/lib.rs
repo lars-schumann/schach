@@ -10,7 +10,12 @@
     iter_collect_into
 )]
 
+pub mod board;
+pub mod coord;
 pub mod game;
+pub mod player;
+pub mod piece;
+pub mod mov;
 
 #[cfg(test)]
 mod tests;

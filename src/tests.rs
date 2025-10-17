@@ -1,4 +1,11 @@
+use crate::board::*;
+use crate::coord::*;
 use crate::game::*;
+use crate::mov::Move;
+use crate::mov::Threat;
+use crate::piece::Piece;
+use crate::piece::PieceKind;
+use crate::player::*;
 
 #[test]
 fn test() {
