@@ -13,9 +13,9 @@
 pub mod board;
 pub mod coord;
 pub mod game;
-pub mod player;
-pub mod piece;
 pub mod mov;
+pub mod piece;
+pub mod player;
 
 #[cfg(test)]
 mod tests;

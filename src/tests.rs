@@ -62,7 +62,7 @@ fn test_piece(piece: Piece, starting_square: Square, active_player: PlayerKind) 
     let mut board = Board::new();
     board[starting_square] = Some(piece);
     for row in Row::ROWS {
-        board[Square(Col::C6, row)] = Some(Piece {
+        board[Square { col: Col::C6, row }] = Some(Piece {
             kind: PieceKind::Pawn,
             owner: PlayerKind::Black,
         });
@@ -72,7 +72,7 @@ fn test_piece(piece: Piece, starting_square: Square, active_player: PlayerKind) 
 
     for col in Col::COLS {
         for row in Row::ROWS {
-            let square = Square(col, row);
+            let square = Square { col, row };
             if (board[square]).is_some_and(|piece| piece.owner == active_player) {
                 attacking_moves.append(&mut attacked_squares(&board, square, active_player));
             }

@@ -283,7 +283,7 @@ impl GameState {
                 is_capture: target_square.is_some(),
             }],
             (PieceKind::Pawn, Some(_)) => {
-                if target.row() == self.active_player().pawn_promotion_row() {
+                if target.row == self.active_player().pawn_promotion_row() {
                     PieceKind::PROMOTION_OPTIONS
                         .iter()
                         .map(|promotion_option| Move::Promotion {
@@ -351,7 +351,7 @@ impl GameState {
                 continue; // pawns cant capture moving forward!
             }
 
-            if one_in_front.row() == self.active_player().pawn_promotion_row() {
+            if one_in_front.row == self.active_player().pawn_promotion_row() {
                 PieceKind::PROMOTION_OPTIONS
                     .iter()
                     .map(|promotion_option| Move::Promotion {
@@ -374,7 +374,7 @@ impl GameState {
                 continue; // this one can def be out of range.
             };
 
-            if square.row() != self.active_player().pawn_starting_row() {
+            if square.row != self.active_player().pawn_starting_row() {
                 continue; // pawns can only double-move when they havent moved yet!
             }
 
@@ -462,10 +462,7 @@ pub fn attacked_squares(
     let range_upper_bound = i32::from(range_upper_bound);
 
     let rays = directions.iter().map(move |direction| {
-        (0..range_upper_bound)
-            .map(move |i| starting_square + *direction * (i + 1))
-            .take_while(Result::is_ok) //}
-            .map(Result::unwrap) //} FIXME: uh this cant be right
+        (0..range_upper_bound).flat_map(move |i| starting_square + *direction * (i + 1))
     });
 
     let mut out = vec![];

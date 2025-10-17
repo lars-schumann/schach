@@ -52,10 +52,10 @@ impl Board {
 
     #[allow(clippy::cast_sign_loss)]
     pub const fn movee(&mut self, start: Square, target: Square) {
-        let start_col = usize::from(start.col());
-        let start_row = usize::from(start.row());
-        let target_col = usize::from(target.col());
-        let target_row = usize::from(target.row());
+        let start_col = usize::from(start.col);
+        let start_row = usize::from(start.row);
+        let target_col = usize::from(target.col);
+        let target_row = usize::from(target.row);
         self.0[target_col][target_row] = self.0[start_col][start_row];
         self.0[start_col][start_row] = None;
     }
@@ -65,32 +65,32 @@ impl Board {
     pub fn filled(with_pawns: bool) -> Self {
         use PieceKind::{Pawn, Knight, Bishop, Rook, King, Queen};
         use PlayerKind::{White, Black};
-        use Row::{R1, R2, R7, R8};
-        use Col::{C1, C2, C3, C4, C5, C6, C7, C8};
+        use Row::{R2, R7, };
+      
         let mut board = Self::new();
 
-        board[Square(C1, R1)] = Some(Piece{kind: Rook,   owner: White});
-        board[Square(C2, R1)] = Some(Piece{kind: Knight, owner: White});
-        board[Square(C3, R1)] = Some(Piece{kind: Bishop, owner: White});
-        board[Square(C4, R1)] = Some(Piece{kind: Queen,  owner: White});
-        board[Square(C5, R1)] = Some(Piece{kind: King,   owner: White});
-        board[Square(C6, R1)] = Some(Piece{kind: Bishop, owner: White});
-        board[Square(C7, R1)] = Some(Piece{kind: Knight, owner: White});
-        board[Square(C8, R1)] = Some(Piece{kind: Rook,   owner: White});
+        board[Square::A1] = Some(Piece{kind: Rook,   owner: White});
+        board[Square::B1] = Some(Piece{kind: Knight, owner: White});
+        board[Square::C1] = Some(Piece{kind: Bishop, owner: White});
+        board[Square::D1] = Some(Piece{kind: Queen,  owner: White});
+        board[Square::E1] = Some(Piece{kind: King,   owner: White});
+        board[Square::F1] = Some(Piece{kind: Bishop, owner: White});
+        board[Square::G1] = Some(Piece{kind: Knight, owner: White});
+        board[Square::H1] = Some(Piece{kind: Rook,   owner: White});
 
-        board[Square(C1, R8)] = Some(Piece{kind: Rook,   owner: Black});
-        board[Square(C2, R8)] = Some(Piece{kind: Knight, owner: Black});
-        board[Square(C3, R8)] = Some(Piece{kind: Bishop, owner: Black});
-        board[Square(C4, R8)] = Some(Piece{kind: Queen,  owner: Black});
-        board[Square(C5, R8)] = Some(Piece{kind: King,   owner: Black});
-        board[Square(C6, R8)] = Some(Piece{kind: Bishop, owner: Black});
-        board[Square(C7, R8)] = Some(Piece{kind: Knight, owner: Black});
-        board[Square(C8, R8)] = Some(Piece{kind: Rook,   owner: Black});
+        board[Square::A8] = Some(Piece{kind: Rook,   owner: Black});
+        board[Square::B8] = Some(Piece{kind: Knight, owner: Black});
+        board[Square::C8] = Some(Piece{kind: Bishop, owner: Black});
+        board[Square::D8] = Some(Piece{kind: Queen,  owner: Black});
+        board[Square::E8] = Some(Piece{kind: King,   owner: Black});
+        board[Square::F8] = Some(Piece{kind: Bishop, owner: Black});
+        board[Square::G8] = Some(Piece{kind: Knight, owner: Black});
+        board[Square::H8] = Some(Piece{kind: Rook,   owner: Black});
 
         if with_pawns{
             for col in Col::COLS {
-                board[Square( col,  R2 )] = Some( Piece { kind: Pawn, owner: White });
-                board[Square( col,  R7 )] = Some( Piece { kind: Pawn, owner: Black });
+                board[Square{ col,  row: R2 }] = Some( Piece { kind: Pawn, owner: White });
+                board[Square{ col,  row: R7 }] = Some( Piece { kind: Pawn, owner: Black });
             }
         }
 
@@ -108,7 +108,7 @@ impl std::fmt::Debug for Board {
         for row in Row::ROWS.into_iter().rev() {
             write!(f, "{}", i32::from(row) + 1)?;
             for col in Col::COLS {
-                match self[Square(col, row)] {
+                match self[Square { col, row }] {
                     None => {
                         if (i32::from(row) + i32::from(col)) % 2 == 0 {
                             write!(f, "□ ",)?;
@@ -131,15 +131,15 @@ impl std::fmt::Debug for Board {
 impl const std::ops::Index<Square> for Board {
     type Output = Option<Piece>;
     fn index(&self, index: Square) -> &Self::Output {
-        let col = usize::from(index.col());
-        let row = usize::from(index.row());
+        let col = usize::from(index.col);
+        let row = usize::from(index.row);
         &self.0[col][row]
     }
 }
 impl const std::ops::IndexMut<Square> for Board {
     fn index_mut(&mut self, index: Square) -> &mut Self::Output {
-        let col = usize::from(index.col());
-        let row = usize::from(index.row());
+        let col = usize::from(index.col);
+        let row = usize::from(index.row);
         &mut self.0[col][row]
     }
 }
@@ -154,10 +154,10 @@ impl std::fmt::Debug for DebugBoard {
         for row in Row::ROWS.into_iter().rev() {
             write!(f, "{}", i32::from(row) + 1)?;
             for col in Col::COLS {
-                if self.attacked_squares.contains(&Square(col, row)) {
+                if self.attacked_squares.contains(&Square { col, row }) {
                     write!(f, "\x1B[31m",)?;
                 }
-                match self.inner[Square(col, row)] {
+                match self.inner[Square { col, row }] {
                     None => {
                         if (i32::from(row) + i32::from(col)) % 2 == 0 {
                             write!(f, "□ ",)?;
@@ -168,7 +168,7 @@ impl std::fmt::Debug for DebugBoard {
 
                     Some(piece) => write!(f, "{piece} ")?,
                 }
-                if self.attacked_squares.contains(&Square(col, row)) {
+                if self.attacked_squares.contains(&Square { col, row }) {
                     write!(f, "\x1B[0m",)?;
                 }
             }

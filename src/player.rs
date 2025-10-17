@@ -1,4 +1,4 @@
-use crate::coord::{Col, Offset, Row, Square};
+use crate::coord::{Offset, Row, Square};
 use crate::game::CastlingSide;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, strum::Display)]
@@ -34,66 +34,52 @@ impl PlayerKind {
     #[must_use]
     pub fn castling_non_check_needed_squares(self, castling_side: CastlingSide) -> Vec<Square> {
         match (self, castling_side) {
-            (Self::White, CastlingSide::Kingside) => vec![
-                Square(Col::C5, Row::R1),
-                Square(Col::C6, Row::R1),
-                Square(Col::C7, Row::R1),
-            ],
-            (Self::White, CastlingSide::Queenside) => vec![
-                Square(Col::C5, Row::R1),
-                Square(Col::C4, Row::R1),
-                Square(Col::C3, Row::R1),
-                Square(Col::C2, Row::R1),
-            ],
-            (Self::Black, CastlingSide::Kingside) => vec![
-                Square(Col::C5, Row::R8),
-                Square(Col::C6, Row::R8),
-                Square(Col::C7, Row::R8),
-            ],
-            (Self::Black, CastlingSide::Queenside) => vec![
-                Square(Col::C5, Row::R8),
-                Square(Col::C4, Row::R8),
-                Square(Col::C3, Row::R8),
-                Square(Col::C2, Row::R8),
-            ],
+            (Self::White, CastlingSide::Kingside) => vec![Square::E1, Square::F1, Square::G1],
+            (Self::White, CastlingSide::Queenside) => {
+                vec![Square::E1, Square::D1, Square::C1, Square::B1]
+            }
+            (Self::Black, CastlingSide::Kingside) => vec![Square::E8, Square::F8, Square::G8],
+            (Self::Black, CastlingSide::Queenside) => {
+                vec![Square::E8, Square::D8, Square::C8, Square::B8]
+            }
         }
     }
 
     #[must_use]
     pub const fn king_start(&self) -> Square {
         match self {
-            Self::White => Square(Col::C5, Row::R1),
-            Self::Black => Square(Col::C5, Row::R8),
+            Self::White => Square::E1,
+            Self::Black => Square::E8,
         }
     }
 
     #[must_use]
     pub const fn king_castling_target(&self, castling_side: CastlingSide) -> Square {
         match (self, castling_side) {
-            (Self::White, CastlingSide::Kingside) => Square(Col::C7, Row::R1),
-            (Self::White, CastlingSide::Queenside) => Square(Col::C3, Row::R1),
-            (Self::Black, CastlingSide::Kingside) => Square(Col::C7, Row::R8),
-            (Self::Black, CastlingSide::Queenside) => Square(Col::C3, Row::R8),
+            (Self::White, CastlingSide::Kingside) => Square::G1,
+            (Self::White, CastlingSide::Queenside) => Square::C1,
+            (Self::Black, CastlingSide::Kingside) => Square::G8,
+            (Self::Black, CastlingSide::Queenside) => Square::C8,
         }
     }
 
     #[must_use]
     pub const fn rook_start(&self, castling_side: CastlingSide) -> Square {
         match (self, castling_side) {
-            (Self::White, CastlingSide::Kingside) => Square(Col::C8, Row::R1),
-            (Self::White, CastlingSide::Queenside) => Square(Col::C1, Row::R1),
-            (Self::Black, CastlingSide::Kingside) => Square(Col::C1, Row::R8),
-            (Self::Black, CastlingSide::Queenside) => Square(Col::C8, Row::R8),
+            (Self::White, CastlingSide::Kingside) => Square::H1,
+            (Self::White, CastlingSide::Queenside) => Square::A1,
+            (Self::Black, CastlingSide::Kingside) => Square::H8,
+            (Self::Black, CastlingSide::Queenside) => Square::A8,
         }
     }
 
     #[must_use]
     pub const fn rook_castling_target(&self, castling_side: CastlingSide) -> Square {
         match (self, castling_side) {
-            (Self::White, CastlingSide::Kingside) => Square(Col::C6, Row::R1),
-            (Self::White, CastlingSide::Queenside) => Square(Col::C4, Row::R1),
-            (Self::Black, CastlingSide::Kingside) => Square(Col::C6, Row::R8),
-            (Self::Black, CastlingSide::Queenside) => Square(Col::C4, Row::R8),
+            (Self::White, CastlingSide::Kingside) => Square::F1,
+            (Self::White, CastlingSide::Queenside) => Square::D1,
+            (Self::Black, CastlingSide::Kingside) => Square::F8,
+            (Self::Black, CastlingSide::Queenside) => Square::D8,
         }
     }
 

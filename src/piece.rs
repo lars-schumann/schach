@@ -32,6 +32,13 @@ impl Piece {
             (PieceKind::King, _) => (&Offset::KING_DIRECT, Range::One),
         }
     }
+
+    pub const PAWN_WHITE: Self = Self {
+        kind: PieceKind::Pawn,
+        owner: PlayerKind::White,
+    };
+
+    
 }
 
 impl std::fmt::Display for Piece {

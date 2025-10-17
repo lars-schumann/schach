@@ -1,27 +1,136 @@
 use crate::board::{COL_COUNT, ROW_COUNT};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub struct Square(pub Col, pub Row);
-impl Square {
-    #[must_use]
-    pub const fn col(&self) -> Col {
-        self.0
-    }
-    #[must_use]
-    pub const fn row(&self) -> Row {
-        self.1
-    }
+pub struct Square {
+    pub col: Col,
+    pub row: Row,
 }
+
+macro_rules! square {
+    ($square_col:tt $square_row:tt) => {
+        paste::paste! {
+            pub const [<$square_col $square_row>]: Self = Self{col: match Col::try_from(letter_to_number!($square_col)){
+                Ok(val) => val,
+                Err(_) => panic!()
+            }, row: match Row::try_from($square_row-1){
+                Ok(val) => val,
+                Err(_) => panic!()
+            }};
+        }
+    };
+}
+
+macro_rules! letter_to_number {
+    (A) => {
+        0
+    };
+    (B) => {
+        1
+    };
+    (C) => {
+        2
+    };
+    (D) => {
+        3
+    };
+    (E) => {
+        4
+    };
+    (F) => {
+        5
+    };
+    (G) => {
+        6
+    };
+    (H) => {
+        7
+    };
+}
+
+impl Square {
+    square!(A 1);
+    square!(B 1);
+    square!(C 1);
+    square!(D 1);
+    square!(E 1);
+    square!(F 1);
+    square!(G 1);
+    square!(H 1);
+
+    square!(A 2);
+    square!(B 2);
+    square!(C 2);
+    square!(D 2);
+    square!(E 2);
+    square!(F 2);
+    square!(G 2);
+    square!(H 2);
+
+    square!(A 3);
+    square!(B 3);
+    square!(C 3);
+    square!(D 3);
+    square!(E 3);
+    square!(F 3);
+    square!(G 3);
+    square!(H 3);
+
+    square!(A 4);
+    square!(B 4);
+    square!(C 4);
+    square!(D 4);
+    square!(E 4);
+    square!(F 4);
+    square!(G 4);
+    square!(H 4);
+
+    square!(A 5);
+    square!(B 5);
+    square!(C 5);
+    square!(D 5);
+    square!(E 5);
+    square!(F 5);
+    square!(G 5);
+    square!(H 5);
+
+    square!(A 6);
+    square!(B 6);
+    square!(C 6);
+    square!(D 6);
+    square!(E 6);
+    square!(F 6);
+    square!(G 6);
+    square!(H 6);
+
+    square!(A 7);
+    square!(B 7);
+    square!(C 7);
+    square!(D 7);
+    square!(E 7);
+    square!(F 7);
+    square!(G 7);
+    square!(H 7);
+
+    square!(A 8);
+    square!(B 8);
+    square!(C 8);
+    square!(D 8);
+    square!(E 8);
+    square!(F 8);
+    square!(G 8);
+    square!(H 8);
+}
+
 impl std::fmt::Display for Square {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}, {}", self.col(), self.row())
+        write!(f, "{}, {}", self.col, self.row)
     }
 }
 impl Square {
     pub fn all() -> impl Iterator<Item = Self> + Clone + use<> {
         Col::COLS
             .into_iter()
-            .flat_map(|col| Row::ROWS.into_iter().map(move |row| Self(col, row)))
+            .flat_map(|col| Row::ROWS.into_iter().map(move |row| Self { col, row }))
     }
 }
 
@@ -266,6 +375,9 @@ impl const std::ops::Mul<i32> for Offset {
 impl const std::ops::Add<Offset> for Square {
     type Output = Result<Self, ()>;
     fn add(self, rhs: Offset) -> Self::Output {
-        Ok(Self((self.col() + rhs.col)?, (self.row() + rhs.row)?))
+        Ok(Self {
+            col: (self.col + rhs.col)?,
+            row: (self.row + rhs.row)?,
+        })
     }
 }
