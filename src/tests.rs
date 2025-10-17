@@ -20,7 +20,7 @@ fn test() {
 
     let before = std::time::Instant::now();
 
-    for depth in 0..3 {
+    for depth in 0..4 {
         continued_games.clone().into_iter().for_each(|game| {
             let legal_moves: Vec<Move> = game.legal_moves().collect();
             for mov in legal_moves.clone() {

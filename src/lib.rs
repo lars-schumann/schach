@@ -7,7 +7,8 @@
     const_convert,
     const_try,
     const_index,
-    iter_collect_into
+    iter_collect_into,
+    ascii_char
 )]
 
 pub mod board;

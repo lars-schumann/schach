@@ -46,10 +46,50 @@ pub struct GameState {
     pub half_turn_count: u64,
     pub is_perft: bool,
 }
+
+struct FenStrings {
+    piece_placements: String,
+    active_color: String,
+    castling_availability: String,
+    en_passant_target_square: String,
+    half_move_clock: String,
+    full_move_number: String,
+}
 impl GameState {
     #[must_use]
     pub fn new() -> Self {
         Self::default()
+    }
+
+    #[must_use]
+    pub fn from_fen(fen: &str) -> Self {
+        let x = fen
+            .split_ascii_whitespace()
+            .map(str::to_owned)
+            .collect::<Vec<String>>();
+        let y: [String; 6] = x.try_into().expect("fen did not have all 6 fields");
+
+        for s in &y {
+            assert!(s.is_ascii(), "why isnt this ascii :thonk:");
+        }
+
+        let a: Vec<std::ascii::Char> = y[0]
+            .clone()
+            .bytes()
+            .map(std::ascii::Char::from_u8)
+            .map(Option::unwrap)
+            .collect();
+
+        let mut z: FenStrings = FenStrings {
+            piece_placements: y[0].clone(),
+            active_color: y[1].clone(),
+            castling_availability: y[2].clone(),
+            en_passant_target_square: y[3].clone(),
+            half_move_clock: y[4].clone(),
+            full_move_number: y[5].clone(),
+        };
+
+        todo!()
     }
 
     #[must_use]
@@ -463,7 +503,10 @@ pub fn attacked_squares(
     let range_upper_bound = i32::from(range_upper_bound);
 
     let rays = directions.iter().map(move |direction| {
-        (0..range_upper_bound).flat_map(move |i| starting_square + *direction * (i + 1))
+        (0..range_upper_bound)
+            .map(move |i| starting_square + *direction * (i + 1))
+            .take_while(Result::is_ok) // ugly but right, once this is Err(_) once, itll _always_ be out of bounds!
+            .map(Result::unwrap)
     });
 
     let mut out = vec![];
