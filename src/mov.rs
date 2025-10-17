@@ -38,9 +38,9 @@ impl std::fmt::Debug for Move {
                 target,
                 is_capture,
             } => {
-                write!(f, "{piece_kind:?}: {start} -> {target} {is_capture}",)
+                write!(f, "{piece_kind:?}: {start:?} -> {target:?} {is_capture}",)
             }
-            Self::DoubleStep { start, target } => write!(f, "Double Step: {start} -> {target}"),
+            Self::DoubleStep { start, target } => write!(f, "Double Step: {start:?} -> {target:?}"),
             Self::Promotion {
                 start,
                 target,
@@ -48,7 +48,7 @@ impl std::fmt::Debug for Move {
                 replacement,
             } => write!(
                 f,
-                "Promotion: {start} -> {target} to: {replacement} {is_capture}",
+                "Promotion: {start:?} -> {target:?} to: {replacement} {is_capture}",
             ),
             Self::EnPassant {
                 start,
@@ -56,7 +56,7 @@ impl std::fmt::Debug for Move {
                 affected_square,
             } => write!(
                 f,
-                "En Passant: {start} -> {target}, affected: {affected_square}",
+                "En Passant: {start:?} -> {target:?}, affected: {affected_square:?}",
             ),
             Self::Castling(castling_side) => write!(f, "{castling_side}",),
         }
@@ -72,7 +72,7 @@ pub struct Threat {
 
 impl std::fmt::Debug for Threat {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}: {} => {}", self.piece, self.start, self.target)
+        write!(f, "{}: {:?} => {:?}", self.piece, self.start, self.target)
     }
 }
 

@@ -398,13 +398,13 @@ impl GameState {
                 target,
                 is_capture: _,
             }
-            | Move::DoubleStep { start, target } => self.board.movee(start, target),
+            | Move::DoubleStep { start, target } => self.board.mov(start, target),
             Move::EnPassant {
                 start,
                 target,
                 affected_square,
             } => {
-                self.board.movee(start, target);
+                self.board.mov(start, target);
                 self.board[affected_square] = None;
             }
             Move::Promotion {
@@ -413,18 +413,18 @@ impl GameState {
                 is_capture: _,
                 replacement,
             } => {
-                self.board.movee(start, target);
+                self.board.mov(start, target);
                 self.board[target] = Some(Piece {
                     kind: replacement,
                     owner: self.active_player(),
                 });
             }
             Move::Castling(castling_side) => {
-                self.board.movee(
+                self.board.mov(
                     self.active_player().king_start(),
                     self.active_player().king_castling_target(castling_side),
                 );
-                self.board.movee(
+                self.board.mov(
                     self.active_player().rook_start(castling_side),
                     self.active_player().rook_castling_target(castling_side),
                 );

@@ -50,47 +50,37 @@ impl Board {
             .any(|square| square == self.king_position(king_owner))
     }
 
-    #[allow(clippy::cast_sign_loss)]
-    pub const fn movee(&mut self, start: Square, target: Square) {
-        let start_col = usize::from(start.col);
-        let start_row = usize::from(start.row);
-        let target_col = usize::from(target.col);
-        let target_row = usize::from(target.row);
-        self.0[target_col][target_row] = self.0[start_col][start_row];
-        self.0[start_col][start_row] = None;
+    pub const fn mov(&mut self, start: Square, target: Square) {
+        self[target] = self[start];
+        self[start] = None;
     }
 
     #[must_use]
-    #[rustfmt::skip]
     pub fn filled(with_pawns: bool) -> Self {
-        use PieceKind::{Pawn, Knight, Bishop, Rook, King, Queen};
-        use PlayerKind::{White, Black};
-        use Row::{R2, R7, };
-      
         let mut board = Self::new();
 
-        board[Square::A1] = Some(Piece{kind: Rook,   owner: White});
-        board[Square::B1] = Some(Piece{kind: Knight, owner: White});
-        board[Square::C1] = Some(Piece{kind: Bishop, owner: White});
-        board[Square::D1] = Some(Piece{kind: Queen,  owner: White});
-        board[Square::E1] = Some(Piece{kind: King,   owner: White});
-        board[Square::F1] = Some(Piece{kind: Bishop, owner: White});
-        board[Square::G1] = Some(Piece{kind: Knight, owner: White});
-        board[Square::H1] = Some(Piece{kind: Rook,   owner: White});
+        board[Square::A1] = Some(Piece::ROOK_WHITE);
+        board[Square::B1] = Some(Piece::KNIGHT_WHITE);
+        board[Square::C1] = Some(Piece::BISHOP_WHITE);
+        board[Square::D1] = Some(Piece::QUEEN_WHITE);
+        board[Square::E1] = Some(Piece::KING_WHITE);
+        board[Square::F1] = Some(Piece::BISHOP_WHITE);
+        board[Square::G1] = Some(Piece::KNIGHT_WHITE);
+        board[Square::H1] = Some(Piece::ROOK_WHITE);
 
-        board[Square::A8] = Some(Piece{kind: Rook,   owner: Black});
-        board[Square::B8] = Some(Piece{kind: Knight, owner: Black});
-        board[Square::C8] = Some(Piece{kind: Bishop, owner: Black});
-        board[Square::D8] = Some(Piece{kind: Queen,  owner: Black});
-        board[Square::E8] = Some(Piece{kind: King,   owner: Black});
-        board[Square::F8] = Some(Piece{kind: Bishop, owner: Black});
-        board[Square::G8] = Some(Piece{kind: Knight, owner: Black});
-        board[Square::H8] = Some(Piece{kind: Rook,   owner: Black});
+        board[Square::A8] = Some(Piece::ROOK_BLACK);
+        board[Square::B8] = Some(Piece::KNIGHT_BLACK);
+        board[Square::C8] = Some(Piece::BISHOP_BLACK);
+        board[Square::D8] = Some(Piece::QUEEN_BLACK);
+        board[Square::E8] = Some(Piece::KING_BLACK);
+        board[Square::F8] = Some(Piece::BISHOP_BLACK);
+        board[Square::G8] = Some(Piece::KNIGHT_BLACK);
+        board[Square::H8] = Some(Piece::ROOK_BLACK);
 
-        if with_pawns{
+        if with_pawns {
             for col in Col::COLS {
-                board[Square{ col,  row: R2 }] = Some( Piece { kind: Pawn, owner: White });
-                board[Square{ col,  row: R7 }] = Some( Piece { kind: Pawn, owner: Black });
+                board[Square { col, row: Row::R2 }] = Some(Piece::PAWN_WHITE);
+                board[Square { col, row: Row::R7 }] = Some(Piece::PAWN_BLACK);
             }
         }
 

@@ -1,6 +1,6 @@
 use crate::board::{COL_COUNT, ROW_COUNT};
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Square {
     pub col: Col,
     pub row: Row,
@@ -11,40 +11,25 @@ macro_rules! square {
         paste::paste! {
             pub const [<$square_col $square_row>]: Self = Self{col: match Col::try_from(letter_to_number!($square_col)){
                 Ok(val) => val,
-                Err(_) => panic!()
+                Err(_) => panic!("illegal Column Index")
             }, row: match Row::try_from($square_row-1){
                 Ok(val) => val,
-                Err(_) => panic!()
+                Err(_) => panic!("illegal Row Index")
             }};
         }
     };
 }
 
+#[rustfmt::skip]
 macro_rules! letter_to_number {
-    (A) => {
-        0
-    };
-    (B) => {
-        1
-    };
-    (C) => {
-        2
-    };
-    (D) => {
-        3
-    };
-    (E) => {
-        4
-    };
-    (F) => {
-        5
-    };
-    (G) => {
-        6
-    };
-    (H) => {
-        7
-    };
+    (A) => { 0 };
+    (B) => { 1 };
+    (C) => { 2 };
+    (D) => { 3 };
+    (E) => { 4 };
+    (F) => { 5 };
+    (G) => { 6 };
+    (H) => { 7 };
 }
 
 impl Square {
@@ -121,7 +106,7 @@ impl Square {
     square!(H 8);
 }
 
-impl std::fmt::Display for Square {
+impl std::fmt::Debug for Square {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}, {}", self.col, self.row)
     }

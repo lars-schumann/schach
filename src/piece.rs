@@ -21,6 +21,10 @@ pub struct Piece {
 }
 impl Piece {
     #[must_use]
+    pub const fn new(kind: PieceKind, owner: PlayerKind) -> Self {
+        Self { kind, owner }
+    }
+    #[must_use]
     pub const fn threat_directions(&self) -> (&[Offset], Range) {
         match (self.kind, self.owner) {
             (PieceKind::Pawn, PlayerKind::White) => (&Offset::PAWN_UP_DIAGONAL, Range::One),
@@ -33,33 +37,37 @@ impl Piece {
         }
     }
 
-    pub const PAWN_WHITE: Self = Self {
-        kind: PieceKind::Pawn,
-        owner: PlayerKind::White,
-    };
+    pub const PAWN_WHITE: Self = Self::new(PieceKind::Pawn, PlayerKind::White);
+    pub const KNIGHT_WHITE: Self = Self::new(PieceKind::Knight, PlayerKind::White);
+    pub const BISHOP_WHITE: Self = Self::new(PieceKind::Bishop, PlayerKind::White);
+    pub const ROOK_WHITE: Self = Self::new(PieceKind::Rook, PlayerKind::White);
+    pub const QUEEN_WHITE: Self = Self::new(PieceKind::Queen, PlayerKind::White);
+    pub const KING_WHITE: Self = Self::new(PieceKind::King, PlayerKind::White);
 
-    
+    pub const PAWN_BLACK: Self = Self::new(PieceKind::Pawn, PlayerKind::Black);
+    pub const KNIGHT_BLACK: Self = Self::new(PieceKind::Knight, PlayerKind::Black);
+    pub const BISHOP_BLACK: Self = Self::new(PieceKind::Bishop, PlayerKind::Black);
+    pub const ROOK_BLACK: Self = Self::new(PieceKind::Rook, PlayerKind::Black);
+    pub const QUEEN_BLACK: Self = Self::new(PieceKind::Queen, PlayerKind::Black);
+    pub const KING_BLACK: Self = Self::new(PieceKind::King, PlayerKind::Black);
 }
 
 impl std::fmt::Display for Piece {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let symbol = match self.owner {
-            PlayerKind::White => match self.kind {
-                PieceKind::Pawn => "♙",
-                PieceKind::Knight => "♘",
-                PieceKind::Bishop => "♗",
-                PieceKind::Rook => "♖",
-                PieceKind::Queen => "♕",
-                PieceKind::King => "♔",
-            },
-            PlayerKind::Black => match self.kind {
-                PieceKind::Pawn => "♟",
-                PieceKind::Knight => "♞",
-                PieceKind::Bishop => "♝",
-                PieceKind::Rook => "♜",
-                PieceKind::Queen => "♛",
-                PieceKind::King => "♚",
-            },
+        let symbol = match *self {
+            Self::PAWN_WHITE => "♙",
+            Self::KNIGHT_WHITE => "♘",
+            Self::BISHOP_WHITE => "♗",
+            Self::ROOK_WHITE => "♖",
+            Self::QUEEN_WHITE => "♕",
+            Self::KING_WHITE => "♔",
+
+            Self::PAWN_BLACK => "♟",
+            Self::KNIGHT_BLACK => "♞",
+            Self::BISHOP_BLACK => "♝",
+            Self::ROOK_BLACK => "♜",
+            Self::QUEEN_BLACK => "♛",
+            Self::KING_BLACK => "♚",
         };
         write!(f, "{symbol}")
     }
