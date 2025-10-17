@@ -86,16 +86,16 @@ impl PlayerKind {
     #[must_use]
     pub const fn forwards_one_row(&self) -> Offset {
         match self {
-            Self::White => Offset { col: 0, row: 1 },
-            Self::Black => Offset { col: 0, row: -1 },
+            Self::White => Offset::U,
+            Self::Black => Offset::D,
         }
     }
 
     #[must_use]
     pub const fn backwards_one_row(&self) -> Offset {
         match self {
-            Self::White => Offset { col: 0, row: -1 },
-            Self::Black => Offset { col: 0, row: 1 },
+            Self::White => Offset::D,
+            Self::Black => Offset::U,
         }
     }
 }

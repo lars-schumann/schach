@@ -142,7 +142,7 @@ impl std::fmt::Debug for DebugBoard {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f)?;
         for row in Row::ROWS.into_iter().rev() {
-            write!(f, "{}", i32::from(row) + 1)?;
+            write!(f, "{}", i32::from(row))?;
             for col in Col::COLS {
                 if self.attacked_squares.contains(&Square { col, row }) {
                     write!(f, "\x1B[31m",)?;
@@ -166,7 +166,7 @@ impl std::fmt::Debug for DebugBoard {
         }
         write!(f, "  ")?;
         for col in Col::COLS {
-            write!(f, "{} ", i32::from(col) + 1)?;
+            write!(f, "{} ", i32::from(col))?;
         }
         Ok(())
     }

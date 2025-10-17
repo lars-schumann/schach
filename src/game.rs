@@ -43,7 +43,7 @@ pub struct GameState {
     pub black_castling_rights: CastlingRights,
     pub position_history: Vec<Position>,
     pub last_double_pawn_move: Option<DoublePawnMove>,
-    pub round: u64,
+    pub half_turn_count: u64,
     pub is_perft: bool,
 }
 impl GameState {
@@ -70,7 +70,7 @@ impl GameState {
 
     #[must_use]
     pub fn active_player(&self) -> PlayerKind {
-        match self.round % 2 {
+        match self.half_turn_count % 2 {
             0 => PlayerKind::White,
             1 => PlayerKind::Black,
             _ => unreachable!(),
@@ -143,7 +143,7 @@ impl GameState {
             }
             | Move::Promotion { .. }
             | Move::EnPassant { .. } => {
-                new_game.round_of_last_pawn_move_or_capture = self.round;
+                new_game.round_of_last_pawn_move_or_capture = self.half_turn_count;
             }
             Move::Normal { .. } | Move::Castling(_) => {} //nothing
         }
@@ -180,7 +180,7 @@ impl GameState {
         if let Move::DoubleStep { start: _, target } = mov {
             new_game.last_double_pawn_move = Some(DoublePawnMove {
                 target,
-                round: new_game.round,
+                round: new_game.half_turn_count,
             });
         }
 
@@ -200,7 +200,8 @@ impl GameState {
                 });
             }
 
-            if new_game.round - new_game.round_of_last_pawn_move_or_capture == FIFTY_MOVE_RULE_COUNT
+            if new_game.half_turn_count - new_game.round_of_last_pawn_move_or_capture
+                == FIFTY_MOVE_RULE_COUNT
             {
                 return StepResult::Terminated(GameResult {
                     kind: GameResultKind::Draw(DrawKind::FiftyMove),
@@ -209,7 +210,7 @@ impl GameState {
             }
         }
 
-        new_game.round += 1;
+        new_game.half_turn_count += 1;
 
         if new_game.legal_moves().count() == 0 {
             return if new_game
@@ -307,7 +308,7 @@ impl GameState {
                 let Some(last_double_pawn_move) = self.last_double_pawn_move else {
                     return vec![];
                 };
-                if self.round != last_double_pawn_move.round + 1 {
+                if self.half_turn_count != last_double_pawn_move.round + 1 {
                     return vec![];
                 }
 
