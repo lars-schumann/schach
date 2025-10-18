@@ -39,10 +39,10 @@ pub enum StepResult {
 struct FenStrings {
     piece_placements: Vec<AsciiChar>,
     active_color: Vec<AsciiChar>,
-    castling_availability: Vec<AsciiChar>,
+    castling_availability: String,
     en_passant_target_square: Vec<AsciiChar>,
-    half_move_clock: Vec<AsciiChar>,
-    full_move_number: Vec<AsciiChar>,
+    half_move_clock: String,
+    full_move_number: String,
 }
 
 #[derive(Clone, Default)]
@@ -52,7 +52,7 @@ pub struct GameState {
     pub white_castling_rights: CastlingRights,
     pub black_castling_rights: CastlingRights,
     pub position_history: Vec<Position>,
-    pub last_double_pawn_move: Option<EnPassantTargetSquare>,
+    pub en_passant_target_square: Option<EnPassantTargetSquare>,
     pub half_turn_count: u64,
     pub is_perft: bool,
 }
@@ -116,10 +116,10 @@ impl GameState {
         let z: FenStrings = FenStrings {
             piece_placements: str_to_vec_ascii_char(&y[0]),
             active_color: str_to_vec_ascii_char(&y[1]),
-            castling_availability: str_to_vec_ascii_char(&y[2]),
+            castling_availability: y[2].clone(),
             en_passant_target_square: str_to_vec_ascii_char(&y[3]),
-            half_move_clock: str_to_vec_ascii_char(&y[4]),
-            full_move_number: str_to_vec_ascii_char(&y[5]),
+            half_move_clock: y[4].clone(),
+            full_move_number: y[5].clone(),
         };
 
         let piece_placements_chunked: [[Option<Piece>; 8]; 8] = z
@@ -137,9 +137,28 @@ impl GameState {
             }),
         );
 
+        let fifty_move_rule_clock: u64 = z.half_move_clock.parse().unwrap();
+
+        let white_castling_rights = CastlingRights {
+            kingside: z.castling_availability.contains('K'),
+            queenside: z.castling_availability.contains('Q'),
+        };
+
+        let black_castling_rights = CastlingRights {
+            kingside: z.castling_availability.contains('k'),
+            queenside: z.castling_availability.contains('q'),
+        };
+
+        let position_history: Vec<Position> = vec![];
+
         Self {
             board,
-            ..Default::default()
+            fifty_move_rule_clock,
+            white_castling_rights,
+            black_castling_rights,
+            position_history,
+            half_turn_count: 0,
+            is_perft: false,
         }
     }
 
@@ -267,7 +286,7 @@ impl GameState {
         }
 
         if let Move::DoubleStep { start: _, target } = mov {
-            new_game.last_double_pawn_move = Some(EnPassantTargetSquare {
+            new_game.en_passant_target_square = Some(EnPassantTargetSquare {
                 inner: target,
                 half_turn_round: new_game.half_turn_count,
             });
@@ -392,7 +411,7 @@ impl GameState {
             }
             (PieceKind::Pawn, None) => {
                 //en passant case, this is never gonna lead to promotion
-                let Some(en_passant_target_square) = self.last_double_pawn_move else {
+                let Some(en_passant_target_square) = self.en_passant_target_square else {
                     return vec![];
                 };
                 if self.half_turn_count != en_passant_target_square.half_turn_round + 1 {
