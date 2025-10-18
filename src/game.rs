@@ -8,7 +8,7 @@ use crate::piece::{Piece, PieceKind};
 use crate::player::PlayerKind;
 
 pub static REPETITIONS_TO_FORCED_DRAW_COUNT: usize = 5;
-pub static FIFTY_MOVE_RULE_COUNT: u64 = 50;
+pub static FIFTY_MOVE_RULE_COUNT: u64 = 100;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, strum::Display)]
 pub enum CastlingSide {
@@ -48,7 +48,7 @@ struct FenStrings {
 #[derive(Clone, Default)]
 pub struct GameState {
     pub board: Board,
-    pub round_of_last_pawn_move_or_capture: u64,
+    pub fifty_move_rule_clock: u64,
     pub white_castling_rights: CastlingRights,
     pub black_castling_rights: CastlingRights,
     pub position_history: Vec<Position>,
@@ -121,15 +121,6 @@ impl GameState {
             half_move_clock: str_to_vec_ascii_char(&y[4]),
             full_move_number: str_to_vec_ascii_char(&y[5]),
         };
-
-        // [r n b q]
-        // [p p p p]
-        // [_ _ _ _]
-        // [_ _ _ _]
-
-        //  ! Square::C1-R8
-        // [r p _ _] Col::C1
-        //
 
         let piece_placements_chunked: [[Option<Piece>; 8]; 8] = z
             .piece_placements
@@ -242,10 +233,8 @@ impl GameState {
                 is_capture: true,
             }
             | Move::Promotion { .. }
-            | Move::EnPassant { .. } => {
-                new_game.round_of_last_pawn_move_or_capture = self.half_turn_count;
-            }
-            Move::Normal { .. } | Move::Castling(_) => {} //nothing
+            | Move::EnPassant { .. } => {} //nothing
+            Move::Normal { .. } | Move::Castling(_) => new_game.fifty_move_rule_clock += 1,
         }
 
         match mov {
@@ -300,9 +289,7 @@ impl GameState {
                 });
             }
 
-            if new_game.half_turn_count - new_game.round_of_last_pawn_move_or_capture
-                == FIFTY_MOVE_RULE_COUNT
-            {
+            if new_game.fifty_move_rule_clock == FIFTY_MOVE_RULE_COUNT {
                 return StepResult::Terminated(GameResult {
                     kind: GameResultKind::Draw(DrawKind::FiftyMove),
                     final_game_state: new_game,
