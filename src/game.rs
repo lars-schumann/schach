@@ -1,8 +1,9 @@
+use std::ascii::Char as AsciiChar;
 use std::ops::Not;
 
 use crate::board::Board;
 use crate::coord::Square;
-use crate::mov::{DoublePawnMove, Move, Threat};
+use crate::mov::{EnPassantTargetSquare, Move, Threat};
 use crate::piece::{Piece, PieceKind};
 use crate::player::PlayerKind;
 
@@ -35,6 +36,15 @@ pub enum StepResult {
     Continued(GameState),
 }
 
+struct FenStrings {
+    piece_placements: Vec<AsciiChar>,
+    active_color: Vec<AsciiChar>,
+    castling_availability: Vec<AsciiChar>,
+    en_passant_target_square: Vec<AsciiChar>,
+    half_move_clock: Vec<AsciiChar>,
+    full_move_number: Vec<AsciiChar>,
+}
+
 #[derive(Clone, Default)]
 pub struct GameState {
     pub board: Board,
@@ -42,18 +52,9 @@ pub struct GameState {
     pub white_castling_rights: CastlingRights,
     pub black_castling_rights: CastlingRights,
     pub position_history: Vec<Position>,
-    pub last_double_pawn_move: Option<DoublePawnMove>,
+    pub last_double_pawn_move: Option<EnPassantTargetSquare>,
     pub half_turn_count: u64,
     pub is_perft: bool,
-}
-
-struct FenStrings {
-    piece_placements: String,
-    active_color: String,
-    castling_availability: String,
-    en_passant_target_square: String,
-    half_move_clock: String,
-    full_move_number: String,
 }
 impl GameState {
     #[must_use]
@@ -63,33 +64,92 @@ impl GameState {
 
     #[must_use]
     pub fn from_fen(fen: &str) -> Self {
+        fn str_to_vec_ascii_char(str: &str) -> Vec<std::ascii::Char> {
+            str.bytes()
+                .map(std::ascii::Char::from_u8)
+                .map(Option::unwrap)
+                .collect()
+        }
+
+        fn ascii_char_to_piece(char: AsciiChar) -> Piece {
+            match char as u8 {
+                b'P' => Piece::PAWN_WHITE,
+                b'N' => Piece::KNIGHT_WHITE,
+                b'B' => Piece::BISHOP_WHITE,
+                b'R' => Piece::ROOK_WHITE,
+                b'Q' => Piece::QUEEN_WHITE,
+                b'K' => Piece::KING_WHITE,
+
+                b'p' => Piece::PAWN_BLACK,
+                b'n' => Piece::KNIGHT_BLACK,
+                b'b' => Piece::BISHOP_BLACK,
+                b'r' => Piece::ROOK_BLACK,
+                b'q' => Piece::QUEEN_BLACK,
+                b'k' => Piece::KING_BLACK,
+
+                _ => panic!(),
+            }
+        }
+        fn fen_row_to_board_row(row: &[AsciiChar]) -> [Option<Piece>; 8] {
+            let mut out_row: Vec<Option<Piece>> = vec![];
+
+            for c in row {
+                match *c as u8 {
+                    d @ b'1'..=b'8' => out_row.extend(vec![None; usize::from(d - b'0')]),
+                    b'A'..=b'Z' | b'a'..=b'z' => out_row.push(Some(ascii_char_to_piece(*c))),
+
+                    _ => panic!(),
+                }
+            }
+
+            out_row
+                .try_into()
+                .expect("why did the row not have 8 things in it :susge:")
+        }
+
         let x = fen
             .split_ascii_whitespace()
             .map(str::to_owned)
             .collect::<Vec<String>>();
         let y: [String; 6] = x.try_into().expect("fen did not have all 6 fields");
 
-        for s in &y {
-            assert!(s.is_ascii(), "why isnt this ascii :thonk:");
-        }
-
-        let a: Vec<std::ascii::Char> = y[0]
-            .clone()
-            .bytes()
-            .map(std::ascii::Char::from_u8)
-            .map(Option::unwrap)
-            .collect();
-
-        let mut z: FenStrings = FenStrings {
-            piece_placements: y[0].clone(),
-            active_color: y[1].clone(),
-            castling_availability: y[2].clone(),
-            en_passant_target_square: y[3].clone(),
-            half_move_clock: y[4].clone(),
-            full_move_number: y[5].clone(),
+        let z: FenStrings = FenStrings {
+            piece_placements: str_to_vec_ascii_char(&y[0]),
+            active_color: str_to_vec_ascii_char(&y[1]),
+            castling_availability: str_to_vec_ascii_char(&y[2]),
+            en_passant_target_square: str_to_vec_ascii_char(&y[3]),
+            half_move_clock: str_to_vec_ascii_char(&y[4]),
+            full_move_number: str_to_vec_ascii_char(&y[5]),
         };
 
-        todo!()
+        // [r n b q]
+        // [p p p p]
+        // [_ _ _ _]
+        // [_ _ _ _]
+
+        //  ! Square::C1-R8
+        // [r p _ _] Col::C1
+        //
+
+        let piece_placements_chunked: [[Option<Piece>; 8]; 8] = z
+            .piece_placements
+            .split(|c| *c == AsciiChar::Solidus)
+            .map(fen_row_to_board_row)
+            .collect::<Vec<_>>()
+            .try_into()
+            .unwrap();
+
+        let board = Board(
+            mattr::transpose_array(piece_placements_chunked).map(|mut col| {
+                col.reverse();
+                col
+            }),
+        );
+
+        Self {
+            board,
+            ..Default::default()
+        }
     }
 
     #[must_use]
@@ -218,9 +278,9 @@ impl GameState {
         }
 
         if let Move::DoubleStep { start: _, target } = mov {
-            new_game.last_double_pawn_move = Some(DoublePawnMove {
-                target,
-                round: new_game.half_turn_count,
+            new_game.last_double_pawn_move = Some(EnPassantTargetSquare {
+                inner: target,
+                half_turn_round: new_game.half_turn_count,
             });
         }
 
@@ -345,20 +405,17 @@ impl GameState {
             }
             (PieceKind::Pawn, None) => {
                 //en passant case, this is never gonna lead to promotion
-                let Some(last_double_pawn_move) = self.last_double_pawn_move else {
+                let Some(en_passant_target_square) = self.last_double_pawn_move else {
                     return vec![];
                 };
-                if self.half_turn_count != last_double_pawn_move.round + 1 {
+                if self.half_turn_count != en_passant_target_square.half_turn_round + 1 {
                     return vec![];
                 }
 
-                let Ok(one_back_from_pawn_target) =
-                    target + self.active_player().backwards_one_row()
-                else {
-                    panic!("this is inside the board by construction");
-                };
+                let one_back_from_pawn_target = (target + self.active_player().backwards_one_row())
+                    .expect("this is inside the board by construction");
 
-                if one_back_from_pawn_target == last_double_pawn_move.target {
+                if one_back_from_pawn_target == en_passant_target_square.inner {
                     vec![Move::EnPassant {
                         start,
                         target,

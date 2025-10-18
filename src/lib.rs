@@ -8,7 +8,9 @@
     const_try,
     const_index,
     iter_collect_into,
-    ascii_char
+    ascii_char,
+    ascii_char_variants,
+    generic_const_exprs
 )]
 
 pub mod board;

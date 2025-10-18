@@ -58,6 +58,13 @@ fn test() {
     println!("took: {:?}", after - before);
 }
 
+#[test]
+fn test_fen() {
+    let game = GameState::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+
+    assert_eq!(game.board, Board::default());
+}
+
 fn test_piece(piece: Piece, starting_square: Square, active_player: PlayerKind) {
     let mut board = Board::new();
     board[starting_square] = Some(piece);

@@ -77,7 +77,7 @@ impl std::fmt::Debug for Threat {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct DoublePawnMove {
-    pub target: Square,
-    pub round: u64,
+pub struct EnPassantTargetSquare {
+    pub inner: Square,
+    pub half_turn_round: u64,
 }
