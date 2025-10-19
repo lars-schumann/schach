@@ -133,7 +133,7 @@ impl GameState {
                 is_capture: true,
             }
             | Move::Promotion { .. }
-            | Move::EnPassant { .. } => {} //nothing
+            | Move::EnPassant { .. } => new_game.fifty_move_rule_clock = 0,
             Move::Normal { .. } | Move::Castling(_) => new_game.fifty_move_rule_clock += 1,
         }
 
