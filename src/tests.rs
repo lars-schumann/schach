@@ -62,7 +62,7 @@ fn test_fen() {
 
 #[test]
 fn test_against_owl() {
-    let fens = include_str!("../fens.txt");
+    let fens = include_str!("../fens/lichess_puzzle_fens.txt");
     for (i, fen) in fens.lines().enumerate() {
         print!("{i}:");
         let owl_board = owlchess::Board::from_fen(fen).unwrap();
