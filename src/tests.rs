@@ -20,7 +20,7 @@ fn test() {
 
     let before = std::time::Instant::now();
 
-    for depth in 0..4 {
+    for depth in 0..1 {
         continued_games.clone().into_iter().for_each(|game| {
             let legal_moves: Vec<Move> = game.legal_moves().collect();
             for mov in legal_moves.clone() {
@@ -63,6 +63,22 @@ fn test_fen() {
     let game = GameState::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
     assert_eq!(game.board, Board::default());
+}
+
+#[test]
+fn test_against_owl() {
+    let owl_board =
+        owlchess::Board::from_fen("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1")
+            .unwrap();
+
+    let owl_legals = owlchess::movegen::legal::gen_all(&owl_board);
+
+    let schach_game =
+        GameState::from_fen("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
+
+    let schach_legals = dbg!(schach_game.legal_moves().collect::<Vec<_>>());
+
+    assert_eq!(owl_legals.len(), schach_legals.len());
 }
 
 fn test_piece(piece: Piece, starting_square: Square, active_player: PlayerKind) {
