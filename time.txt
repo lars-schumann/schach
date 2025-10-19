@@ -1,4 +1,0 @@
-8.05
-7.66 use mem::swap to swap the continued game vecs 
-6.96 use Game::perft() which skips some checks and doesnt store history
-6.89 dont clone the game to look into the future for checking if check/stalemate happened
