@@ -1,14 +1,9 @@
 use crate::board::*;
-use crate::coord::*;
 use crate::game::*;
 use crate::mov::Move;
-use crate::mov::Threat;
-use crate::piece::Piece;
-use crate::piece::PieceKind;
-use crate::player::*;
 
 #[test]
-fn test() {
+fn search() {
     let game = GameState::perft();
 
     let mut terminated_games_checkmate: Vec<GameState> = vec![]; //push-only 
@@ -20,7 +15,7 @@ fn test() {
 
     let before = std::time::Instant::now();
 
-    for depth in 0..1 {
+    for depth in 0..5 {
         continued_games.clone().into_iter().for_each(|game| {
             let legal_moves: Vec<Move> = game.legal_moves().collect();
             for mov in legal_moves.clone() {
@@ -67,91 +62,21 @@ fn test_fen() {
 
 #[test]
 fn test_against_owl() {
-    let owl_board =
-        owlchess::Board::from_fen("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1")
-            .unwrap();
+    let fens = include_str!("../fens.txt");
+    for (i, fen) in fens.lines().enumerate() {
+        print!("{i}:");
+        let owl_board = owlchess::Board::from_fen(fen).unwrap();
 
-    let owl_legals = owlchess::movegen::legal::gen_all(&owl_board);
+        let owl_legals = owlchess::movegen::legal::gen_all(&owl_board);
 
-    let schach_game =
-        GameState::from_fen("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
+        let schach_game = GameState::from_fen(fen);
 
-    let schach_legals = dbg!(schach_game.legal_moves().collect::<Vec<_>>());
+        #[allow(clippy::needless_collect)]
+        let schach_legals = schach_game.legal_moves().collect::<Vec<_>>();
 
-    assert_eq!(owl_legals.len(), schach_legals.len());
-}
+        let (owl_len, schach_len) = (owl_legals.len(), schach_legals.len());
+        assert_eq!(owl_len, schach_len);
 
-fn test_piece(piece: Piece, starting_square: Square, active_player: PlayerKind) {
-    let mut board = Board::new();
-    board[starting_square] = Some(piece);
-    for row in Row::ROWS {
-        board[Square { col: Col::C6, row }] = Some(Piece {
-            kind: PieceKind::Pawn,
-            owner: PlayerKind::Black,
-        });
+        println!(" owl: {owl_len}, schach: {schach_len}");
     }
-
-    let mut attacking_moves: Vec<Threat> = vec![];
-
-    for col in Col::COLS {
-        for row in Row::ROWS {
-            let square = Square { col, row };
-            if (board[square]).is_some_and(|piece| piece.owner == active_player) {
-                attacking_moves.append(&mut attacked_squares(&board, square, active_player));
-            }
-        }
-    }
-
-    let dbg_board = DebugBoard {
-        inner: board,
-        attacked_squares: attacking_moves.iter().map(|threat| threat.target).collect(),
-    };
-    dbg!(attacking_moves);
-    dbg!(dbg_board);
-}
-
-fn attacked_squares(
-    board: &Board,
-    starting_square: Square,
-    active_player: PlayerKind,
-) -> Vec<Threat> {
-    let Some(piece) = board[starting_square] else {
-        return vec![];
-    };
-    if piece.owner != active_player {
-        return vec![];
-    }
-    let (directions, range_upper_bound) = piece.threat_directions();
-    let range_upper_bound = i32::from(range_upper_bound);
-
-    let rays = directions.iter().map(move |direction| {
-        (0..range_upper_bound)
-            .map(move |i| starting_square + *direction * (i + 1))
-            .take_while(Result::is_ok) //}
-            .map(Result::unwrap) //} FIXME: uh this cant be right
-    });
-
-    let mut out = vec![];
-    for ray in rays {
-        for target_square in ray {
-            match board[target_square] {
-                None => out.push(target_square),
-                Some(piece) if piece.owner == active_player => {
-                    break;
-                }
-                Some(piece) if piece.owner != active_player => {
-                    out.push(target_square);
-                    break;
-                }
-                _ => unreachable!(),
-            }
-        }
-    }
-    out.into_iter()
-        .map(|target_square| Threat {
-            piece,
-            start: starting_square,
-            target: target_square,
-        })
-        .collect()
 }

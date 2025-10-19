@@ -1,6 +1,7 @@
 #![deny(clippy::pedantic, clippy::nursery)]
 #![allow(clippy::missing_errors_doc)]
 #![allow(clippy::missing_panics_doc)]
+#![allow(incomplete_features)]
 #![feature(
     const_trait_impl,
     const_ops,
