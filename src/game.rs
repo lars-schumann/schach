@@ -1,9 +1,8 @@
-use std::ascii::Char as AsciiChar;
 use std::ops::Not;
 
 use crate::board::Board;
 use crate::coord::Square;
-use crate::mov::{EnPassantTargetSquare, Move, Threat};
+use crate::mov::{Move, Threat};
 use crate::piece::{Piece, PieceKind};
 use crate::player::PlayerKind;
 

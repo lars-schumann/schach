@@ -41,16 +41,18 @@ fn search() {
         std::mem::swap(&mut continued_games, &mut new_continued_games);
         new_continued_games.clear();
 
+        println!("-------------------------");
         println!("depth: {depth}");
-        println!("check mate games: {}", terminated_games_checkmate.len());
-        println!("draw games: {}", terminated_games_draw.len());
+        println!("#checkmate: {}", terminated_games_checkmate.len());
+        println!("#drawn games: {}", terminated_games_draw.len());
 
-        println!("continued games: {}", continued_games.len());
-        println!("en passant count:{}", &en_passant_count);
+        println!("#continued games: {}", continued_games.len());
+        println!("#en passant: {}", &en_passant_count);
     }
-
+    println!("-------------------------");
     let after = std::time::Instant::now();
     println!("took: {:?}", after - before);
+    println!("-------------------------");
 }
 
 #[test]
