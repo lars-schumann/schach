@@ -15,6 +15,7 @@
 
 pub mod board;
 pub mod coord;
+pub mod fen;
 pub mod game;
 pub mod mov;
 pub mod piece;
