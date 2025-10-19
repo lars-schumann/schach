@@ -38,7 +38,7 @@ pub enum StepResult {
 
 struct FenStrings {
     piece_placements: Vec<AsciiChar>,
-    active_color: Vec<AsciiChar>,
+    active_player: String,
     castling_availability: String,
     en_passant_target_square: Vec<AsciiChar>,
     half_move_clock: String,
@@ -52,8 +52,8 @@ pub struct GameState {
     pub white_castling_rights: CastlingRights,
     pub black_castling_rights: CastlingRights,
     pub position_history: Vec<Position>,
-    pub en_passant_target_square: Option<EnPassantTargetSquare>,
-    pub half_turn_count: u64,
+    pub en_passant_target: Option<Square>,
+    pub active_player: PlayerKind,
     pub is_perft: bool,
 }
 impl GameState {
@@ -115,7 +115,7 @@ impl GameState {
 
         let z: FenStrings = FenStrings {
             piece_placements: str_to_vec_ascii_char(&y[0]),
-            active_color: str_to_vec_ascii_char(&y[1]),
+            active_player: y[1].clone(),
             castling_availability: y[2].clone(),
             en_passant_target_square: str_to_vec_ascii_char(&y[3]),
             half_move_clock: y[4].clone(),
@@ -151,14 +151,21 @@ impl GameState {
 
         let position_history: Vec<Position> = vec![];
 
+        let active_player = match z.active_player.as_str() {
+            "w" => PlayerKind::White,
+            "b" => PlayerKind::Black,
+            _ => panic!(),
+        };
+
         Self {
             board,
             fifty_move_rule_clock,
             white_castling_rights,
             black_castling_rights,
             position_history,
-            half_turn_count: 0,
             is_perft: false,
+            active_player,
+            en_passant_target: panic!(),
         }
     }
 
@@ -179,17 +186,8 @@ impl GameState {
     }
 
     #[must_use]
-    pub fn active_player(&self) -> PlayerKind {
-        match self.half_turn_count % 2 {
-            0 => PlayerKind::White,
-            1 => PlayerKind::Black,
-            _ => unreachable!(),
-        }
-    }
-
-    #[must_use]
-    pub fn is_castling_allowed(&self, castling_side: CastlingSide) -> bool {
-        match (self.active_player(), castling_side) {
+    pub const fn is_castling_allowed(&self, castling_side: CastlingSide) -> bool {
+        match (self.active_player, castling_side) {
             (PlayerKind::White, CastlingSide::Kingside) => self.white_castling_rights.kingside,
             (PlayerKind::White, CastlingSide::Queenside) => self.white_castling_rights.queenside,
             (PlayerKind::Black, CastlingSide::Kingside) => self.black_castling_rights.kingside,
@@ -197,8 +195,8 @@ impl GameState {
         }
     }
 
-    pub fn deny_castling(&mut self, castling_side: CastlingSide) {
-        match (self.active_player(), castling_side) {
+    pub const fn deny_castling(&mut self, castling_side: CastlingSide) {
+        match (self.active_player, castling_side) {
             (PlayerKind::White, CastlingSide::Kingside) => {
                 self.white_castling_rights.kingside = false;
             }
@@ -222,7 +220,7 @@ impl GameState {
                 self.clone()
                     .apply_move_to_board(*mov)
                     .board
-                    .is_king_checked(self.active_player())
+                    .is_king_checked(self.active_player)
                     .not()
             })
     }
@@ -274,7 +272,7 @@ impl GameState {
                 is_capture: _,
             } => {
                 for castling_side in [CastlingSide::Kingside, CastlingSide::Queenside] {
-                    if start == new_game.active_player().rook_start(castling_side) {
+                    if start == new_game.active_player.rook_start(castling_side) {
                         new_game.deny_castling(castling_side);
                     }
                 }
@@ -286,10 +284,9 @@ impl GameState {
         }
 
         if let Move::DoubleStep { start: _, target } = mov {
-            new_game.en_passant_target_square = Some(EnPassantTargetSquare {
-                inner: target,
-                half_turn_round: new_game.half_turn_count,
-            });
+            new_game.en_passant_target = Some(target);
+        } else {
+            new_game.en_passant_target = None;
         }
 
         if self.is_perft.not() {
@@ -316,12 +313,10 @@ impl GameState {
             }
         }
 
-        new_game.half_turn_count += 1;
-
         if new_game.legal_moves().count() == 0 {
             return if new_game
                 .board
-                .is_king_checked(self.active_player().opponent())
+                .is_king_checked(self.active_player.opponent())
             {
                 StepResult::Terminated(GameResult {
                     kind: GameResultKind::Win,
@@ -335,6 +330,7 @@ impl GameState {
             };
         }
 
+        new_game.active_player = new_game.active_player.opponent();
         StepResult::Continued(new_game)
     }
 
@@ -345,10 +341,10 @@ impl GameState {
             .filter(|castling_side| {
                 let threatened_squares = self
                     .board
-                    .threatened_squares_by(self.active_player().opponent())
+                    .threatened_squares_by(self.active_player.opponent())
                     .collect::<Vec<_>>();
 
-                self.active_player()
+                self.active_player
                     .castling_non_check_needed_squares(*castling_side)
                     .iter()
                     .all(|castle_square| {
@@ -362,20 +358,13 @@ impl GameState {
 
     fn threatening_move_candidates(&self) -> impl Iterator<Item = Move> + Clone + use<'_> {
         self.board
-            .threatening_moves_by(self.active_player())
+            .threatening_moves_by(self.active_player)
             .flat_map(|threat| self.threat_to_move_candidate(threat))
     }
 
     #[must_use]
-    fn threat_to_move_candidate(
-        &self,
-        Threat {
-            piece,
-            start,
-            target,
-        }: Threat,
-    ) -> Vec<Move> {
-        match (piece.kind, self.board[target]) {
+    fn threat_to_move_candidate(&self, threat: Threat) -> Vec<Move> {
+        match (threat.piece.kind, self.board[threat.target]) {
             (
                 PieceKind::Knight
                 | PieceKind::Bishop
@@ -384,48 +373,41 @@ impl GameState {
                 | PieceKind::King,
                 target_square,
             ) => vec![Move::Normal {
-                piece_kind: piece.kind,
-                start,
-                target,
+                piece_kind: threat.piece.kind,
+                start: threat.start,
+                target: threat.target,
                 is_capture: target_square.is_some(),
             }],
             (PieceKind::Pawn, Some(_)) => {
-                if target.row == self.active_player().pawn_promotion_row() {
+                if threat.target.row == self.active_player.pawn_promotion_row() {
                     PieceKind::PROMOTION_OPTIONS
                         .iter()
                         .map(|promotion_option| Move::Promotion {
-                            start,
-                            target,
+                            start: threat.start,
+                            target: threat.target,
                             is_capture: true,
                             replacement: *promotion_option,
                         })
                         .collect()
                 } else {
                     vec![Move::Normal {
-                        piece_kind: piece.kind,
-                        start,
-                        target,
+                        piece_kind: threat.piece.kind,
+                        start: threat.start,
+                        target: threat.target,
                         is_capture: true,
                     }]
                 }
             }
             (PieceKind::Pawn, None) => {
                 //en passant case, this is never gonna lead to promotion
-                let Some(en_passant_target_square) = self.en_passant_target_square else {
-                    return vec![];
-                };
-                if self.half_turn_count != en_passant_target_square.half_turn_round + 1 {
-                    return vec![];
-                }
-
-                let one_back_from_pawn_target = (target + self.active_player().backwards_one_row())
-                    .expect("this is inside the board by construction");
-
-                if one_back_from_pawn_target == en_passant_target_square.inner {
+                if let Some(en_passant_target) = self.en_passant_target
+                    && threat.target == en_passant_target
+                {
                     vec![Move::EnPassant {
-                        start,
-                        target,
-                        affected_square: one_back_from_pawn_target,
+                        start: threat.start,
+                        target: threat.target,
+                        affected_square: (threat.target + self.active_player.backwards_one_row())
+                            .expect("how is this not on the board?"),
                     }]
                 } else {
                     vec![]
@@ -438,7 +420,7 @@ impl GameState {
     fn pawn_step_candidates(&self) -> Vec<Move> {
         let mut candidates = vec![];
         for square in Square::all() {
-            let player = self.active_player();
+            let player = self.active_player;
             if !(self.board[square]
                 == Some(Piece {
                     kind: PieceKind::Pawn,
@@ -448,14 +430,14 @@ impl GameState {
                 continue;
             }
 
-            let one_in_front = (square + self.active_player().forwards_one_row())
+            let one_in_front = (square + self.active_player.forwards_one_row())
                 .expect("a pawn cannot exist on the last row");
 
             if self.board[one_in_front].is_some() {
                 continue; // pawns cant capture moving forward!
             }
 
-            if one_in_front.row == self.active_player().pawn_promotion_row() {
+            if one_in_front.row == self.active_player.pawn_promotion_row() {
                 PieceKind::PROMOTION_OPTIONS
                     .iter()
                     .map(|promotion_option| Move::Promotion {
@@ -474,11 +456,11 @@ impl GameState {
                 });
             }
 
-            let Ok(two_in_front) = square + self.active_player().forwards_one_row() * 2 else {
+            let Ok(two_in_front) = square + self.active_player.forwards_one_row() * 2 else {
                 continue; // this one can def be out of range.
             };
 
-            if square.row != self.active_player().pawn_starting_row() {
+            if square.row != self.active_player.pawn_starting_row() {
                 continue; // pawns can only double-move when they havent moved yet!
             }
 
@@ -494,7 +476,7 @@ impl GameState {
         candidates
     }
     #[must_use]
-    pub fn apply_move_to_board(mut self, m: Move) -> Self {
+    pub const fn apply_move_to_board(mut self, m: Move) -> Self {
         match m {
             Move::Normal {
                 piece_kind: _,
@@ -520,17 +502,17 @@ impl GameState {
                 self.board.mov(start, target);
                 self.board[target] = Some(Piece {
                     kind: replacement,
-                    owner: self.active_player(),
+                    owner: self.active_player,
                 });
             }
             Move::Castling(castling_side) => {
                 self.board.mov(
-                    self.active_player().king_start(),
-                    self.active_player().king_castling_target(castling_side),
+                    self.active_player.king_start(),
+                    self.active_player.king_castling_target(castling_side),
                 );
                 self.board.mov(
-                    self.active_player().rook_start(castling_side),
-                    self.active_player().rook_castling_target(castling_side),
+                    self.active_player.rook_start(castling_side),
+                    self.active_player.rook_castling_target(castling_side),
                 );
             }
         }

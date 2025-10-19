@@ -1,8 +1,9 @@
 use crate::coord::{Offset, Row, Square};
 use crate::game::CastlingSide;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, strum::Display)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, strum::Display, Default)]
 pub enum PlayerKind {
+    #[default]
     White,
     Black,
 }
