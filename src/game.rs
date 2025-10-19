@@ -236,6 +236,11 @@ impl GameState {
                             .iter()
                             .all(|threatened_square| threatened_square != castle_square)
                     })
+                    && self
+                        .active_player
+                        .castling_free_needed_squares(*castling_side)
+                        .iter()
+                        .all(|square| self.board[*square].is_none())
             })
             .map(Move::Castling)
     }

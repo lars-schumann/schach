@@ -1,7 +1,7 @@
 pub static COL_COUNT: usize = 8;
 pub static ROW_COUNT: usize = 8;
 
-use crate::coord::{Col, Row, Square};
+use crate::coord::{Col, Row, Square as S};
 use crate::game::attacked_squares;
 use crate::mov::Threat;
 use crate::piece::{Piece, PieceKind};
@@ -19,12 +19,11 @@ impl Board {
         &self,
         threatened_by: PlayerKind,
     ) -> impl Iterator<Item = Threat> + Clone + use<'_> {
-        Square::all()
-            .flat_map(move |square| crate::game::attacked_squares(self, square, threatened_by))
+        S::all().flat_map(move |square| crate::game::attacked_squares(self, square, threatened_by))
     }
 
-    pub fn threatened_squares_by(&self, threatened_by: PlayerKind) -> impl Iterator<Item = Square> {
-        Square::all().flat_map(move |square| {
+    pub fn threatened_squares_by(&self, threatened_by: PlayerKind) -> impl Iterator<Item = S> {
+        S::all().flat_map(move |square| {
             attacked_squares(self, square, threatened_by)
                 .into_iter()
                 .map(|threat| threat.target)
@@ -32,8 +31,8 @@ impl Board {
     }
 
     #[must_use]
-    pub fn king_position(&self, king_owner: PlayerKind) -> Square {
-        Square::all()
+    pub fn king_position(&self, king_owner: PlayerKind) -> S {
+        S::all()
             .find(|square| {
                 self[*square]
                     == Some(Piece {
@@ -50,7 +49,7 @@ impl Board {
             .any(|square| square == self.king_position(king_owner))
     }
 
-    pub const fn mov(&mut self, start: Square, target: Square) {
+    pub const fn mov(&mut self, start: S, target: S) {
         self[target] = self[start];
         self[start] = None;
     }
@@ -59,28 +58,28 @@ impl Board {
     pub fn filled(with_pawns: bool) -> Self {
         let mut board = Self::new();
 
-        board[Square::A1] = Some(Piece::ROOK_WHITE);
-        board[Square::B1] = Some(Piece::KNIGHT_WHITE);
-        board[Square::C1] = Some(Piece::BISHOP_WHITE);
-        board[Square::D1] = Some(Piece::QUEEN_WHITE);
-        board[Square::E1] = Some(Piece::KING_WHITE);
-        board[Square::F1] = Some(Piece::BISHOP_WHITE);
-        board[Square::G1] = Some(Piece::KNIGHT_WHITE);
-        board[Square::H1] = Some(Piece::ROOK_WHITE);
+        board[S::A1] = Some(Piece::ROOK_WHITE);
+        board[S::B1] = Some(Piece::KNIGHT_WHITE);
+        board[S::C1] = Some(Piece::BISHOP_WHITE);
+        board[S::D1] = Some(Piece::QUEEN_WHITE);
+        board[S::E1] = Some(Piece::KING_WHITE);
+        board[S::F1] = Some(Piece::BISHOP_WHITE);
+        board[S::G1] = Some(Piece::KNIGHT_WHITE);
+        board[S::H1] = Some(Piece::ROOK_WHITE);
 
-        board[Square::A8] = Some(Piece::ROOK_BLACK);
-        board[Square::B8] = Some(Piece::KNIGHT_BLACK);
-        board[Square::C8] = Some(Piece::BISHOP_BLACK);
-        board[Square::D8] = Some(Piece::QUEEN_BLACK);
-        board[Square::E8] = Some(Piece::KING_BLACK);
-        board[Square::F8] = Some(Piece::BISHOP_BLACK);
-        board[Square::G8] = Some(Piece::KNIGHT_BLACK);
-        board[Square::H8] = Some(Piece::ROOK_BLACK);
+        board[S::A8] = Some(Piece::ROOK_BLACK);
+        board[S::B8] = Some(Piece::KNIGHT_BLACK);
+        board[S::C8] = Some(Piece::BISHOP_BLACK);
+        board[S::D8] = Some(Piece::QUEEN_BLACK);
+        board[S::E8] = Some(Piece::KING_BLACK);
+        board[S::F8] = Some(Piece::BISHOP_BLACK);
+        board[S::G8] = Some(Piece::KNIGHT_BLACK);
+        board[S::H8] = Some(Piece::ROOK_BLACK);
 
         if with_pawns {
             for col in Col::COLS {
-                board[Square { col, row: Row::R2 }] = Some(Piece::PAWN_WHITE);
-                board[Square { col, row: Row::R7 }] = Some(Piece::PAWN_BLACK);
+                board[S { col, row: Row::R2 }] = Some(Piece::PAWN_WHITE);
+                board[S { col, row: Row::R7 }] = Some(Piece::PAWN_BLACK);
             }
         }
 
@@ -98,7 +97,7 @@ impl std::fmt::Debug for Board {
         for row in Row::ROWS.into_iter().rev() {
             write!(f, "{}", i32::from(row) + 1)?;
             for col in Col::COLS {
-                match self[Square { col, row }] {
+                match self[S { col, row }] {
                     None => {
                         if (i32::from(row) + i32::from(col)) % 2 == 0 {
                             write!(f, "□ ",)?;
@@ -118,16 +117,16 @@ impl std::fmt::Debug for Board {
         Ok(())
     }
 }
-impl const std::ops::Index<Square> for Board {
+impl const std::ops::Index<S> for Board {
     type Output = Option<Piece>;
-    fn index(&self, index: Square) -> &Self::Output {
+    fn index(&self, index: S) -> &Self::Output {
         let col = usize::from(index.col) - 1;
         let row = usize::from(index.row) - 1;
         &self.0[col][row]
     }
 }
-impl const std::ops::IndexMut<Square> for Board {
-    fn index_mut(&mut self, index: Square) -> &mut Self::Output {
+impl const std::ops::IndexMut<S> for Board {
+    fn index_mut(&mut self, index: S) -> &mut Self::Output {
         let col = usize::from(index.col) - 1;
         let row = usize::from(index.row) - 1;
         &mut self.0[col][row]
@@ -136,7 +135,7 @@ impl const std::ops::IndexMut<Square> for Board {
 
 pub struct DebugBoard {
     pub inner: Board,
-    pub attacked_squares: Vec<Square>,
+    pub attacked_squares: Vec<S>,
 }
 impl std::fmt::Debug for DebugBoard {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -144,10 +143,10 @@ impl std::fmt::Debug for DebugBoard {
         for row in Row::ROWS.into_iter().rev() {
             write!(f, "{}", i32::from(row))?;
             for col in Col::COLS {
-                if self.attacked_squares.contains(&Square { col, row }) {
+                if self.attacked_squares.contains(&S { col, row }) {
                     write!(f, "\x1B[31m",)?;
                 }
-                match self.inner[Square { col, row }] {
+                match self.inner[S { col, row }] {
                     None => {
                         if (i32::from(row) + i32::from(col)) % 2 == 0 {
                             write!(f, "□ ",)?;
@@ -158,7 +157,7 @@ impl std::fmt::Debug for DebugBoard {
 
                     Some(piece) => write!(f, "{piece} ")?,
                 }
-                if self.attacked_squares.contains(&Square { col, row }) {
+                if self.attacked_squares.contains(&S { col, row }) {
                     write!(f, "\x1B[0m",)?;
                 }
             }

@@ -1,5 +1,5 @@
-use crate::coord::{Offset, Row, Square};
-use crate::game::CastlingSide;
+use crate::coord::{Offset, Row, Square as S};
+use crate::game::CastlingSide as CS;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, strum::Display, Default)]
 pub enum PlayerKind {
@@ -33,54 +33,64 @@ impl PlayerKind {
     }
 
     #[must_use]
-    pub fn castling_non_check_needed_squares(self, castling_side: CastlingSide) -> Vec<Square> {
+    pub const fn castling_non_check_needed_squares(self, castling_side: CS) -> [S; 3] {
         match (self, castling_side) {
-            (Self::White, CastlingSide::Kingside) => vec![Square::E1, Square::F1, Square::G1],
-            (Self::White, CastlingSide::Queenside) => {
-                vec![Square::E1, Square::D1, Square::C1, Square::B1]
+            (Self::White, CS::Kingside) => [S::E1, S::F1, S::G1],
+            (Self::White, CS::Queenside) => [S::E1, S::D1, S::C1],
+            (Self::Black, CS::Kingside) => [S::E8, S::F8, S::G8],
+            (Self::Black, CS::Queenside) => [S::E8, S::D8, S::C8],
+        }
+    }
+
+    #[must_use]
+    pub fn castling_free_needed_squares(self, castling_side: CS) -> Vec<S> {
+        match (self, castling_side) {
+            (Self::White, CS::Kingside) => vec![S::F1, S::G1],
+            (Self::White, CS::Queenside) => {
+                vec![S::D1, S::C1, S::B1]
             }
-            (Self::Black, CastlingSide::Kingside) => vec![Square::E8, Square::F8, Square::G8],
-            (Self::Black, CastlingSide::Queenside) => {
-                vec![Square::E8, Square::D8, Square::C8, Square::B8]
+            (Self::Black, CS::Kingside) => vec![S::F8, S::G8],
+            (Self::Black, CS::Queenside) => {
+                vec![S::D8, S::C8, S::B8]
             }
         }
     }
 
     #[must_use]
-    pub const fn king_start(&self) -> Square {
+    pub const fn king_start(&self) -> S {
         match self {
-            Self::White => Square::E1,
-            Self::Black => Square::E8,
+            Self::White => S::E1,
+            Self::Black => S::E8,
         }
     }
 
     #[must_use]
-    pub const fn king_castling_target(&self, castling_side: CastlingSide) -> Square {
+    pub const fn king_castling_target(&self, castling_side: CS) -> S {
         match (self, castling_side) {
-            (Self::White, CastlingSide::Kingside) => Square::G1,
-            (Self::White, CastlingSide::Queenside) => Square::C1,
-            (Self::Black, CastlingSide::Kingside) => Square::G8,
-            (Self::Black, CastlingSide::Queenside) => Square::C8,
+            (Self::White, CS::Kingside) => S::G1,
+            (Self::White, CS::Queenside) => S::C1,
+            (Self::Black, CS::Kingside) => S::G8,
+            (Self::Black, CS::Queenside) => S::C8,
         }
     }
 
     #[must_use]
-    pub const fn rook_start(&self, castling_side: CastlingSide) -> Square {
+    pub const fn rook_start(&self, castling_side: CS) -> S {
         match (self, castling_side) {
-            (Self::White, CastlingSide::Kingside) => Square::H1,
-            (Self::White, CastlingSide::Queenside) => Square::A1,
-            (Self::Black, CastlingSide::Kingside) => Square::H8,
-            (Self::Black, CastlingSide::Queenside) => Square::A8,
+            (Self::White, CS::Kingside) => S::H1,
+            (Self::White, CS::Queenside) => S::A1,
+            (Self::Black, CS::Kingside) => S::H8,
+            (Self::Black, CS::Queenside) => S::A8,
         }
     }
 
     #[must_use]
-    pub const fn rook_castling_target(&self, castling_side: CastlingSide) -> Square {
+    pub const fn rook_castling_target(&self, castling_side: CS) -> S {
         match (self, castling_side) {
-            (Self::White, CastlingSide::Kingside) => Square::F1,
-            (Self::White, CastlingSide::Queenside) => Square::D1,
-            (Self::Black, CastlingSide::Kingside) => Square::F8,
-            (Self::Black, CastlingSide::Queenside) => Square::D8,
+            (Self::White, CS::Kingside) => S::F1,
+            (Self::White, CS::Queenside) => S::D1,
+            (Self::Black, CS::Kingside) => S::F8,
+            (Self::Black, CS::Queenside) => S::D8,
         }
     }
 
