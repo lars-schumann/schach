@@ -35,7 +35,15 @@ pub enum StepResult {
     Continued(GameState),
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Copy, Debug)]
+pub struct FullMoveCount(pub u64);
+impl Default for FullMoveCount {
+    fn default() -> Self {
+        Self(1)
+    }
+}
+
+#[derive(Default, Clone)]
 pub struct GameState {
     pub board: Board,
     pub fifty_move_rule_clock: u64,
@@ -45,7 +53,9 @@ pub struct GameState {
     pub en_passant_target: Option<Square>,
     pub active_player: PlayerKind,
     pub is_perft: bool,
+    pub full_move_count: FullMoveCount,
 }
+
 impl GameState {
     #[must_use]
     pub fn new() -> Self {

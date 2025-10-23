@@ -1,42 +1,32 @@
 use crate::{
     board::Board,
     coord::{Col, Row, Square},
-    game::{CastlingRights, GameState, Position},
+    game::{CastlingRights, FullMoveCount, GameState, Position},
     piece::Piece,
     player::PlayerKind,
 };
-use std::ascii::Char as AsciiChar;
-
-struct FenStrings {
-    piece_placements: Vec<AsciiChar>,
-    active_player: String,
-    castling_availability: String,
-    en_passant_target_square: String,
-    half_move_clock: String,
-    full_move_number: String,
-}
 
 impl GameState {
     #[must_use]
     pub fn from_fen(fen: &str) -> Self {
-        let x = fen
+        let [
+            piece_placements,
+            active_player,
+            castling_availability,
+            en_passant_target_square,
+            half_move_clock,
+            full_move_number,
+        ] = fen
             .split_ascii_whitespace()
             .map(str::to_owned)
-            .collect::<Vec<String>>();
-        let y: [String; 6] = x.try_into().expect("fen did not have all 6 fields");
-
-        let z = FenStrings {
-            piece_placements: str_to_vec_ascii_char(&y[0]),
-            active_player: y[1].clone(),
-            castling_availability: y[2].clone(),
-            en_passant_target_square: y[3].clone(),
-            half_move_clock: y[4].clone(),
-            full_move_number: y[5].clone(),
+            .collect::<Vec<_>>()
+            .as_slice()
+        else {
+            panic!()
         };
 
-        let piece_placements_chunked: [[Option<Piece>; 8]; 8] = z
-            .piece_placements
-            .split(|c| *c == AsciiChar::Solidus)
+        let piece_placements_chunked: [[Option<Piece>; 8]; 8] = piece_placements
+            .split('/')
             .map(fen_row_to_board_row)
             .collect::<Vec<_>>()
             .try_into()
@@ -49,27 +39,25 @@ impl GameState {
             }),
         );
 
-        let fifty_move_rule_clock: u64 = z.half_move_clock.parse().unwrap();
+        let fifty_move_rule_clock: u64 = half_move_clock.parse().unwrap();
 
         let white_castling_rights = CastlingRights {
-            kingside: z.castling_availability.contains('K'),
-            queenside: z.castling_availability.contains('Q'),
+            kingside: castling_availability.contains('K'),
+            queenside: castling_availability.contains('Q'),
         };
 
         let black_castling_rights = CastlingRights {
-            kingside: z.castling_availability.contains('k'),
-            queenside: z.castling_availability.contains('q'),
+            kingside: castling_availability.contains('k'),
+            queenside: castling_availability.contains('q'),
         };
 
         let position_history: Vec<Position> = vec![];
 
-        let active_player = match z.active_player.as_str() {
-            "w" => PlayerKind::White,
-            "b" => PlayerKind::Black,
-            _ => panic!(),
-        };
+        let active_player = PlayerKind::White; //PlayerKind::try_from(active_player).unwrap();
 
-        let en_passant_target = str_to_square(&z.en_passant_target_square);
+        let en_passant_target = Square::from_str(en_passant_target_square).unwrap();
+
+        let full_move_count = FullMoveCount(6);
 
         Self {
             board,
@@ -80,43 +68,93 @@ impl GameState {
             is_perft: false,
             active_player,
             en_passant_target,
+            full_move_count,
+        }
+    }
+
+    #[must_use]
+    pub fn to_fen(&self) -> String {
+        todo!()
+    }
+}
+
+#[derive(Debug)]
+pub struct NotANumber;
+impl TryFrom<&str> for FullMoveCount {
+    type Error = std::num::ParseIntError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        value.parse().map(Self)
+    }
+}
+#[derive(Debug)]
+pub struct NoPiece;
+
+impl const TryFrom<u8> for Piece {
+    type Error = NoPiece;
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            b'P' => Ok(Self::PAWN_WHITE),
+            b'N' => Ok(Self::KNIGHT_WHITE),
+            b'B' => Ok(Self::BISHOP_WHITE),
+            b'R' => Ok(Self::ROOK_WHITE),
+            b'Q' => Ok(Self::QUEEN_WHITE),
+            b'K' => Ok(Self::KING_WHITE),
+
+            b'p' => Ok(Self::PAWN_BLACK),
+            b'n' => Ok(Self::KNIGHT_BLACK),
+            b'b' => Ok(Self::BISHOP_BLACK),
+            b'r' => Ok(Self::ROOK_BLACK),
+            b'q' => Ok(Self::QUEEN_BLACK),
+            b'k' => Ok(Self::KING_BLACK),
+
+            _ => Err(NoPiece),
         }
     }
 }
 
-fn str_to_vec_ascii_char(str: &str) -> Vec<std::ascii::Char> {
-    str.bytes()
-        .map(std::ascii::Char::from_u8)
-        .map(Option::unwrap)
-        .collect()
-}
+impl const From<Piece> for &str {
+    fn from(value: Piece) -> Self {
+        match value {
+            Piece::PAWN_WHITE => "P",
+            Piece::KNIGHT_WHITE => "N",
+            Piece::BISHOP_WHITE => "B",
+            Piece::ROOK_WHITE => "R",
+            Piece::QUEEN_WHITE => "Q",
+            Piece::KING_WHITE => "K",
 
-fn ascii_char_to_piece(char: AsciiChar) -> Piece {
-    match char as u8 {
-        b'P' => Piece::PAWN_WHITE,
-        b'N' => Piece::KNIGHT_WHITE,
-        b'B' => Piece::BISHOP_WHITE,
-        b'R' => Piece::ROOK_WHITE,
-        b'Q' => Piece::QUEEN_WHITE,
-        b'K' => Piece::KING_WHITE,
-
-        b'p' => Piece::PAWN_BLACK,
-        b'n' => Piece::KNIGHT_BLACK,
-        b'b' => Piece::BISHOP_BLACK,
-        b'r' => Piece::ROOK_BLACK,
-        b'q' => Piece::QUEEN_BLACK,
-        b'k' => Piece::KING_BLACK,
-
-        _ => panic!(),
+            Piece::PAWN_BLACK => "p",
+            Piece::KNIGHT_BLACK => "n",
+            Piece::BISHOP_BLACK => "b",
+            Piece::ROOK_BLACK => "r",
+            Piece::QUEEN_BLACK => "q",
+            Piece::KING_BLACK => "k",
+        }
     }
 }
-fn fen_row_to_board_row(row: &[AsciiChar]) -> [Option<Piece>; 8] {
+
+#[derive(Debug)]
+pub struct InvalidPlayer;
+
+impl TryFrom<&str> for PlayerKind {
+    type Error = InvalidPlayer;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "w" => Ok(Self::White),
+            "b" => Ok(Self::Black),
+            _ => Err(InvalidPlayer),
+        }
+    }
+}
+
+fn fen_row_to_board_row(row: &str) -> [Option<Piece>; 8] {
     let mut out_row: Vec<Option<Piece>> = vec![];
 
-    for c in row {
-        match *c as u8 {
+    for c in row.bytes() {
+        match c {
             d @ b'1'..=b'8' => out_row.extend(vec![None; usize::from(d - b'0')]),
-            b'A'..=b'Z' | b'a'..=b'z' => out_row.push(Some(ascii_char_to_piece(*c))),
+            b'A'..=b'Z' | b'a'..=b'z' => out_row.push(Some(c.try_into().unwrap())),
 
             _ => panic!(),
         }
@@ -127,38 +165,13 @@ fn fen_row_to_board_row(row: &[AsciiChar]) -> [Option<Piece>; 8] {
         .expect("why did the row not have 8 things in it :susge:")
 }
 
-fn str_to_square(str: &str) -> Option<Square> {
-    if str.contains('-') {
-        return None;
+impl Square {
+    #[must_use]
+    pub const fn from_str(value: &str) -> Result<Option<Self>, ()> {
+        if value == "-" {
+            return Ok(None);
+        }
+
+        todo!()
     }
-
-    let square: [AsciiChar; 2] = str_to_vec_ascii_char(str)
-        .try_into()
-        .expect("square isnt 2 chars long hmm");
-
-    let col = match square[0] as u8 {
-        b'a' => Col::C1,
-        b'b' => Col::C2,
-        b'c' => Col::C3,
-        b'd' => Col::C4,
-        b'e' => Col::C5,
-        b'f' => Col::C6,
-        b'g' => Col::C7,
-        b'h' => Col::C8,
-        _ => panic!(),
-    };
-
-    let row = match square[1] as u8 {
-        b'1' => Row::R1,
-        b'2' => Row::R2,
-        b'3' => Row::R3,
-        b'4' => Row::R4,
-        b'5' => Row::R5,
-        b'6' => Row::R6,
-        b'7' => Row::R7,
-        b'8' => Row::R8,
-        _ => panic!(),
-    };
-
-    Some(Square { col, row })
 }
