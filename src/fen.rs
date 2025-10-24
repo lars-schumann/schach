@@ -1,7 +1,7 @@
 use crate::{
     board::Board,
     coord::{Col, Row, Square},
-    game::{CastlingRights, FullMoveCount, GameState, Position},
+    game::{CastlingRights, FullMoveCount, GameState},
     piece::Piece,
     player::PlayerKind,
 };
@@ -16,13 +16,6 @@ pub struct FenStrings {
     full_move_number: Vec<AsciiChar>,
 }
 
-trait FromIntoFenPart {
-    type FenStorageType;
-    type Error;
-
-    fn try_from_fen(value: Vec<AsciiChar>) -> Result<Self::FenStorageType, Self::Error>;
-    fn to_fen(value: Self::FenStorageType) -> Vec<AsciiChar>;
-}
 impl GameState {
     #[must_use]
     pub fn from_fen(fen: &str) -> Self {
@@ -35,58 +28,41 @@ impl GameState {
                     .collect::<Vec<AsciiChar>>()
             })
             .collect::<Vec<_>>();
-        let [
-            piece_placements,
-            active_player,
-            castling_availability,
-            en_passant_target_square,
-            half_move_clock,
-            full_move_number,
-        ] = binding.as_slice()
-        else {
-            panic!()
+
+        let fen = FenStrings {
+            piece_placements: binding[0].clone(),
+            active_player: binding[1].clone(),
+            castling_availability: binding[2].clone(),
+            en_passant_target_square: binding[3].clone(),
+            half_move_clock: binding[4].clone(),
+            full_move_number: binding[5].clone(),
         };
 
-        let piece_placements_chunked: [[Option<Piece>; 8]; 8] = piece_placements
-            .split(|c| *c == AsciiChar::from_u8(b'/').unwrap())
-            .map(fen_row_to_board_row)
-            .collect::<Vec<_>>()
-            .try_into()
-            .unwrap();
+        let board = Board::try_from_fen(fen.piece_placements.as_slice()).unwrap();
 
-        let board = Board(
-            mattr::transpose_array(piece_placements_chunked).map(|mut col| {
-                col.reverse();
-                col
-            }),
-        );
-
-        let fifty_move_rule_clock: u64 = half_move_clock.as_str().parse().unwrap();
+        let fifty_move_rule_clock: u64 = fen.half_move_clock.as_str().parse().unwrap();
 
         let white_castling_rights = CastlingRights {
-            kingside: castling_availability.contains(&AsciiChar::CapitalK), // `K`
-            queenside: castling_availability.contains(&AsciiChar::CapitalQ), // `Q`
+            kingside: fen.castling_availability.contains(&AsciiChar::CapitalK), // `K`
+            queenside: fen.castling_availability.contains(&AsciiChar::CapitalQ), // `Q`
         };
 
         let black_castling_rights = CastlingRights {
-            kingside: castling_availability.contains(&AsciiChar::SmallK), // `k`
-            queenside: castling_availability.contains(&AsciiChar::SmallQ), // `q`
+            kingside: fen.castling_availability.contains(&AsciiChar::SmallK), // `k`
+            queenside: fen.castling_availability.contains(&AsciiChar::SmallQ), // `q`
         };
 
-        let position_history: Vec<Position> = vec![];
-
-        let active_player = PlayerKind::try_from_fen(active_player.as_slice()).unwrap();
-
-        let en_passant_target = Square::try_from_fen(en_passant_target_square).unwrap();
-
-        let full_move_count = FullMoveCount::try_from_fen(full_move_number).unwrap();
+        let active_player = PlayerKind::try_from_fen(fen.active_player.as_slice()).unwrap();
+        let en_passant_target =
+            Square::try_from_fen(fen.en_passant_target_square.as_slice()).unwrap();
+        let full_move_count = FullMoveCount::try_from_fen(fen.full_move_number.as_slice()).unwrap();
 
         Self {
             board,
             fifty_move_rule_clock,
             white_castling_rights,
             black_castling_rights,
-            position_history,
+            position_history: vec![],
             is_perft: false,
             active_player,
             en_passant_target,
@@ -95,7 +71,7 @@ impl GameState {
     }
 
     #[must_use]
-    pub fn to_fen(&self) -> String {
+    pub fn to_fen(&self) -> Vec<AsciiChar> {
         let Self {
             board,
             fifty_move_rule_clock,
@@ -202,6 +178,26 @@ fn fen_row_to_board_row(row: &[AsciiChar]) -> [Option<Piece>; 8] {
     out_row
         .try_into()
         .expect("why did the row not have 8 things in it :susge:")
+}
+
+impl Board {
+    pub fn try_from_fen(value: &[AsciiChar]) -> Result<Self, ()> {
+        let piece_placements_chunked: [[Option<Piece>; 8]; 8] = value
+            .split(|c| *c == AsciiChar::from_u8(b'/').unwrap())
+            .map(fen_row_to_board_row)
+            .collect::<Vec<_>>()
+            .try_into()
+            .unwrap();
+
+        let board = Self(
+            mattr::transpose_array(piece_placements_chunked).map(|mut col| {
+                col.reverse();
+                col
+            }),
+        );
+
+        Ok(board)
+    }
 }
 
 impl Square {
