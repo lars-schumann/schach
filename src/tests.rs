@@ -1,6 +1,8 @@
-use crate::coord::Square;
+use crate::coord::{Col, Row, Square};
 use crate::game::*;
 use crate::mov::Move;
+use crate::piece::Piece;
+use crate::player::PlayerKind;
 use rayon::prelude::*;
 use std::sync::Mutex;
 use std::sync::atomic::AtomicU32;
@@ -92,11 +94,65 @@ fn search() {
 
 #[test]
 fn test_fens() {
+    println!("---Squares-------");
     for square in Square::all() {
         assert_eq!(
             Some(square),
             Square::try_from_fen(&Square::to_fen(&Some(square))).unwrap()
         );
-        println!("{}", Square::to_fen(&Some(square)).as_str());
+
+        println!("{square:?}: {}", Square::to_fen(&Some(square)).as_str());
+    }
+
+    println!("-------Columns-----");
+    for col in Col::COLS {
+        assert_eq!(
+            col,
+            Col::try_from_ascii_char(Col::to_ascii_char(col)).unwrap()
+        );
+        println!("{col}: {}", Col::to_ascii_char(col).as_str());
+    }
+
+    println!("-------Rows--------");
+    for row in Row::ROWS {
+        assert_eq!(
+            row,
+            Row::try_from_ascii_char(Row::to_ascii_char(row)).unwrap()
+        );
+        println!("{row}: {}", Row::to_ascii_char(row).as_str());
+    }
+
+    println!("-------Pieces------");
+    for piece in Piece::ALL {
+        assert_eq!(
+            piece,
+            Piece::try_from_ascii_char(Piece::to_ascii_char(piece)).unwrap()
+        );
+        println!("{piece}: {}", Piece::to_ascii_char(piece).as_str());
+    }
+
+    println!("-------Players-----");
+    for player_kind in [PlayerKind::White, PlayerKind::Black] {
+        assert_eq!(
+            player_kind,
+            PlayerKind::try_from_fen(vec![PlayerKind::to_ascii_char(player_kind)].as_slice())
+                .unwrap()
+        );
+        println!(
+            "{player_kind}: {}",
+            PlayerKind::to_ascii_char(player_kind).as_str()
+        );
+    }
+
+    println!("-------Castling-----");
+    for castling_rights in CastlingRights::all() {
+        assert_eq!(
+            castling_rights,
+            CastlingRights::from_fen(CastlingRights::to_fen(castling_rights).as_slice())
+        );
+        println!(
+            "{castling_rights:?}: {}",
+            CastlingRights::to_fen(castling_rights).as_str()
+        );
     }
 }

@@ -1,6 +1,8 @@
 use std::num::NonZeroU64;
 use std::ops::Not;
 
+use itertools::{Itertools, iproduct};
+
 use crate::board::Board;
 use crate::coord::Square;
 use crate::mov::{Move, Threat};
@@ -443,6 +445,27 @@ pub struct CastlingRights {
     pub white_queenside: bool,
     pub black_kingside: bool,
     pub black_queenside: bool,
+}
+impl CastlingRights {
+    #[must_use]
+    pub const fn new(
+        (white_kingside, white_queenside, black_kingside, black_queenside): (
+            bool,
+            bool,
+            bool,
+            bool,
+        ),
+    ) -> Self {
+        Self {
+            white_kingside,
+            white_queenside,
+            black_kingside,
+            black_queenside,
+        }
+    }
+    pub fn all() -> impl Iterator<Item = Self> + Clone {
+        iproduct!([false, true], [false, true], [false, true], [false, true]).map(Self::new)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

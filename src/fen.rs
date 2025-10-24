@@ -78,7 +78,7 @@ impl GameState {
 
         let fen = FenStrings {
             piece_placements: Board::to_fen(board),
-            active_player: vec![PlayerKind::to_fen(*active_player)],
+            active_player: vec![PlayerKind::to_ascii_char(*active_player)],
             castling_availability: CastlingRights::to_fen(*castling_rights),
             en_passant_target_square: Square::to_fen(en_passant_target),
             half_move_clock: FiftyMoveRuleClock::to_fen(*fifty_move_rule_clock),
@@ -103,7 +103,8 @@ impl GameState {
 }
 
 impl CastlingRights {
-    fn from_fen(value: &[AsciiChar]) -> Self {
+    #[must_use]
+    pub fn from_fen(value: &[AsciiChar]) -> Self {
         if value == [AsciiChar::HyphenMinus]
         // `-`
         {
@@ -117,7 +118,8 @@ impl CastlingRights {
         }
     }
 
-    fn to_fen(self) -> Vec<AsciiChar> {
+    #[must_use]
+    pub fn to_fen(self) -> Vec<AsciiChar> {
         if self == Self::default() {
             // if no more castling
             return vec![AsciiChar::HyphenMinus];
@@ -164,7 +166,7 @@ impl FiftyMoveRuleClock {
 pub struct NoPiece;
 
 impl Piece {
-    const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, NoPiece> {
+    pub const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, NoPiece> {
         match value as u8 {
             b'P' => Ok(Self::PAWN_WHITE),
             b'N' => Ok(Self::KNIGHT_WHITE),
@@ -184,7 +186,8 @@ impl Piece {
         }
     }
 
-    const fn to_ascii_char(value: Self) -> AsciiChar {
+    #[must_use]
+    pub const fn to_ascii_char(value: Self) -> AsciiChar {
         use AsciiChar as AC;
         match value {
             Self::PAWN_WHITE => AC::CapitalP,   // `P`
@@ -208,7 +211,7 @@ impl Piece {
 pub struct InvalidPlayer;
 
 impl PlayerKind {
-    fn try_from_fen(value: &[AsciiChar]) -> Result<Self, InvalidPlayer> {
+    pub const fn try_from_fen(value: &[AsciiChar]) -> Result<Self, InvalidPlayer> {
         match value {
             [AsciiChar::SmallW] => Ok(Self::White),      // `w`
             [AsciiChar::SmallB] => Ok(Self::Black),      // `b`
@@ -216,7 +219,8 @@ impl PlayerKind {
         }
     }
 
-    const fn to_fen(self) -> AsciiChar {
+    #[must_use]
+    pub const fn to_ascii_char(self) -> AsciiChar {
         match self {
             Self::White => AsciiChar::SmallW,
             Self::Black => AsciiChar::SmallB,
@@ -304,18 +308,20 @@ impl Board {
 }
 
 impl Col {
-    const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, ()> {
+    pub const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, ()> {
         Self::try_from(u8::from(value) - b'a' + 1)
     }
-    const fn to_ascii_char(self) -> AsciiChar {
+    #[must_use]
+    pub const fn to_ascii_char(self) -> AsciiChar {
         AsciiChar::from_u8(u8::from(self) + b'a' - 1).unwrap()
     }
 }
 impl Row {
-    const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, ()> {
+    pub const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, ()> {
         Self::try_from(u8::from(value) - b'0')
     }
-    const fn to_ascii_char(self) -> AsciiChar {
+    #[must_use]
+    pub const fn to_ascii_char(self) -> AsciiChar {
         AsciiChar::from_u8(u8::from(self) + b'0').unwrap()
     }
 }

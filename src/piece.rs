@@ -50,6 +50,21 @@ impl Piece {
     pub const ROOK_BLACK: Self = Self::new(PieceKind::Rook, PlayerKind::Black);
     pub const QUEEN_BLACK: Self = Self::new(PieceKind::Queen, PlayerKind::Black);
     pub const KING_BLACK: Self = Self::new(PieceKind::King, PlayerKind::Black);
+
+    pub const ALL: [Self; 12] = [
+        Self::PAWN_WHITE,
+        Self::KING_WHITE,
+        Self::BISHOP_WHITE,
+        Self::ROOK_WHITE,
+        Self::QUEEN_WHITE,
+        Self::KING_WHITE,
+        Self::PAWN_BLACK,
+        Self::KNIGHT_BLACK,
+        Self::BISHOP_BLACK,
+        Self::ROOK_BLACK,
+        Self::QUEEN_BLACK,
+        Self::KING_BLACK,
+    ];
 }
 
 impl std::fmt::Display for Piece {
