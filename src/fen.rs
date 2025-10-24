@@ -104,8 +104,9 @@ impl GameState {
 
 impl CastlingRights {
     fn from_fen(value: &[AsciiChar]) -> Self {
-        if value == [AsciiChar::Solidus] {
-            // `-`
+        if value == [AsciiChar::HyphenMinus]
+        // `-`
+        {
             return Self::default(); // no more castling
         }
         Self {
@@ -119,7 +120,7 @@ impl CastlingRights {
     fn to_fen(self) -> Vec<AsciiChar> {
         if self == Self::default() {
             // if no more castling
-            return vec![AsciiChar::Solidus];
+            return vec![AsciiChar::HyphenMinus];
         }
         let mut out = vec![];
         if self.white_kingside {
@@ -263,20 +264,62 @@ impl Board {
 
     #[must_use]
     pub fn to_fen(&self) -> Vec<AsciiChar> {
-        todo!()
+        let mut running_square_count = 0;
+        let mut out: Vec<AsciiChar> = vec![];
+        for square in Square::all_fen_ordered() {
+            match self[square] {
+                None => running_square_count += 1,
+                Some(piece) => {
+                    if running_square_count != 0 {
+                        out.extend(
+                            running_square_count
+                                .to_string()
+                                .as_ascii()
+                                .unwrap()
+                                .to_owned(),
+                        ); //as the running count should never exceed 8, this should always be a single digit
+                    }
+                    running_square_count = 0;
+                    out.push(Piece::to_ascii_char(piece));
+                }
+            }
+            if square.col == Col::C8 {
+                if running_square_count != 0 {
+                    out.extend(
+                        running_square_count
+                            .to_string()
+                            .as_ascii()
+                            .unwrap()
+                            .to_owned(),
+                    ); //as the running count should never exceed 8, this should always be a single digit
+                }
+                running_square_count = 0;
+                if square != Square::H1 {
+                    out.push(AsciiChar::Solidus);
+                }
+            }
+        }
+        out
     }
 }
 
-impl Row {
-    const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, ()> {
-        Self::try_from(value as u8 - b'a' + 1)
-    }
-}
 impl Col {
     const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, ()> {
-        Self::try_from(value as u8 - b'0' + 1)
+        Self::try_from(u8::from(value) - b'a' + 1)
+    }
+    const fn to_ascii_char(self) -> AsciiChar {
+        AsciiChar::from_u8(u8::from(self) + b'a' - 1).unwrap()
     }
 }
+impl Row {
+    const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, ()> {
+        Self::try_from(u8::from(value) - b'0' + 1)
+    }
+    const fn to_ascii_char(self) -> AsciiChar {
+        AsciiChar::from_u8(u8::from(self) + b'0' - 1).unwrap()
+    }
+}
+
 impl Square {
     pub fn try_from_fen(value: &[AsciiChar]) -> Result<Option<Self>, ()> {
         // supposed to look like `-` || `a5` / `d2` / `f7` / ...
@@ -286,18 +329,15 @@ impl Square {
                 col: Col::try_from_ascii_char(*col)?,
                 row: Row::try_from_ascii_char(*row)?,
             })),
-            [] | [_, _, _, ..] => Err(()), // should never empty or longer than 2
+            [] | [_, _, _, ..] => Err(()), // should never be empty or longer than 2
         }
     }
 
     #[must_use]
     pub fn to_fen(value: &Option<Self>) -> Vec<AsciiChar> {
         match value {
-            None => vec![AsciiChar::Solidus], // `/`
-            Some(Self { col, row }) => vec![
-                AsciiChar::from_u8(*col as u8 + b'a' - 1).unwrap(),
-                AsciiChar::from_u8(*row as u8 + b'0' - 1).unwrap(),
-            ],
+            None => vec![AsciiChar::HyphenMinus], // `-`
+            Some(Self { col, row }) => vec![Col::to_ascii_char(*col), Row::to_ascii_char(*row)],
         }
     }
 }

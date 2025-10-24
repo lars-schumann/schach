@@ -117,6 +117,13 @@ impl Square {
             .into_iter()
             .flat_map(|col| Row::ROWS.into_iter().map(move |row| Self { col, row }))
     }
+
+    pub fn all_fen_ordered() -> impl Iterator<Item = Self> + Clone + use<> {
+        Row::ROWS
+            .into_iter()
+            .rev()
+            .flat_map(|row| Col::COLS.into_iter().map(move |col| Self { col, row }))
+    }
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, strum::Display)]

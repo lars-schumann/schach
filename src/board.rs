@@ -95,7 +95,7 @@ impl std::fmt::Debug for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f)?;
         for row in Row::ROWS.into_iter().rev() {
-            write!(f, "{}", i32::from(row) + 1)?;
+            write!(f, "{}", i32::from(row))?;
             for col in Col::COLS {
                 match self[S { col, row }] {
                     None => {
@@ -112,7 +112,7 @@ impl std::fmt::Debug for Board {
         }
         write!(f, "  ")?;
         for col in Col::COLS {
-            write!(f, "{} ", i32::from(col) + 1)?;
+            write!(f, "{} ", i32::from(col))?;
         }
         Ok(())
     }

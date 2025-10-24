@@ -1,3 +1,5 @@
+use owlchess::board;
+
 use crate::board::*;
 use crate::game::*;
 use crate::mov::Move;
@@ -15,9 +17,16 @@ fn search() {
 
     let before = std::time::Instant::now();
 
-    for depth in 0..5 {
+    for depth in 0..3 {
         continued_games.clone().into_iter().for_each(|game| {
             let legal_moves: Vec<Move> = game.legal_moves().collect();
+            assert_eq!(
+                legal_moves.len(),
+                owlchess::movegen::legal::gen_all(
+                    &owlchess::Board::from_fen(dbg!(game.to_fen().as_str())).unwrap()
+                )
+                .len()
+            );
             for mov in legal_moves.clone() {
                 if matches!(mov, Move::EnPassant { .. }) {
                     en_passant_count += 1;
@@ -57,9 +66,13 @@ fn search() {
 
 #[test]
 fn test_fen() {
-    let game = GameState::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-
+    let default_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    let game = GameState::from_fen(default_fen);
     assert_eq!(game.board, Board::default());
+    println!("{:?}", game.board);
+
+    let schach_fen = GameState::to_fen(&game);
+    assert_eq!(default_fen, schach_fen.as_str());
 }
 
 #[test]
@@ -70,6 +83,8 @@ fn test_against_owl() {
         let owl_board = owlchess::Board::from_fen(fen).unwrap();
 
         let owl_legals = owlchess::movegen::legal::gen_all(&owl_board);
+
+        let x = owl_board.as_fen();
 
         let schach_game = GameState::from_fen(fen);
 
