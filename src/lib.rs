@@ -10,7 +10,9 @@
     const_index,
     iter_collect_into,
     const_cmp,
-    generic_const_exprs
+    generic_const_exprs,
+    ascii_char,
+    ascii_char_variants
 )]
 
 pub mod board;

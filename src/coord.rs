@@ -180,96 +180,100 @@ impl const std::ops::Add<i32> for Col {
         (column_number + rhs).try_into()
     }
 }
-impl const TryFrom<i32> for Row {
-    type Error = ();
-    fn try_from(value: i32) -> Result<Self, Self::Error> {
-        match value {
-            1 => Ok(Self::R1),
-            2 => Ok(Self::R2),
-            3 => Ok(Self::R3),
-            4 => Ok(Self::R4),
-            5 => Ok(Self::R5),
-            6 => Ok(Self::R6),
-            7 => Ok(Self::R7),
-            8 => Ok(Self::R8),
-            _ => Err(()),
-        }
-    }
-}
-impl const TryFrom<i32> for Col {
-    type Error = ();
-    fn try_from(value: i32) -> Result<Self, Self::Error> {
-        match value {
-            1 => Ok(Self::C1),
-            2 => Ok(Self::C2),
-            3 => Ok(Self::C3),
-            4 => Ok(Self::C4),
-            5 => Ok(Self::C5),
-            6 => Ok(Self::C6),
-            7 => Ok(Self::C7),
-            8 => Ok(Self::C8),
-            _ => Err(()),
-        }
-    }
-}
-impl const From<Row> for i32 {
-    fn from(value: Row) -> Self {
-        match value {
-            Row::R1 => 1,
-            Row::R2 => 2,
-            Row::R3 => 3,
-            Row::R4 => 4,
-            Row::R5 => 5,
-            Row::R6 => 6,
-            Row::R7 => 7,
-            Row::R8 => 8,
-        }
+
+macro_rules! col_into_int_impl {
+    ($($ty:ty)*) => {
+        $(
+            impl const From<Col> for $ty {
+                fn from(value: Col) -> $ty {
+                    match value {
+                        Col::C1 => 1,
+                        Col::C2 => 2,
+                        Col::C3 => 3,
+                        Col::C4 => 4,
+                        Col::C5 => 5,
+                        Col::C6 => 6,
+                        Col::C7 => 7,
+                        Col::C8 => 8,
+                    }
+                }
+            }
+        )*
     }
 }
 
-impl const From<Col> for i32 {
-    fn from(value: Col) -> Self {
-        match value {
-            Col::C1 => 1,
-            Col::C2 => 2,
-            Col::C3 => 3,
-            Col::C4 => 4,
-            Col::C5 => 5,
-            Col::C6 => 6,
-            Col::C7 => 7,
-            Col::C8 => 8,
-        }
-    }
-}
-impl const From<Row> for usize {
-    fn from(value: Row) -> Self {
-        match value {
-            Row::R1 => 1,
-            Row::R2 => 2,
-            Row::R3 => 3,
-            Row::R4 => 4,
-            Row::R5 => 5,
-            Row::R6 => 6,
-            Row::R7 => 7,
-            Row::R8 => 8,
-        }
+macro_rules! row_into_int_impl {
+    ($($ty:ty)*) => {
+        $(
+            impl const From<Row> for $ty {
+                fn from(value: Row) -> $ty {
+                    match value {
+                        Row::R1 => 1,
+                        Row::R2 => 2,
+                        Row::R3 => 3,
+                        Row::R4 => 4,
+                        Row::R5 => 5,
+                        Row::R6 => 6,
+                        Row::R7 => 7,
+                        Row::R8 => 8,
+                    }
+                }
+            }
+        )*
     }
 }
 
-impl const From<Col> for usize {
-    fn from(value: Col) -> Self {
-        match value {
-            Col::C1 => 1,
-            Col::C2 => 2,
-            Col::C3 => 3,
-            Col::C4 => 4,
-            Col::C5 => 5,
-            Col::C6 => 6,
-            Col::C7 => 7,
-            Col::C8 => 8,
-        }
+macro_rules! col_try_from_int_impl {
+    ($($ty:ty)*) => {
+        $(
+            impl const TryFrom<$ty> for Col {
+                type Error = ();
+                fn try_from(value: $ty) -> Result<Self, Self::Error> {
+                    match value {
+                         1 => Ok(Self::C1),
+                         2 => Ok(Self::C2),
+                         3 => Ok(Self::C3),
+                         4 => Ok(Self::C4),
+                         5 => Ok(Self::C5),
+                         6 => Ok(Self::C6),
+                         7 => Ok(Self::C7),
+                         8 => Ok(Self::C8),
+                         _ => Err(()),
+                    }
+                }
+            }
+        )*
     }
 }
+
+macro_rules! row_try_from_int_impl {
+    ($($ty:ty)*) => {
+        $(
+            impl const TryFrom<$ty> for Row {
+                type Error = ();
+                fn try_from(value: $ty) -> Result<Self, Self::Error> {
+                    match value {
+                         1 => Ok(Self::R1),
+                         2 => Ok(Self::R2),
+                         3 => Ok(Self::R3),
+                         4 => Ok(Self::R4),
+                         5 => Ok(Self::R5),
+                         6 => Ok(Self::R6),
+                         7 => Ok(Self::R7),
+                         8 => Ok(Self::R8),
+                         _ => Err(()),
+                    }
+                }
+            }
+        )*
+    }
+}
+
+col_into_int_impl!(u8 u16 u32 u64 u128 usize i8 i16 i32 i64 i128 isize);
+row_into_int_impl!(u8 u16 u32 u64 u128 usize i8 i16 i32 i64 i128 isize);
+
+col_try_from_int_impl!(u8 u16 u32 u64 u128 usize i8 i16 i32 i64 i128 isize);
+row_try_from_int_impl!(u8 u16 u32 u64 u128 usize i8 i16 i32 i64 i128 isize);
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Offset {
@@ -279,9 +283,9 @@ pub struct Offset {
 #[allow(clippy::upper_case_acronyms)]
 impl Offset {
     pub const U: Self = Self { col: 0, row: 1 };
-    pub const D: Self = Self { col: 0, row: -1 };
-    pub const L: Self = Self { col: -1, row: 0 };
     pub const R: Self = Self { col: 1, row: 0 };
+    pub const D: Self = Self::U * -1;
+    pub const L: Self = Self::R * -1;
     pub const UL: Self = Self::U + Self::L;
     pub const UR: Self = Self::U + Self::R;
     pub const DL: Self = Self::D + Self::L;
@@ -338,6 +342,7 @@ impl Offset {
         Self::DRR,
     ];
 }
+
 impl const std::ops::Add for Offset {
     type Output = Self;
     fn add(self, rhs: Self) -> Self::Output {
