@@ -16,26 +16,32 @@ pub struct FenStrings {
     full_move_number: Vec<AsciiChar>,
 }
 
+#[derive(Debug)]
+pub enum GameFromFenError {
+    NotAscii,
+    WrongFieldCount,
+}
 impl GameState {
-    #[must_use]
-    pub fn from_fen(fen: &str) -> Self {
-        let binding = fen
+    pub fn try_from_fen(fen: &str) -> Result<Self, GameFromFenError> {
+        let fen_parts: [Vec<AsciiChar>; 6] = fen
             .split_ascii_whitespace()
             .map(|str| {
                 str.bytes()
                     .map(AsciiChar::from_u8)
-                    .map(Option::unwrap)
-                    .collect::<Vec<AsciiChar>>()
+                    .collect::<Option<Vec<AsciiChar>>>()
             })
-            .collect::<Vec<_>>();
+            .collect::<Option<Vec<Vec<AsciiChar>>>>()
+            .ok_or(GameFromFenError::NotAscii)?
+            .try_into()
+            .map_err(|_| GameFromFenError::WrongFieldCount)?;
 
         let fen = FenStrings {
-            piece_placements: binding[0].clone(),
-            active_player: binding[1].clone(),
-            castling_availability: binding[2].clone(),
-            en_passant_target_square: binding[3].clone(),
-            half_move_clock: binding[4].clone(),
-            full_move_number: binding[5].clone(),
+            piece_placements: fen_parts[0].clone(),
+            active_player: fen_parts[1].clone(),
+            castling_availability: fen_parts[2].clone(),
+            en_passant_target_square: fen_parts[3].clone(),
+            half_move_clock: fen_parts[4].clone(),
+            full_move_number: fen_parts[5].clone(),
         };
 
         let board = Board::try_from_fen(fen.piece_placements.as_slice()).unwrap();
@@ -50,7 +56,7 @@ impl GameState {
             Square::try_from_fen(fen.en_passant_target_square.as_slice()).unwrap();
         let full_move_count = FullMoveCount::try_from_fen(fen.full_move_number.as_slice()).unwrap();
 
-        Self {
+        Ok(Self {
             board,
             fifty_move_rule_clock,
             castling_rights,
@@ -59,7 +65,7 @@ impl GameState {
             active_player,
             en_passant_target,
             full_move_count,
-        }
+        })
     }
 
     #[must_use]
