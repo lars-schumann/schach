@@ -1,7 +1,7 @@
 use std::num::NonZeroU64;
 use std::ops::Not;
 
-use itertools::{Itertools, iproduct};
+use itertools::iproduct;
 
 use crate::board::Board;
 use crate::coord::Square;

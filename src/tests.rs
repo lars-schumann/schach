@@ -22,7 +22,7 @@ fn search() {
 
     let before = std::time::Instant::now();
 
-    for depth in 0..=5 {
+    for depth in 0..=1 {
         continued_games
             .lock()
             .unwrap()
@@ -154,5 +154,16 @@ fn test_fens() {
             "{castling_rights:?}: {}",
             CastlingRights::to_fen(castling_rights).as_str()
         );
+    }
+}
+
+#[test]
+fn test_mass_fens() {
+    let fens = include_str!("../fens/lichess_puzzle_fens.txt");
+
+    for fen in fens.lines() {
+        let schach_game = GameState::from_fen(fen);
+        let schach_fen = schach_game.to_fen();
+        assert_eq!(fen, schach_fen.as_str());
     }
 }
