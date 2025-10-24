@@ -313,10 +313,10 @@ impl Col {
 }
 impl Row {
     const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, ()> {
-        Self::try_from(u8::from(value) - b'0' + 1)
+        Self::try_from(u8::from(value) - b'0')
     }
     const fn to_ascii_char(self) -> AsciiChar {
-        AsciiChar::from_u8(u8::from(self) + b'0' - 1).unwrap()
+        AsciiChar::from_u8(u8::from(self) + b'0').unwrap()
     }
 }
 

@@ -192,7 +192,9 @@ impl GameState {
         }
 
         if let Move::DoubleStep { start: _, target } = mov {
-            new_game.en_passant_target = Some(target);
+            let en_passant_target = (target + new_game.active_player.backwards_one_row())
+                .expect("this cannot be outside the board");
+            new_game.en_passant_target = Some(en_passant_target);
         } else {
             new_game.en_passant_target = None;
         }
