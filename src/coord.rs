@@ -253,11 +253,16 @@ macro_rules! col_try_from_int_impl {
     }
 }
 
+pub enum IndexOutOfRange {
+    TooLow(String),
+    TooHigh(String),
+}
+
 macro_rules! row_try_from_int_impl {
     ($($ty:ty)*) => {
         $(
             impl const TryFrom<$ty> for Row {
-                type Error = ();
+                type Error = IndexOutOfRange;
                 fn try_from(value: $ty) -> Result<Self, Self::Error> {
                     match value {
                          1 => Ok(Self::R1),
@@ -268,7 +273,9 @@ macro_rules! row_try_from_int_impl {
                          6 => Ok(Self::R6),
                          7 => Ok(Self::R7),
                          8 => Ok(Self::R8),
-                         _ => Err(()),
+                         _ if value < 1 =>  Err(IndexOutOfRange::TooLow(String::from(format!("{value} was less than 1")))),
+                         _ if value > 8 =>  Err(IndexOutOfRange::TooLow(String::from(format!("{value} was less than 1")))),
+                         _ => unreachable!()
                     }
                 }
             }
