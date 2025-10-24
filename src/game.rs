@@ -223,7 +223,9 @@ impl GameState {
             }
         }
 
+        new_game.active_player = new_game.active_player.opponent();
         if new_game.legal_moves().count() == 0 {
+            new_game.active_player = new_game.active_player.opponent();
             return if new_game
                 .board
                 .is_king_checked(self.active_player.opponent())
@@ -240,7 +242,6 @@ impl GameState {
             };
         }
 
-        new_game.active_player = new_game.active_player.opponent();
         StepResult::Continued(new_game)
     }
 
