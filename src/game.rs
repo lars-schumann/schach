@@ -1,3 +1,4 @@
+use std::num::NonZeroU64;
 use std::ops::Not;
 
 use crate::board::Board;
@@ -36,10 +37,10 @@ pub enum StepResult {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct FullMoveCount(pub u64);
+pub struct FullMoveCount(pub NonZeroU64); // non-zero & unsized because this always starts at 1 and cant decrease 
 impl Default for FullMoveCount {
     fn default() -> Self {
-        Self(1)
+        Self(NonZeroU64::new(1).unwrap())
     }
 }
 

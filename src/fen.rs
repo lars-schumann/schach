@@ -7,6 +7,22 @@ use crate::{
 };
 use std::ascii::Char as AsciiChar;
 
+pub struct FenStrings {
+    piece_placements: Vec<AsciiChar>,
+    active_player: Vec<AsciiChar>,
+    castling_availability: Vec<AsciiChar>,
+    en_passant_target_square: Vec<AsciiChar>,
+    half_move_clock: Vec<AsciiChar>,
+    full_move_number: Vec<AsciiChar>,
+}
+
+trait FromIntoFenPart {
+    type FenStorageType;
+    type Error;
+
+    fn try_from_fen(value: Vec<AsciiChar>) -> Result<Self::FenStorageType, Self::Error>;
+    fn to_fen(value: Self::FenStorageType) -> Vec<AsciiChar>;
+}
 impl GameState {
     #[must_use]
     pub fn from_fen(fen: &str) -> Self {
@@ -59,11 +75,11 @@ impl GameState {
 
         let position_history: Vec<Position> = vec![];
 
-        let active_player = PlayerKind::try_from(active_player.as_slice()).unwrap();
+        let active_player = PlayerKind::try_from_fen(active_player.as_slice()).unwrap();
 
-        let en_passant_target = Square::from_acs(en_passant_target_square).unwrap();
+        let en_passant_target = Square::try_from_fen(en_passant_target_square).unwrap();
 
-        let full_move_count = FullMoveCount(full_move_number.as_str().parse().unwrap());
+        let full_move_count = FullMoveCount::try_from_fen(full_move_number).unwrap();
 
         Self {
             board,
@@ -80,25 +96,38 @@ impl GameState {
 
     #[must_use]
     pub fn to_fen(&self) -> String {
+        let Self {
+            board,
+            fifty_move_rule_clock,
+            white_castling_rights,
+            black_castling_rights,
+            position_history,
+            en_passant_target,
+            active_player,
+            is_perft,
+            full_move_count,
+        } = self;
+
         todo!()
     }
 }
 
 #[derive(Debug)]
 pub struct NotANumber;
-impl TryFrom<&[AsciiChar]> for FullMoveCount {
-    type Error = std::num::ParseIntError;
-
-    fn try_from(value: &[AsciiChar]) -> Result<Self, Self::Error> {
+impl FullMoveCount {
+    fn try_from_fen(value: &[AsciiChar]) -> Result<Self, std::num::ParseIntError> {
         value.as_str().parse().map(Self)
+    }
+
+    fn to_fen(self) -> Vec<AsciiChar> {
+        self.0.to_string().as_ascii().unwrap().to_owned()
     }
 }
 #[derive(Debug)]
 pub struct NoPiece;
 
-impl const TryFrom<AsciiChar> for Piece {
-    type Error = NoPiece;
-    fn try_from(value: AsciiChar) -> Result<Self, Self::Error> {
+impl Piece {
+    const fn try_from_fen(value: AsciiChar) -> Result<Self, NoPiece> {
         match value as u8 {
             b'P' => Ok(Self::PAWN_WHITE),
             b'N' => Ok(Self::KNIGHT_WHITE),
@@ -117,25 +146,23 @@ impl const TryFrom<AsciiChar> for Piece {
             _ => Err(NoPiece),
         }
     }
-}
 
-impl const From<Piece> for AsciiChar {
-    fn from(value: Piece) -> Self {
-        use Piece as P;
+    const fn to_fen(value: Self) -> AsciiChar {
+        use AsciiChar as AC;
         match value {
-            P::PAWN_WHITE => Self::CapitalP,   // `P`
-            P::KNIGHT_WHITE => Self::CapitalN, // `N`
-            P::BISHOP_WHITE => Self::CapitalB, // `B`
-            P::ROOK_WHITE => Self::CapitalR,   // `R`
-            P::QUEEN_WHITE => Self::CapitalQ,  // `Q`
-            P::KING_WHITE => Self::CapitalK,   // `K`
+            Self::PAWN_WHITE => AC::CapitalP,   // `P`
+            Self::KNIGHT_WHITE => AC::CapitalN, // `N`
+            Self::BISHOP_WHITE => AC::CapitalB, // `B`
+            Self::ROOK_WHITE => AC::CapitalR,   // `R`
+            Self::QUEEN_WHITE => AC::CapitalQ,  // `Q`
+            Self::KING_WHITE => AC::CapitalK,   // `K`
 
-            P::PAWN_BLACK => Self::SmallP,   // `p`
-            P::KNIGHT_BLACK => Self::SmallN, // `n`
-            P::BISHOP_BLACK => Self::SmallB, // `b`
-            P::ROOK_BLACK => Self::SmallR,   // `r`
-            P::QUEEN_BLACK => Self::SmallQ,  // `q`
-            P::KING_BLACK => Self::SmallK,   // `k`
+            Self::PAWN_BLACK => AC::SmallP,   // `p`
+            Self::KNIGHT_BLACK => AC::SmallN, // `n`
+            Self::BISHOP_BLACK => AC::SmallB, // `b`
+            Self::ROOK_BLACK => AC::SmallR,   // `r`
+            Self::QUEEN_BLACK => AC::SmallQ,  // `q`
+            Self::KING_BLACK => AC::SmallK,   // `k`
         }
     }
 }
@@ -143,15 +170,19 @@ impl const From<Piece> for AsciiChar {
 #[derive(Debug)]
 pub struct InvalidPlayer;
 
-impl TryFrom<&[AsciiChar]> for PlayerKind {
-    type Error = InvalidPlayer;
-
-    fn try_from(value: &[AsciiChar]) -> Result<Self, Self::Error> {
-        use AsciiChar as AC;
+impl PlayerKind {
+    fn try_from_fen(value: &[AsciiChar]) -> Result<Self, InvalidPlayer> {
         match value {
-            [AC::SmallW] => Ok(Self::White),             // `w`
-            [AC::SmallB] => Ok(Self::Black),             // `b`
+            [AsciiChar::SmallW] => Ok(Self::White),      // `w`
+            [AsciiChar::SmallB] => Ok(Self::Black),      // `b`
             [] | [_] | [_, _, ..] => Err(InvalidPlayer), // empty, other or 2+ chars are all wrong
+        }
+    }
+
+    const fn to_fen(self) -> AsciiChar {
+        match self {
+            Self::White => AsciiChar::SmallW,
+            Self::Black => AsciiChar::SmallB,
         }
     }
 }
@@ -162,7 +193,7 @@ fn fen_row_to_board_row(row: &[AsciiChar]) -> [Option<Piece>; 8] {
     for c in row {
         match *c as u8 {
             d @ b'1'..=b'8' => out_row.extend(vec![None; usize::from(d - b'0')]),
-            b'A'..=b'Z' | b'a'..=b'z' => out_row.push(Some(TryInto::try_into(*c).unwrap())),
+            b'A'..=b'Z' | b'a'..=b'z' => out_row.push(Some(Piece::try_from_fen(*c).unwrap())),
 
             _ => panic!(),
         }
@@ -174,7 +205,7 @@ fn fen_row_to_board_row(row: &[AsciiChar]) -> [Option<Piece>; 8] {
 }
 
 impl Square {
-    pub fn from_acs(value: &[AsciiChar]) -> Result<Option<Self>, ()> {
+    pub fn try_from_fen(value: &[AsciiChar]) -> Result<Option<Self>, ()> {
         // supposed to look like `-` || `a5` / `d2` / `f7` / ...
         match value {
             [_] => Ok(None), // normally just `-`, but i'll be nice
@@ -183,6 +214,14 @@ impl Square {
                 row: Row::try_from(*row as u8 - b'0' + 1)?,
             })),
             [] | [_, _, _, ..] => Err(()), // should never empty or longer than 2
+        }
+    }
+
+    #[must_use]
+    pub fn to_fen(value: Option<Self>) -> Vec<AsciiChar> {
+        match value {
+            None => vec![AsciiChar::Solidus], // `/`
+            Some(Self { col, row }) => todo!(),
         }
     }
 }

@@ -8,9 +8,9 @@
     const_convert,
     const_try,
     const_index,
-    iter_collect_into,
     const_cmp,
     generic_const_exprs,
+    iter_collect_into,
     ascii_char,
     ascii_char_variants
 )]
