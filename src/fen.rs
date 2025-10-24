@@ -63,7 +63,8 @@ impl GameState {
     }
 
     #[must_use]
-    pub fn to_fen(&self) -> FenStrings {
+    pub fn to_fen(&self) -> Vec<AsciiChar> {
+        use AsciiChar::Space;
         let Self {
             board,
             fifty_move_rule_clock,
@@ -75,14 +76,29 @@ impl GameState {
             full_move_count,
         } = self;
 
-        FenStrings {
+        let fen = FenStrings {
             piece_placements: Board::to_fen(board),
             active_player: vec![PlayerKind::to_fen(*active_player)],
+            castling_availability: CastlingRights::to_fen(*castling_rights),
             en_passant_target_square: Square::to_fen(en_passant_target),
             half_move_clock: FiftyMoveRuleClock::to_fen(*fifty_move_rule_clock),
             full_move_number: FullMoveCount::to_fen(*full_move_count),
-            castling_availability: CastlingRights::to_fen(*castling_rights),
-        }
+        };
+
+        [
+            fen.piece_placements,
+            vec![Space],
+            fen.active_player,
+            vec![Space],
+            fen.castling_availability,
+            vec![Space],
+            fen.en_passant_target_square,
+            vec![Space],
+            fen.half_move_clock,
+            vec![Space],
+            fen.full_move_number,
+        ]
+        .concat()
     }
 }
 
@@ -118,7 +134,7 @@ impl CastlingRights {
         if self.black_queenside {
             out.push(AsciiChar::SmallQ);
         }
-        assert!(out.len() > 0);
+        assert!(!out.is_empty());
         out
     }
 }
@@ -147,7 +163,7 @@ impl FiftyMoveRuleClock {
 pub struct NoPiece;
 
 impl Piece {
-    const fn try_from_fen(value: AsciiChar) -> Result<Self, NoPiece> {
+    const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, NoPiece> {
         match value as u8 {
             b'P' => Ok(Self::PAWN_WHITE),
             b'N' => Ok(Self::KNIGHT_WHITE),
@@ -167,7 +183,7 @@ impl Piece {
         }
     }
 
-    const fn to_fen(value: Self) -> AsciiChar {
+    const fn to_ascii_char(value: Self) -> AsciiChar {
         use AsciiChar as AC;
         match value {
             Self::PAWN_WHITE => AC::CapitalP,   // `P`
@@ -207,25 +223,27 @@ impl PlayerKind {
     }
 }
 
-fn fen_row_to_board_row(row: &[AsciiChar]) -> [Option<Piece>; 8] {
-    let mut out_row: Vec<Option<Piece>> = vec![];
-
-    for c in row {
-        match *c as u8 {
-            d @ b'1'..=b'8' => out_row.extend(vec![None; usize::from(d - b'0')]),
-            b'A'..=b'Z' | b'a'..=b'z' => out_row.push(Some(Piece::try_from_fen(*c).unwrap())),
-
-            _ => panic!(),
-        }
-    }
-
-    out_row
-        .try_into()
-        .expect("why did the row not have 8 things in it :susge:")
-}
-
 impl Board {
     pub fn try_from_fen(value: &[AsciiChar]) -> Result<Self, ()> {
+        fn fen_row_to_board_row(row: &[AsciiChar]) -> [Option<Piece>; 8] {
+            let mut out_row: Vec<Option<Piece>> = vec![];
+
+            for c in row {
+                match *c as u8 {
+                    d @ b'1'..=b'8' => out_row.extend(vec![None; usize::from(d - b'0')]),
+                    b'A'..=b'Z' | b'a'..=b'z' => {
+                        out_row.push(Some(Piece::try_from_ascii_char(*c).unwrap()));
+                    }
+
+                    _ => panic!(),
+                }
+            }
+
+            out_row
+                .try_into()
+                .expect("why did the row not have 8 things in it :susge:")
+        }
+
         let piece_placements_chunked: [[Option<Piece>; 8]; 8] = value
             .split(|c| *c == AsciiChar::from_u8(b'/').unwrap())
             .map(fen_row_to_board_row)
@@ -249,14 +267,24 @@ impl Board {
     }
 }
 
+impl Row {
+    const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, ()> {
+        Self::try_from(value as u8 - b'a' + 1)
+    }
+}
+impl Col {
+    const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, ()> {
+        Self::try_from(value as u8 - b'0' + 1)
+    }
+}
 impl Square {
     pub fn try_from_fen(value: &[AsciiChar]) -> Result<Option<Self>, ()> {
         // supposed to look like `-` || `a5` / `d2` / `f7` / ...
         match value {
             [_] => Ok(None), // normally just `-`, but i'll be nice
             [col, row] => Ok(Some(Self {
-                col: Col::try_from(*col as u8 - b'a' + 1)?,
-                row: Row::try_from(*row as u8 - b'0' + 1)?,
+                col: Col::try_from_ascii_char(*col)?,
+                row: Row::try_from_ascii_char(*row)?,
             })),
             [] | [_, _, _, ..] => Err(()), // should never empty or longer than 2
         }
@@ -266,7 +294,10 @@ impl Square {
     pub fn to_fen(value: &Option<Self>) -> Vec<AsciiChar> {
         match value {
             None => vec![AsciiChar::Solidus], // `/`
-            Some(Self { col, row }) => todo!(),
+            Some(Self { col, row }) => vec![
+                AsciiChar::from_u8(*col as u8 + b'a' - 1).unwrap(),
+                AsciiChar::from_u8(*row as u8 + b'0' - 1).unwrap(),
+            ],
         }
     }
 }
