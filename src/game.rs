@@ -63,8 +63,7 @@ impl FiftyMoveRuleClock {
 pub struct GameState {
     pub board: Board,
     pub fifty_move_rule_clock: FiftyMoveRuleClock,
-    pub white_castling_rights: CastlingRights,
-    pub black_castling_rights: CastlingRights,
+    pub castling_rights: CastlingRights,
     pub position_history: Vec<Position>,
     pub en_passant_target: Option<Square>,
     pub active_player: PlayerKind,
@@ -97,26 +96,26 @@ impl GameState {
     #[must_use]
     pub const fn is_castling_allowed(&self, castling_side: CastlingSide) -> bool {
         match (self.active_player, castling_side) {
-            (PlayerKind::White, CastlingSide::Kingside) => self.white_castling_rights.kingside,
-            (PlayerKind::White, CastlingSide::Queenside) => self.white_castling_rights.queenside,
-            (PlayerKind::Black, CastlingSide::Kingside) => self.black_castling_rights.kingside,
-            (PlayerKind::Black, CastlingSide::Queenside) => self.black_castling_rights.queenside,
+            (PlayerKind::White, CastlingSide::Kingside) => self.castling_rights.white_kingside,
+            (PlayerKind::White, CastlingSide::Queenside) => self.castling_rights.white_queenside,
+            (PlayerKind::Black, CastlingSide::Kingside) => self.castling_rights.black_kingside,
+            (PlayerKind::Black, CastlingSide::Queenside) => self.castling_rights.black_queenside,
         }
     }
 
     pub const fn deny_castling(&mut self, castling_side: CastlingSide) {
         match (self.active_player, castling_side) {
             (PlayerKind::White, CastlingSide::Kingside) => {
-                self.white_castling_rights.kingside = false;
+                self.castling_rights.white_kingside = false;
             }
             (PlayerKind::White, CastlingSide::Queenside) => {
-                self.white_castling_rights.queenside = false;
+                self.castling_rights.white_queenside = false;
             }
             (PlayerKind::Black, CastlingSide::Kingside) => {
-                self.black_castling_rights.kingside = false;
+                self.castling_rights.black_kingside = false;
             }
             (PlayerKind::Black, CastlingSide::Queenside) => {
-                self.black_castling_rights.queenside = false;
+                self.castling_rights.black_queenside = false;
             }
         }
     }
@@ -434,10 +433,13 @@ impl GameState {
     }
 }
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
 pub struct CastlingRights {
-    pub kingside: bool,
-    pub queenside: bool,
+    pub white_kingside: bool,
+    pub white_queenside: bool,
+    pub black_kingside: bool,
+    pub black_queenside: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

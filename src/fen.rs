@@ -43,15 +43,7 @@ impl GameState {
         let fifty_move_rule_clock =
             FiftyMoveRuleClock::try_from_fen(fen.half_move_clock.as_slice()).unwrap();
 
-        let white_castling_rights = CastlingRights {
-            kingside: fen.castling_availability.contains(&AsciiChar::CapitalK), // `K`
-            queenside: fen.castling_availability.contains(&AsciiChar::CapitalQ), // `Q`
-        };
-
-        let black_castling_rights = CastlingRights {
-            kingside: fen.castling_availability.contains(&AsciiChar::SmallK), // `k`
-            queenside: fen.castling_availability.contains(&AsciiChar::SmallQ), // `q`
-        };
+        let castling_rights = CastlingRights::from_fen(&fen.castling_availability);
 
         let active_player = PlayerKind::try_from_fen(fen.active_player.as_slice()).unwrap();
         let en_passant_target =
@@ -61,8 +53,7 @@ impl GameState {
         Self {
             board,
             fifty_move_rule_clock,
-            white_castling_rights,
-            black_castling_rights,
+            castling_rights,
             position_history: vec![],
             is_perft: false,
             active_player,
@@ -76,8 +67,7 @@ impl GameState {
         let Self {
             board,
             fifty_move_rule_clock,
-            white_castling_rights,
-            black_castling_rights,
+            castling_rights,
             position_history: _, // not part of fen
             en_passant_target,
             active_player,
@@ -91,11 +81,47 @@ impl GameState {
             en_passant_target_square: Square::to_fen(en_passant_target),
             half_move_clock: FiftyMoveRuleClock::to_fen(*fifty_move_rule_clock),
             full_move_number: FullMoveCount::to_fen(*full_move_count),
-            castling_availability: todo!(),
+            castling_availability: CastlingRights::to_fen(*castling_rights),
         }
     }
 }
 
+impl CastlingRights {
+    fn from_fen(value: &[AsciiChar]) -> Self {
+        if value == [AsciiChar::Solidus] {
+            // `-`
+            return Self::default(); // no more castling
+        }
+        Self {
+            white_kingside: value.contains(&AsciiChar::CapitalK), // `K`
+            white_queenside: value.contains(&AsciiChar::CapitalQ), // `Q`
+            black_kingside: value.contains(&AsciiChar::SmallK),   // `k`
+            black_queenside: value.contains(&AsciiChar::SmallQ),  // `q`
+        }
+    }
+
+    fn to_fen(self) -> Vec<AsciiChar> {
+        if self == Self::default() {
+            // if no more castling
+            return vec![AsciiChar::Solidus];
+        }
+        let mut out = vec![];
+        if self.white_kingside {
+            out.push(AsciiChar::CapitalK);
+        }
+        if self.white_queenside {
+            out.push(AsciiChar::CapitalQ);
+        }
+        if self.black_kingside {
+            out.push(AsciiChar::SmallK);
+        }
+        if self.black_queenside {
+            out.push(AsciiChar::SmallQ);
+        }
+        assert!(out.len() > 0);
+        out
+    }
+}
 #[derive(Debug)]
 pub struct NotANumber;
 impl FullMoveCount {
