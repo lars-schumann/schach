@@ -8,7 +8,7 @@ use crate::piece::{Piece, PieceKind};
 use crate::player::PlayerKind;
 
 pub static REPETITIONS_TO_FORCED_DRAW_COUNT: usize = 5;
-pub static FIFTY_MOVE_RULE_COUNT: u64 = 100;
+pub static FIFTY_MOVE_RULE_COUNT: FiftyMoveRuleClock = FiftyMoveRuleClock(100);
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, strum::Display)]
 pub enum CastlingSide {
@@ -44,10 +44,25 @@ impl Default for FullMoveCount {
     }
 }
 
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub struct FiftyMoveRuleClock(pub u64);
+impl FiftyMoveRuleClock {
+    #[must_use]
+    pub const fn new(initial: u64) -> Self {
+        Self(initial)
+    }
+    pub const fn increase(&mut self) {
+        self.0 += 1;
+    }
+    pub const fn reset(&mut self) {
+        self.0 = 0;
+    }
+}
+
 #[derive(Default, Clone)]
 pub struct GameState {
     pub board: Board,
-    pub fifty_move_rule_clock: u64,
+    pub fifty_move_rule_clock: FiftyMoveRuleClock,
     pub white_castling_rights: CastlingRights,
     pub black_castling_rights: CastlingRights,
     pub position_history: Vec<Position>,
@@ -144,8 +159,8 @@ impl GameState {
                 is_capture: true,
             }
             | Move::Promotion { .. }
-            | Move::EnPassant { .. } => new_game.fifty_move_rule_clock = 0,
-            Move::Normal { .. } | Move::Castling(_) => new_game.fifty_move_rule_clock += 1,
+            | Move::EnPassant { .. } => new_game.fifty_move_rule_clock.reset(),
+            Move::Normal { .. } | Move::Castling(_) => new_game.fifty_move_rule_clock.increase(),
         }
 
         match mov {

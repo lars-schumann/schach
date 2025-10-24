@@ -1,7 +1,7 @@
 use crate::{
     board::Board,
     coord::{Col, Row, Square},
-    game::{CastlingRights, FullMoveCount, GameState},
+    game::{CastlingRights, FiftyMoveRuleClock, FullMoveCount, GameState},
     piece::Piece,
     player::PlayerKind,
 };
@@ -40,7 +40,8 @@ impl GameState {
 
         let board = Board::try_from_fen(fen.piece_placements.as_slice()).unwrap();
 
-        let fifty_move_rule_clock: u64 = fen.half_move_clock.as_str().parse().unwrap();
+        let fifty_move_rule_clock =
+            FiftyMoveRuleClock::try_from_fen(fen.half_move_clock.as_slice()).unwrap();
 
         let white_castling_rights = CastlingRights {
             kingside: fen.castling_availability.contains(&AsciiChar::CapitalK), // `K`
@@ -71,20 +72,27 @@ impl GameState {
     }
 
     #[must_use]
-    pub fn to_fen(&self) -> Vec<AsciiChar> {
+    pub fn to_fen(&self) -> FenStrings {
         let Self {
             board,
             fifty_move_rule_clock,
             white_castling_rights,
             black_castling_rights,
-            position_history,
+            position_history: _, // not part of fen
             en_passant_target,
             active_player,
-            is_perft,
+            is_perft: _, // not part of fen
             full_move_count,
         } = self;
 
-        todo!()
+        FenStrings {
+            piece_placements: Board::to_fen(board),
+            active_player: vec![PlayerKind::to_fen(*active_player)],
+            en_passant_target_square: Square::to_fen(en_passant_target),
+            half_move_clock: FiftyMoveRuleClock::to_fen(*fifty_move_rule_clock),
+            full_move_number: FullMoveCount::to_fen(*full_move_count),
+            castling_availability: todo!(),
+        }
     }
 }
 
@@ -93,6 +101,16 @@ pub struct NotANumber;
 impl FullMoveCount {
     fn try_from_fen(value: &[AsciiChar]) -> Result<Self, std::num::ParseIntError> {
         value.as_str().parse().map(Self)
+    }
+
+    fn to_fen(self) -> Vec<AsciiChar> {
+        self.0.to_string().as_ascii().unwrap().to_owned()
+    }
+}
+
+impl FiftyMoveRuleClock {
+    fn try_from_fen(value: &[AsciiChar]) -> Result<Self, std::num::ParseIntError> {
+        Ok(Self::new(value.as_str().parse()?))
     }
 
     fn to_fen(self) -> Vec<AsciiChar> {
@@ -198,6 +216,11 @@ impl Board {
 
         Ok(board)
     }
+
+    #[must_use]
+    pub fn to_fen(&self) -> Vec<AsciiChar> {
+        todo!()
+    }
 }
 
 impl Square {
@@ -214,7 +237,7 @@ impl Square {
     }
 
     #[must_use]
-    pub fn to_fen(value: Option<Self>) -> Vec<AsciiChar> {
+    pub fn to_fen(value: &Option<Self>) -> Vec<AsciiChar> {
         match value {
             None => vec![AsciiChar::Solidus], // `/`
             Some(Self { col, row }) => todo!(),
