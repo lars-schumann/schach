@@ -93,11 +93,11 @@ impl std::fmt::Debug for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f)?;
         for row in Row::ROWS.into_iter().rev() {
-            write!(f, "{}", i32::from(row))?;
+            write!(f, "{}", i8::from(row))?;
             for col in Col::COLS {
                 match self[S { col, row }] {
                     None => {
-                        if (i32::from(row) + i32::from(col)) % 2 == 0 {
+                        if (i8::from(row) + i8::from(col)) % 2 == 0 {
                             write!(f, "□ ",)?;
                         } else {
                             write!(f, "■ ",)?;
@@ -110,7 +110,7 @@ impl std::fmt::Debug for Board {
         }
         write!(f, "  ")?;
         for col in Col::COLS {
-            write!(f, "{} ", i32::from(col))?;
+            write!(f, "{} ", i8::from(col))?;
         }
         Ok(())
     }
@@ -118,15 +118,15 @@ impl std::fmt::Debug for Board {
 impl const std::ops::Index<S> for Board {
     type Output = Option<Piece>;
     fn index(&self, index: S) -> &Self::Output {
-        let col = usize::from(index.col) - 1;
-        let row = usize::from(index.row) - 1;
+        let col = usize::from(u8::from(index.col) - 1);
+        let row = usize::from(u8::from(index.row) - 1);
         &self.0[col][row]
     }
 }
 impl const std::ops::IndexMut<S> for Board {
     fn index_mut(&mut self, index: S) -> &mut Self::Output {
-        let col = usize::from(index.col) - 1;
-        let row = usize::from(index.row) - 1;
+        let col = usize::from(u8::from(index.col) - 1);
+        let row = usize::from(u8::from(index.row) - 1);
         &mut self.0[col][row]
     }
 }
@@ -139,14 +139,14 @@ impl std::fmt::Debug for DebugBoard {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f)?;
         for row in Row::ROWS.into_iter().rev() {
-            write!(f, "{}", i32::from(row))?;
+            write!(f, "{}", i8::from(row))?;
             for col in Col::COLS {
                 if self.attacked_squares.contains(&S { col, row }) {
                     write!(f, "\x1B[31m",)?;
                 }
                 match self.inner[S { col, row }] {
                     None => {
-                        if (i32::from(row) + i32::from(col)) % 2 == 0 {
+                        if (i8::from(row) + i8::from(col)) % 2 == 0 {
                             write!(f, "□ ",)?;
                         } else {
                             write!(f, "■ ",)?;
@@ -163,7 +163,7 @@ impl std::fmt::Debug for DebugBoard {
         }
         write!(f, "  ")?;
         for col in Col::COLS {
-            write!(f, "{} ", i32::from(col))?;
+            write!(f, "{} ", i8::from(col))?;
         }
         Ok(())
     }
