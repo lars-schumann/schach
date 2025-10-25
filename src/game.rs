@@ -1,7 +1,9 @@
 use std::num::NonZeroU64;
 use std::ops::Not;
+use std::sync::Mutex;
 
 use itertools::iproduct;
+use rayon::prelude::*;
 
 use crate::board::Board;
 use crate::coord::Square;
@@ -385,6 +387,7 @@ impl GameState {
         }
         candidates
     }
+
     #[must_use]
     pub const fn apply_move_to_board(mut self, m: Move) -> Self {
         match m {
@@ -395,6 +398,7 @@ impl GameState {
                 is_capture: _,
             }
             | Move::DoubleStep { start, target } => self.board.mov(start, target),
+
             Move::EnPassant {
                 start,
                 target,
@@ -403,6 +407,7 @@ impl GameState {
                 self.board.mov(start, target);
                 self.board[affected_square] = None;
             }
+
             Move::Promotion {
                 start,
                 target,
@@ -415,6 +420,7 @@ impl GameState {
                     owner: self.active_player,
                 });
             }
+
             Move::Castling(castling_side) => {
                 self.board.mov(
                     self.active_player.king_start(),
@@ -428,8 +434,66 @@ impl GameState {
         }
         self
     }
+
+    #[must_use]
+    pub fn search(self, max_depth: u32) -> SearchStats {
+        let terminated_games_checkmate: Mutex<Vec<Self>> = Mutex::new(vec![]);
+        let terminated_games_draw: Mutex<Vec<Self>> = Mutex::new(vec![]);
+        let mut continued_games: Mutex<Vec<Self>> = Mutex::new(vec![self]);
+        let mut new_continued_games: Mutex<Vec<Self>> = Mutex::new(vec![]);
+
+        let stats: Mutex<SearchStats> = Mutex::<SearchStats>::default();
+
+        for _ in 0..=max_depth {
+            continued_games
+                .lock()
+                .unwrap()
+                .clone()
+                .into_par_iter()
+                .for_each(|game| {
+                    let legal_moves: Vec<Move> = game.legal_moves().collect();
+
+                    for mov in legal_moves.clone() {
+                        if matches!(mov, Move::EnPassant { .. }) {
+                            stats.lock().unwrap().en_passant += 1;
+                        }
+                        match game.clone().step(mov, legal_moves.clone()) {
+                            StepResult::Terminated(GameResult {
+                                kind: GameResultKind::Win,
+                                final_game_state,
+                            }) => terminated_games_checkmate
+                                .lock()
+                                .unwrap()
+                                .push(final_game_state),
+                            StepResult::Terminated(GameResult {
+                                kind: GameResultKind::Draw(_),
+                                final_game_state,
+                            }) => terminated_games_draw.lock().unwrap().push(final_game_state),
+                            StepResult::Continued(game_state) => {
+                                new_continued_games.lock().unwrap().push(game_state);
+                            }
+                        }
+                    }
+                });
+
+            std::mem::swap(&mut continued_games, &mut new_continued_games);
+            new_continued_games.lock().unwrap().clear();
+        }
+
+        stats.lock().unwrap().countinued_games = continued_games.lock().unwrap().len();
+        stats.lock().unwrap().checkmated_games = terminated_games_checkmate.lock().unwrap().len();
+        stats.lock().unwrap().drawn_games = terminated_games_draw.lock().unwrap().len();
+        stats.into_inner().unwrap()
+    }
 }
 
+#[derive(Default)]
+pub struct SearchStats {
+    pub countinued_games: usize,
+    pub checkmated_games: usize,
+    pub drawn_games: usize,
+    pub en_passant: usize,
+}
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
 pub struct CastlingRights {
