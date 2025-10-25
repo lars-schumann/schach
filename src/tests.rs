@@ -22,12 +22,12 @@ fn search() {
 
     let before = std::time::Instant::now();
 
-    for depth in 0..=1 {
+    for depth in 0..=4 {
         continued_games
             .lock()
             .unwrap()
             .clone()
-            .into_par_iter()
+            .into_iter()
             .for_each(|game| {
                 let count = count.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
 

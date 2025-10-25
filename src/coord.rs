@@ -249,6 +249,7 @@ macro_rules! col_try_from_int_impl {
                 type Error = ColIndexOutOfRange;
                 fn try_from(value: $ty) -> Result<Self, Self::Error> {
                     match value {
+                        ..=0 => Err(ColIndexOutOfRange::TooLow),
                          1 => Ok(Self::C1),
                          2 => Ok(Self::C2),
                          3 => Ok(Self::C3),
@@ -257,9 +258,8 @@ macro_rules! col_try_from_int_impl {
                          6 => Ok(Self::C6),
                          7 => Ok(Self::C7),
                          8 => Ok(Self::C8),
-                         _ if value < 1 =>  Err(ColIndexOutOfRange::TooLow),
-                         _ if value > 8 =>  Err(ColIndexOutOfRange::TooHigh),
-                         _ => unreachable!()
+                         9.. =>  Err(ColIndexOutOfRange::TooHigh),
+
                     }
                 }
             }
@@ -274,6 +274,7 @@ macro_rules! row_try_from_int_impl {
                 type Error = RowIndexOutOfRange;
                 fn try_from(value: $ty) -> Result<Self, Self::Error> {
                     match value {
+                        ..=0 =>  Err(RowIndexOutOfRange::TooLow),
                          1 => Ok(Self::R1),
                          2 => Ok(Self::R2),
                          3 => Ok(Self::R3),
@@ -282,9 +283,7 @@ macro_rules! row_try_from_int_impl {
                          6 => Ok(Self::R6),
                          7 => Ok(Self::R7),
                          8 => Ok(Self::R8),
-                         _ if value < 1 =>  Err(RowIndexOutOfRange::TooLow),
-                         _ if value > 8 =>  Err(RowIndexOutOfRange::TooHigh),
-                         _ => unreachable!()
+                         9.. =>  Err(RowIndexOutOfRange::TooHigh),
                     }
                 }
             }
