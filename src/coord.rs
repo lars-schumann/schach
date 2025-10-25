@@ -174,14 +174,14 @@ impl Row {
     ];
 }
 impl const std::ops::Add<i32> for Row {
-    type Output = Result<Self, ()>;
+    type Output = Result<Self, RowIndexOutOfRange>;
     fn add(self, rhs: i32) -> Self::Output {
         let row_number: i32 = self.into();
         (row_number + rhs).try_into()
     }
 }
 impl const std::ops::Add<i32> for Col {
-    type Output = Result<Self, ()>;
+    type Output = Result<Self, ColIndexOutOfRange>;
     fn add(self, rhs: i32) -> Self::Output {
         let column_number: i32 = self.into();
         (column_number + rhs).try_into()
@@ -230,11 +230,23 @@ macro_rules! row_into_int_impl {
     }
 }
 
+#[derive(Debug)]
+pub enum ColIndexOutOfRange {
+    TooLow,
+    TooHigh,
+}
+
+#[derive(Debug)]
+pub enum RowIndexOutOfRange {
+    TooLow,
+    TooHigh,
+}
+
 macro_rules! col_try_from_int_impl {
     ($($ty:ty)*) => {
         $(
             impl const TryFrom<$ty> for Col {
-                type Error = ();
+                type Error = ColIndexOutOfRange;
                 fn try_from(value: $ty) -> Result<Self, Self::Error> {
                     match value {
                          1 => Ok(Self::C1),
@@ -245,7 +257,9 @@ macro_rules! col_try_from_int_impl {
                          6 => Ok(Self::C6),
                          7 => Ok(Self::C7),
                          8 => Ok(Self::C8),
-                         _ => Err(()),
+                         _ if value < 1 =>  Err(ColIndexOutOfRange::TooLow),
+                         _ if value > 8 =>  Err(ColIndexOutOfRange::TooHigh),
+                         _ => unreachable!()
                     }
                 }
             }
@@ -253,16 +267,11 @@ macro_rules! col_try_from_int_impl {
     }
 }
 
-pub enum IndexOutOfRange {
-    TooLow(String),
-    TooHigh(String),
-}
-
 macro_rules! row_try_from_int_impl {
     ($($ty:ty)*) => {
         $(
             impl const TryFrom<$ty> for Row {
-                type Error = IndexOutOfRange;
+                type Error = RowIndexOutOfRange;
                 fn try_from(value: $ty) -> Result<Self, Self::Error> {
                     match value {
                          1 => Ok(Self::R1),
@@ -273,8 +282,8 @@ macro_rules! row_try_from_int_impl {
                          6 => Ok(Self::R6),
                          7 => Ok(Self::R7),
                          8 => Ok(Self::R8),
-                         _ if value < 1 =>  Err(IndexOutOfRange::TooLow(String::from(format!("{value} was less than 1")))),
-                         _ if value > 8 =>  Err(IndexOutOfRange::TooLow(String::from(format!("{value} was less than 1")))),
+                         _ if value < 1 =>  Err(RowIndexOutOfRange::TooLow),
+                         _ if value > 8 =>  Err(RowIndexOutOfRange::TooHigh),
                          _ => unreachable!()
                     }
                 }
@@ -376,8 +385,23 @@ impl const std::ops::Mul<i32> for Offset {
     }
 }
 
+#[derive(Debug)]
+pub enum SquareOutOfRange {
+    Col(ColIndexOutOfRange),
+    Row(RowIndexOutOfRange),
+}
+impl const From<ColIndexOutOfRange> for SquareOutOfRange {
+    fn from(value: ColIndexOutOfRange) -> Self {
+        Self::Col(value)
+    }
+}
+impl const From<RowIndexOutOfRange> for SquareOutOfRange {
+    fn from(value: RowIndexOutOfRange) -> Self {
+        Self::Row(value)
+    }
+}
 impl const std::ops::Add<Offset> for Square {
-    type Output = Result<Self, ()>;
+    type Output = Result<Self, SquareOutOfRange>;
     fn add(self, rhs: Offset) -> Self::Output {
         Ok(Self {
             col: (self.col + rhs.col)?,

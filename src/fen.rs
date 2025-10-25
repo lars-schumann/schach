@@ -1,6 +1,6 @@
 use crate::{
     board::Board,
-    coord::{Col, Row, Square},
+    coord::{Col, ColIndexOutOfRange, Row, RowIndexOutOfRange, Square, SquareOutOfRange},
     game::{CastlingRights, FiftyMoveRuleClock, FullMoveCount, GameState},
     piece::Piece,
     player::PlayerKind,
@@ -111,10 +111,8 @@ impl GameState {
 impl CastlingRights {
     #[must_use]
     pub fn from_fen(value: &[AsciiChar]) -> Self {
-        if value == [AsciiChar::HyphenMinus]
-        // `-`
-        {
-            return Self::default(); // no more castling
+        if value == [AsciiChar::HyphenMinus] {
+            return Self::default();
         }
         Self {
             white_kingside: value.contains(&AsciiChar::CapitalK), // `K`
@@ -127,7 +125,6 @@ impl CastlingRights {
     #[must_use]
     pub fn to_fen(self) -> Vec<AsciiChar> {
         if self == Self::default() {
-            // if no more castling
             return vec![AsciiChar::HyphenMinus];
         }
         let mut out = vec![];
@@ -147,8 +144,7 @@ impl CastlingRights {
         out
     }
 }
-#[derive(Debug)]
-pub struct NotANumber;
+
 impl FullMoveCount {
     fn try_from_fen(value: &[AsciiChar]) -> Result<Self, std::num::ParseIntError> {
         value.as_str().parse().map(Self)
@@ -169,10 +165,10 @@ impl FiftyMoveRuleClock {
     }
 }
 #[derive(Debug)]
-pub struct NoPiece;
+pub struct MalformedPieceError;
 
 impl Piece {
-    pub const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, NoPiece> {
+    pub const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, MalformedPieceError> {
         match value as u8 {
             b'P' => Ok(Self::PAWN_WHITE),
             b'N' => Ok(Self::KNIGHT_WHITE),
@@ -188,7 +184,7 @@ impl Piece {
             b'q' => Ok(Self::QUEEN_BLACK),
             b'k' => Ok(Self::KING_BLACK),
 
-            _ => Err(NoPiece),
+            _ => Err(MalformedPieceError),
         }
     }
 
@@ -214,14 +210,20 @@ impl Piece {
 }
 
 #[derive(Debug)]
-pub struct InvalidPlayer;
+pub enum InvalidPlayer {
+    IllegalCharacter(AsciiChar),
+    TooShort(usize),
+    TooLong(usize),
+}
 
 impl PlayerKind {
     pub const fn try_from_fen(value: &[AsciiChar]) -> Result<Self, InvalidPlayer> {
         match value {
-            [AsciiChar::SmallW] => Ok(Self::White),      // `w`
-            [AsciiChar::SmallB] => Ok(Self::Black),      // `b`
-            [] | [_] | [_, _, ..] => Err(InvalidPlayer), // empty, other or 2+ chars are all wrong
+            [AsciiChar::SmallW] => Ok(Self::White), // `w`
+            [AsciiChar::SmallB] => Ok(Self::Black), // `b`
+            [] => Err(InvalidPlayer::TooShort(value.len())),
+            [illegal] => Err(InvalidPlayer::IllegalCharacter(*illegal)),
+            [_, _, ..] => Err(InvalidPlayer::TooLong(value.len())),
         }
     }
 
@@ -234,33 +236,43 @@ impl PlayerKind {
     }
 }
 
+#[derive(Debug)]
+pub enum BoardFromFenError {
+    IllegalCharacter(AsciiChar),
+    IllegalRowDimensions,
+    IllegalColDimensions,
+}
+
 impl Board {
-    pub fn try_from_fen(value: &[AsciiChar]) -> Result<Self, ()> {
-        fn fen_row_to_board_row(row: &[AsciiChar]) -> [Option<Piece>; 8] {
+    pub fn try_from_fen(value: &[AsciiChar]) -> Result<Self, BoardFromFenError> {
+        fn fen_row_to_board_row(
+            row: &[AsciiChar],
+        ) -> Result<[Option<Piece>; 8], BoardFromFenError> {
             let mut out_row: Vec<Option<Piece>> = vec![];
 
             for c in row {
                 match *c as u8 {
-                    d @ b'1'..=b'8' => out_row.extend(vec![None; usize::from(d - b'0')]),
-                    b'A'..=b'Z' | b'a'..=b'z' => {
+                    b'1'..=b'8' => out_row.extend(vec![None; usize::from(u8::from(*c) - b'0')]),
+                    b'P' | b'N' | b'B' | b'R' | b'Q' | b'K' | b'p' | b'n' | b'b' | b'r' | b'q'
+                    | b'k' => {
                         out_row.push(Some(Piece::try_from_ascii_char(*c).unwrap()));
                     }
 
-                    _ => panic!(),
+                    _ => return Err(BoardFromFenError::IllegalCharacter(*c)),
                 }
             }
 
             out_row
                 .try_into()
-                .expect("why did the row not have 8 things in it :susge:")
+                .map_err(|_| BoardFromFenError::IllegalRowDimensions)
         }
 
         let piece_placements_chunked: [[Option<Piece>; 8]; 8] = value
-            .split(|c| *c == AsciiChar::from_u8(b'/').unwrap())
+            .split(|c| *c == AsciiChar::Solidus)
             .map(fen_row_to_board_row)
-            .collect::<Vec<_>>()
+            .collect::<Result<Vec<[Option<Piece>; 8]>, BoardFromFenError>>()?
             .try_into()
-            .unwrap();
+            .map_err(|_| BoardFromFenError::IllegalColDimensions)?;
 
         let board = Self(
             mattr::transpose_array(piece_placements_chunked).map(|mut col| {
@@ -314,7 +326,7 @@ impl Board {
 }
 
 impl Col {
-    pub const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, ()> {
+    pub const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, ColIndexOutOfRange> {
         Self::try_from(u8::from(value) - b'a' + 1)
     }
     #[must_use]
@@ -323,7 +335,7 @@ impl Col {
     }
 }
 impl Row {
-    pub const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, ()> {
+    pub const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, RowIndexOutOfRange> {
         Self::try_from(u8::from(value) - b'0')
     }
     #[must_use]
@@ -332,16 +344,30 @@ impl Row {
     }
 }
 
+#[derive(Debug)]
+pub enum SquareFromFenError {
+    OutOfRange(SquareOutOfRange),
+    IllegalCharacter(AsciiChar),
+    TooShort(usize),
+    TooLong(usize),
+}
+impl From<SquareOutOfRange> for SquareFromFenError {
+    fn from(value: SquareOutOfRange) -> Self {
+        Self::OutOfRange(value)
+    }
+}
 impl Square {
-    pub fn try_from_fen(value: &[AsciiChar]) -> Result<Option<Self>, ()> {
+    pub fn try_from_fen(value: &[AsciiChar]) -> Result<Option<Self>, SquareFromFenError> {
         // supposed to look like `-` || `a5` / `d2` / `f7` / ...
         match value {
-            [_] => Ok(None), // normally just `-`, but i'll be nice
+            [AsciiChar::HyphenMinus] => Ok(None), //  `-`
             [col, row] => Ok(Some(Self {
-                col: Col::try_from_ascii_char(*col)?,
-                row: Row::try_from_ascii_char(*row)?,
+                col: Col::try_from_ascii_char(*col).map_err(SquareOutOfRange::from)?,
+                row: Row::try_from_ascii_char(*row).map_err(SquareOutOfRange::from)?,
             })),
-            [] | [_, _, _, ..] => Err(()), // should never be empty or longer than 2
+            [] => Err(SquareFromFenError::TooShort(value.len())),
+            [illegal] => Err(SquareFromFenError::IllegalCharacter(*illegal)),
+            [_, _, _, ..] => Err(SquareFromFenError::TooLong(value.len())),
         }
     }
 
