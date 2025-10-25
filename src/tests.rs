@@ -97,3 +97,22 @@ fn test_mass_fens() {
         assert_eq!(fen, schach_fen.as_str());
     }
 }
+
+#[test]
+fn test_mass_against_owl() {
+    let fens = include_str!("../fens/lichess_puzzle_fens.txt");
+
+    for fen in fens.lines() {
+        let schach_game = GameState::try_from_fen(fen).unwrap();
+        let schach_fen = schach_game.to_fen();
+        assert_eq!(fen, schach_fen.as_str());
+
+        let owl = owlchess::Board::from_fen(fen).unwrap();
+        let owl_moves = owlchess::movegen::legal::gen_all(&owl);
+
+        assert_eq!(
+            owl_moves.len(),
+            GameState::try_from_fen(fen).unwrap().legal_moves().count()
+        );
+    }
+}
