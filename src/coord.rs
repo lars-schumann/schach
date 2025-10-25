@@ -9,13 +9,18 @@ pub struct Square {
 macro_rules! square {
     ($square_col:tt $square_row:tt) => {
         paste::paste! {
-            pub const [<$square_col $square_row>]: Self = Self{col: match Col::try_from(letter_to_number!($square_col)){
-                Ok(val) => val,
-                Err(_) => panic!("illegal Column Index")
-            }, row: match Row::try_from($square_row){
-                Ok(val) => val,
-                Err(_) => panic!("illegal Row Index")
-            }};
+            pub const [<$square_col $square_row>]: Self =
+            Self {
+                col: 
+                match Col::try_from(letter_to_number!($square_col)){
+                    Ok(val) => val,
+                    Err(_) => panic!("illegal Column Index")
+                },
+                row: match Row::try_from($square_row){
+                    Ok(val) => val,
+                    Err(_) => panic!("illegal Row Index")
+                }
+            };
         }
     };
 }
