@@ -464,9 +464,31 @@ impl GameState {
                 .lock()
                 .unwrap()
                 .clone()
-                .into_par_iter()
+                .into_iter()
                 .for_each(|game| {
                     let legal_moves: Vec<Move> = game.legal_moves().collect();
+
+                    let owl_moves = owlchess::movegen::legal::gen_all(
+                        &owlchess::Board::from_fen(game.to_fen().as_str()).unwrap(),
+                    );
+
+                    if legal_moves.len() != owl_moves.len() {
+                        println!("----------------------");
+                        println!("fen: {}", game.to_fen().as_str());
+                        println!("----------------------");
+                        println!("schach moves:");
+                        for m in legal_moves {
+                            println!("{m:?}");
+                        }
+                        println!("----------------------");
+                        println!("owl moves:");
+                        for m in &owl_moves {
+                            println!("{m:?}");
+                        }
+                        println!("----------------------");
+
+                        panic!();
+                    }
 
                     for mov in legal_moves.clone() {
                         if matches!(mov, Move::EnPassant { .. }) {
