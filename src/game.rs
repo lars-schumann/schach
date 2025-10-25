@@ -80,14 +80,6 @@ impl GameState {
     }
 
     #[must_use]
-    pub fn testing() -> Self {
-        Self {
-            board: Board::filled(false),
-            ..Default::default()
-        }
-    }
-
-    #[must_use]
     pub fn perft() -> Self {
         Self {
             is_perft: true,

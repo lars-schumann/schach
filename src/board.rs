@@ -11,7 +11,7 @@ use crate::player::PlayerKind;
 pub struct Board(pub [[Option<Piece>; ROW_COUNT]; COL_COUNT]);
 impl Board {
     #[must_use]
-    pub const fn new() -> Self {
+    pub const fn empty() -> Self {
         Self([[None; ROW_COUNT]; COL_COUNT])
     }
 
@@ -55,8 +55,8 @@ impl Board {
     }
 
     #[must_use]
-    pub fn filled(with_pawns: bool) -> Self {
-        let mut board = Self::new();
+    pub fn new() -> Self {
+        let mut board = Self::empty();
 
         board[S::A1] = Some(Piece::ROOK_WHITE);
         board[S::B1] = Some(Piece::KNIGHT_WHITE);
@@ -76,11 +76,9 @@ impl Board {
         board[S::G8] = Some(Piece::KNIGHT_BLACK);
         board[S::H8] = Some(Piece::ROOK_BLACK);
 
-        if with_pawns {
-            for col in Col::COLS {
-                board[S { col, row: Row::R2 }] = Some(Piece::PAWN_WHITE);
-                board[S { col, row: Row::R7 }] = Some(Piece::PAWN_BLACK);
-            }
+        for col in Col::COLS {
+            board[S { col, row: Row::R2 }] = Some(Piece::PAWN_WHITE);
+            board[S { col, row: Row::R7 }] = Some(Piece::PAWN_BLACK);
         }
 
         board
@@ -88,7 +86,7 @@ impl Board {
 }
 impl Default for Board {
     fn default() -> Self {
-        Self::filled(true)
+        Self::new()
     }
 }
 impl std::fmt::Debug for Board {

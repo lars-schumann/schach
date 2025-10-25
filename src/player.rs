@@ -104,9 +104,6 @@ impl PlayerKind {
 
     #[must_use]
     pub const fn backwards_one_row(&self) -> Offset {
-        match self {
-            Self::White => Offset::D,
-            Self::Black => Offset::U,
-        }
+        self.forwards_one_row() * -1
     }
 }
