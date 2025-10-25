@@ -42,9 +42,18 @@ pub enum StepResult {
 
 #[derive(Clone, Copy, Debug)]
 pub struct FullMoveCount(pub NonZeroU64); // non-zero & unsized because this always starts at 1 and cant decrease 
-impl Default for FullMoveCount {
+impl const Default for FullMoveCount {
     fn default() -> Self {
+        Self::new()
+    }
+}
+impl FullMoveCount {
+    #[must_use]
+    pub const fn new() -> Self {
         Self(NonZeroU64::new(1).unwrap())
+    }
+    pub const fn increase(&mut self) {
+        self.0 = self.0.checked_add(1).expect("how did you overflow this");
     }
 }
 
@@ -114,6 +123,12 @@ impl GameState {
                 self.castling_rights.black_queenside = false;
             }
         }
+    }
+
+    #[must_use]
+    pub const fn with_opponent_active(mut self) -> Self {
+        self.active_player = self.active_player.opponent();
+        self
     }
 
     pub fn legal_moves(&self) -> impl Iterator<Item = Move> + Clone + use<'_> {
@@ -219,13 +234,9 @@ impl GameState {
             }
         }
 
-        new_game.active_player = new_game.active_player.opponent();
-        if new_game.legal_moves().count() == 0 {
-            new_game.active_player = new_game.active_player.opponent();
-            return if new_game
-                .board
-                .is_king_checked(self.active_player.opponent())
-            {
+        let future = new_game.clone().with_opponent_active();
+        if future.legal_moves().count() == 0 {
+            return if future.board.is_king_checked(self.active_player.opponent()) {
                 StepResult::Terminated(GameResult {
                     kind: GameResultKind::Win,
                     final_game_state: new_game,
@@ -238,6 +249,10 @@ impl GameState {
             };
         }
 
+        if new_game.active_player == PlayerKind::Black {
+            new_game.full_move_count.increase();
+        }
+        new_game.active_player = new_game.active_player.opponent();
         StepResult::Continued(new_game)
     }
 

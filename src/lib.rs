@@ -10,6 +10,7 @@
     const_index,
     const_cmp,
     const_result_trait_fn,
+    const_default,
     generic_const_exprs,
     iter_collect_into,
     ascii_char,
