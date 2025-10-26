@@ -108,8 +108,8 @@ impl GameState {
         }
     }
 
-    pub const fn deny_castling(&mut self, castling_side: CastlingSide) {
-        match (self.active_player, castling_side) {
+    pub const fn deny_castling(&mut self, for_player: PlayerKind, castling_side: CastlingSide) {
+        match (for_player, castling_side) {
             (PlayerKind::White, CastlingSide::Kingside) => {
                 self.castling_rights.white_kingside = false;
             }
@@ -147,73 +147,100 @@ impl GameState {
     #[must_use]
     #[allow(clippy::too_many_lines)]
     pub fn step(self, mov: Move, all_legal_moves: Vec<Move>) -> StepResult {
-        let mut new_game = self.clone().apply_move_to_board(mov);
+        let mut game = self.apply_move_to_board(mov);
 
         let current_position = Position {
-            board: new_game.board,
+            board: game.board,
             possible_moves: all_legal_moves,
         };
 
+        // handle fifty move rule
         match mov {
             Move::Normal {
                 piece_kind: PieceKind::Pawn,
-                start: _,
-                target: _,
-                is_capture: _,
+                ..
+            }
+            | Move::Normal {
+                is_capture: true, ..
             }
             | Move::DoubleStep { .. }
-            | Move::Normal {
-                piece_kind: _,
-                start: _,
-                target: _,
-                is_capture: true,
-            }
             | Move::Promotion { .. }
-            | Move::EnPassant { .. } => new_game.fifty_move_rule_clock.reset(),
-            Move::Normal { .. } | Move::Castling(_) => new_game.fifty_move_rule_clock.increase(),
+            | Move::EnPassant { .. } => game.fifty_move_rule_clock.reset(),
+            Move::Normal {
+                is_capture: false, ..
+            }
+            | Move::Castling(_) => game.fifty_move_rule_clock.increase(),
         }
 
+        // handle our own castling rights
         match mov {
             Move::Castling(_)
             | Move::Normal {
                 piece_kind: PieceKind::King,
-                start: _,
-                target: _,
-                is_capture: _,
+                ..
             } => {
-                new_game.deny_castling(CastlingSide::Kingside);
-                new_game.deny_castling(CastlingSide::Queenside);
+                game.deny_castling(game.active_player, CastlingSide::Kingside);
+                game.deny_castling(game.active_player, CastlingSide::Queenside);
             }
             Move::Normal {
                 piece_kind: PieceKind::Rook,
                 start,
-                target: _,
-                is_capture: _,
+                ..
             } => {
                 for castling_side in [CastlingSide::Kingside, CastlingSide::Queenside] {
-                    if start == new_game.active_player.rook_start(castling_side) {
-                        new_game.deny_castling(castling_side);
+                    if start == game.active_player.rook_start(castling_side) {
+                        game.deny_castling(game.active_player, castling_side);
                     }
                 }
             }
             Move::Normal { .. }
             | Move::DoubleStep { .. }
             | Move::Promotion { .. }
-            | Move::EnPassant { .. } => {} //nothing
+            | Move::EnPassant { .. } => { /*nothing */ }
         }
 
+        // handle opponents castling rights
+        match mov {
+            Move::Normal {
+                is_capture: true,
+                target,
+                ..
+            }
+            | Move::Promotion {
+                is_capture: true,
+                target,
+                ..
+            } => {
+                for castling_side in [CastlingSide::Kingside, CastlingSide::Queenside] {
+                    if target == game.active_player.opponent().rook_start(castling_side) {
+                        game.deny_castling(game.active_player.opponent(), castling_side);
+                    }
+                }
+            }
+            Move::Normal {
+                is_capture: false, ..
+            }
+            | Move::Promotion {
+                is_capture: false, ..
+            }
+            | Move::DoubleStep { .. }
+            | Move::EnPassant { .. }
+            | Move::Castling(_) => { /*nothing */ }
+        }
+
+        // handle en passant target
         if let Move::DoubleStep { start: _, target } = mov {
-            let en_passant_target = (target + new_game.active_player.backwards_one_row())
+            let en_passant_target = (target + game.active_player.backwards_one_row())
                 .expect("this cannot be outside the board");
-            new_game.en_passant_target = Some(en_passant_target);
+            game.en_passant_target = Some(en_passant_target);
         } else {
-            new_game.en_passant_target = None;
+            game.en_passant_target = None;
         }
 
-        if self.is_perft.not() {
-            new_game.position_history.push(current_position.clone());
+        if game.is_perft.not() {
+            game.position_history.push(current_position.clone());
 
-            if new_game
+            if game
                 .position_history
                 .iter()
                 .filter(|&position| *position == current_position)
@@ -222,38 +249,38 @@ impl GameState {
             {
                 return StepResult::Terminated(GameResult {
                     kind: GameResultKind::Draw(DrawKind::ThreefoldRepetition),
-                    final_game_state: new_game,
+                    final_game_state: game,
                 });
             }
 
-            if new_game.fifty_move_rule_clock == FIFTY_MOVE_RULE_COUNT {
+            if game.fifty_move_rule_clock == FIFTY_MOVE_RULE_COUNT {
                 return StepResult::Terminated(GameResult {
                     kind: GameResultKind::Draw(DrawKind::FiftyMove),
-                    final_game_state: new_game,
+                    final_game_state: game,
                 });
             }
         }
 
-        let future = new_game.clone().with_opponent_active();
+        let future = game.clone().with_opponent_active();
         if future.legal_moves().count() == 0 {
-            return if future.board.is_king_checked(self.active_player.opponent()) {
+            return if future.board.is_king_checked(future.active_player) {
                 StepResult::Terminated(GameResult {
                     kind: GameResultKind::Win,
-                    final_game_state: new_game,
+                    final_game_state: game,
                 })
             } else {
                 StepResult::Terminated(GameResult {
                     kind: GameResultKind::Draw(DrawKind::Stalemate),
-                    final_game_state: new_game,
+                    final_game_state: game,
                 })
             };
         }
 
-        if new_game.active_player == PlayerKind::Black {
-            new_game.full_move_count.increase();
+        if game.active_player == PlayerKind::Black {
+            game.full_move_count.increase();
         }
-        new_game.active_player = new_game.active_player.opponent();
-        StepResult::Continued(new_game)
+        game.active_player = game.active_player.opponent();
+        StepResult::Continued(game)
     }
 
     fn castle_candidates(&self) -> impl Iterator<Item = Move> + Clone {
