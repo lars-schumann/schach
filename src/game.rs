@@ -491,7 +491,7 @@ impl GameState {
                 .lock()
                 .unwrap()
                 .clone()
-                .into_iter()
+                .into_par_iter()
                 .for_each(|game| {
                     let legal_moves: Vec<Move> = game.legal_moves().collect();
 
