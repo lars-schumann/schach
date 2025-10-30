@@ -2,8 +2,6 @@ use std::num::NonZeroU64;
 use std::ops::Not;
 use std::sync::Mutex;
 
-use rayon::prelude::*;
-
 use crate::board::Board;
 use crate::coord::Square;
 use crate::mov::{Move, Threat};
@@ -476,8 +474,11 @@ impl GameState {
         self
     }
 
+    #[cfg(feature = "rayon")]
     #[must_use]
     pub fn search(self, max_depth: u32) -> SearchStats {
+        use rayon::prelude::*;
+
         let terminated_games_checkmate: Mutex<Vec<Self>> = Mutex::new(vec![]);
         let terminated_games_draw: Mutex<Vec<Self>> = Mutex::new(vec![]);
         let mut continued_games: Mutex<Vec<Self>> = Mutex::new(vec![self]);
