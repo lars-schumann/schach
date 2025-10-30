@@ -568,13 +568,12 @@ pub struct CastlingRights {
 }
 impl CastlingRights {
     #[must_use]
+    #[allow(clippy::fn_params_excessive_bools)]
     pub const fn new(
-        (white_kingside, white_queenside, black_kingside, black_queenside): (
-            bool,
-            bool,
-            bool,
-            bool,
-        ),
+        white_kingside: bool,
+        white_queenside: bool,
+        black_kingside: bool,
+        black_queenside: bool,
     ) -> Self {
         Self {
             white_kingside,
@@ -584,7 +583,12 @@ impl CastlingRights {
         }
     }
     pub fn all() -> impl Iterator<Item = Self> + Clone {
-        iproduct!([false, true], [false, true], [false, true], [false, true]).map(Self::new)
+        [false, true]
+            .into_iter()
+            .flat_map(|a| vec![(a, false), (a, true)])
+            .flat_map(|a| vec![(a, false), (a, true)])
+            .flat_map(|a| vec![(a, false), (a, true)])
+            .map(|(((a, b), c), d)| Self::new(a, b, c, d))
     }
 }
 
