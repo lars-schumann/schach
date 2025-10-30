@@ -267,21 +267,27 @@ impl Board {
                 .map_err(|_| BoardFromFenError::IllegalRowDimensions)
         }
 
-        let piece_placements_chunked: [[Option<Piece>; 8]; 8] = value
+        let piece_placements_chunked: Self = value
             .split(|c| *c == AsciiChar::Solidus)
             .map(fen_row_to_board_row)
             .collect::<Result<Vec<[Option<Piece>; 8]>, BoardFromFenError>>()?
             .try_into()
+            .map(Board)
             .map_err(|_| BoardFromFenError::IllegalColDimensions)?;
 
-        let board = Self(
-            mattr::transpose_array(piece_placements_chunked).map(|mut col| {
-                col.reverse();
-                col
-            }),
-        );
+        let mut new_board = Self::empty();
 
-        Ok(board)
+        //TODO: unfuck this
+        for row in Row::ROWS {
+            for col in Col::COLS {
+                new_board[Square {
+                    col: Col::try_from(u8::from(row)).unwrap(),
+                    row: Row::try_from(9 - u8::from(col)).unwrap(),
+                }] = piece_placements_chunked[Square { col, row }];
+            }
+        }
+
+        Ok(new_board)
     }
 
     #[must_use]
