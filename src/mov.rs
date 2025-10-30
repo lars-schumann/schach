@@ -4,7 +4,7 @@ use crate::{
     piece::{Piece, PieceKind},
 };
 
-#[derive(Copy, Clone, PartialEq, Eq, strum::Display)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Move {
     Normal {
         piece_kind: PieceKind,
@@ -48,7 +48,7 @@ impl std::fmt::Debug for Move {
                 replacement,
             } => write!(
                 f,
-                "Promotion: {start:?} -> {target:?} to: {replacement} {is_capture}",
+                "Promotion: {start:?} -> {target:?} to: {replacement:?} {is_capture}",
             ),
             Self::EnPassant {
                 start,
@@ -58,7 +58,7 @@ impl std::fmt::Debug for Move {
                 f,
                 "En Passant: {start:?} -> {target:?}, affected: {affected_square:?}",
             ),
-            Self::Castling(castling_side) => write!(f, "{castling_side}",),
+            Self::Castling(castling_side) => write!(f, "{castling_side:?}",),
         }
     }
 }

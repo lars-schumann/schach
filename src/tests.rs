@@ -43,7 +43,7 @@ fn test_fens() {
             col,
             Col::try_from_ascii_char(Col::to_ascii_char(col)).unwrap()
         );
-        println!("{col}: {}", Col::to_ascii_char(col).as_str());
+        println!("{col:?}: {}", Col::to_ascii_char(col).as_str());
     }
 
     println!("-------Rows--------");
@@ -52,7 +52,7 @@ fn test_fens() {
             row,
             Row::try_from_ascii_char(Row::to_ascii_char(row)).unwrap()
         );
-        println!("{row}: {}", Row::to_ascii_char(row).as_str());
+        println!("{row:?}: {}", Row::to_ascii_char(row).as_str());
     }
 
     println!("-------Pieces------");
@@ -72,7 +72,7 @@ fn test_fens() {
                 .unwrap()
         );
         println!(
-            "{player_kind}: {}",
+            "{player_kind:?}: {}",
             PlayerKind::to_ascii_char(player_kind).as_str()
         );
     }

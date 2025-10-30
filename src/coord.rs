@@ -11,7 +11,7 @@ macro_rules! square {
         paste::paste! {
             pub const [<$square_col $square_row>]: Self =
             Self {
-                col: 
+                col:
                 match Col::try_from(letter_to_number!($square_col)){
                     Ok(val) => val,
                     Err(_) => panic!("illegal Column Index")
@@ -113,7 +113,7 @@ impl Square {
 
 impl std::fmt::Debug for Square {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}, {}", self.col, self.row)
+        write!(f, "{:?}, {:?}", self.col, self.row)
     }
 }
 impl Square {
@@ -131,7 +131,7 @@ impl Square {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, strum::Display)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Col {
     C1,
     C2,
@@ -155,7 +155,7 @@ impl Col {
     ];
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, strum::Display)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Row {
     R1,
     R2,

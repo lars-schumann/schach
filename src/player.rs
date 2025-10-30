@@ -1,7 +1,7 @@
 use crate::coord::{Offset, Row, Square as S};
 use crate::game::CastlingSide as CS;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, strum::Display, Default)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Default)]
 pub enum PlayerKind {
     #[default]
     White,

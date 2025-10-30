@@ -1,7 +1,7 @@
 use crate::coord::Offset;
 use crate::player::PlayerKind;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, strum::Display)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum PieceKind {
     Pawn,
     Knight,
