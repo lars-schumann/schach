@@ -2,7 +2,6 @@ use std::num::NonZeroU64;
 use std::ops::Not;
 use std::sync::Mutex;
 
-use itertools::iproduct;
 use rayon::prelude::*;
 
 use crate::board::Board;
