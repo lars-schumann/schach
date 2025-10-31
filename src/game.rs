@@ -1,5 +1,7 @@
-use std::num::NonZeroU64;
-use std::ops::Not;
+use alloc::vec;
+use alloc::vec::Vec;
+use core::num::NonZeroU64;
+use core::ops::Not;
 
 use crate::board::Board;
 use crate::coord::Square;
@@ -506,7 +508,7 @@ impl GameState {
                 }
             });
 
-            std::mem::swap(&mut continued_games, &mut new_continued_games);
+            core::mem::swap(&mut continued_games, &mut new_continued_games);
             new_continued_games.clear();
         }
 

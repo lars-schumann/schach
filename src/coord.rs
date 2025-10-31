@@ -83,8 +83,8 @@ impl Square {
     pub const H8: Self = Self::new(Col::C8, Row::R8);
 }
 
-impl std::fmt::Debug for Square {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for Square {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{:?}, {:?}", self.col, self.row)
     }
 }
@@ -150,14 +150,14 @@ impl Row {
         Self::R8,
     ];
 }
-impl const std::ops::Add<i32> for Row {
+impl const core::ops::Add<i32> for Row {
     type Output = Result<Self, RowIndexOutOfRange>;
     fn add(self, rhs: i32) -> Self::Output {
         let row_number: i32 = self.into();
         (row_number + rhs).try_into()
     }
 }
-impl const std::ops::Add<i32> for Col {
+impl const core::ops::Add<i32> for Col {
     type Output = Result<Self, ColIndexOutOfRange>;
     fn add(self, rhs: i32) -> Self::Output {
         let column_number: i32 = self.into();
@@ -342,7 +342,7 @@ impl Offset {
     ];
 }
 
-impl const std::ops::Add for Offset {
+impl const core::ops::Add for Offset {
     type Output = Self;
     fn add(self, rhs: Self) -> Self::Output {
         Self {
@@ -351,7 +351,7 @@ impl const std::ops::Add for Offset {
         }
     }
 }
-impl const std::ops::Mul<i32> for Offset {
+impl const core::ops::Mul<i32> for Offset {
     type Output = Self;
     fn mul(self, rhs: i32) -> Self::Output {
         Self {
@@ -376,7 +376,7 @@ impl const From<RowIndexOutOfRange> for SquareOutOfRange {
         Self::Row(value)
     }
 }
-impl const std::ops::Add<Offset> for Square {
+impl const core::ops::Add<Offset> for Square {
     type Output = Result<Self, SquareOutOfRange>;
     fn add(self, rhs: Offset) -> Self::Output {
         Ok(Self {

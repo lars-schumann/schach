@@ -7,6 +7,8 @@ use crate::mov::Threat;
 use crate::piece::{Piece, PieceKind};
 use crate::player::PlayerKind;
 
+use alloc::vec::Vec;
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Board(pub [[Option<Piece>; ROW_COUNT]; COL_COUNT]);
 impl Board {
@@ -89,8 +91,8 @@ impl Default for Board {
         Self::new()
     }
 }
-impl std::fmt::Debug for Board {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for Board {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         writeln!(f)?;
         for row in Row::ROWS.into_iter().rev() {
             write!(f, "{}", i8::from(row))?;
@@ -115,7 +117,7 @@ impl std::fmt::Debug for Board {
         Ok(())
     }
 }
-impl const std::ops::Index<S> for Board {
+impl const core::ops::Index<S> for Board {
     type Output = Option<Piece>;
     fn index(&self, index: S) -> &Self::Output {
         let col = usize::from(u8::from(index.col) - 1);
@@ -123,7 +125,7 @@ impl const std::ops::Index<S> for Board {
         &self.0[col][row]
     }
 }
-impl const std::ops::IndexMut<S> for Board {
+impl const core::ops::IndexMut<S> for Board {
     fn index_mut(&mut self, index: S) -> &mut Self::Output {
         let col = usize::from(u8::from(index.col) - 1);
         let row = usize::from(u8::from(index.row) - 1);
@@ -135,8 +137,8 @@ pub struct DebugBoard {
     pub inner: Board,
     pub attacked_squares: Vec<S>,
 }
-impl std::fmt::Debug for DebugBoard {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for DebugBoard {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         writeln!(f)?;
         for row in Row::ROWS.into_iter().rev() {
             write!(f, "{}", i8::from(row))?;

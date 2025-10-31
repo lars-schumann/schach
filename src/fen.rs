@@ -5,7 +5,9 @@ use crate::{
     piece::Piece,
     player::PlayerKind,
 };
-use std::ascii::Char as AsciiChar;
+use alloc::vec::Vec;
+use alloc::{borrow::ToOwned, string::ToString, vec};
+use core::ascii::Char as AsciiChar;
 
 pub struct FenStrings {
     piece_placements: Vec<AsciiChar>,
@@ -146,7 +148,7 @@ impl CastlingRights {
 }
 
 impl FullMoveCount {
-    fn try_from_fen(value: &[AsciiChar]) -> Result<Self, std::num::ParseIntError> {
+    fn try_from_fen(value: &[AsciiChar]) -> Result<Self, core::num::ParseIntError> {
         value.as_str().parse().map(Self)
     }
 
@@ -156,7 +158,7 @@ impl FullMoveCount {
 }
 
 impl FiftyMoveRuleClock {
-    fn try_from_fen(value: &[AsciiChar]) -> Result<Self, std::num::ParseIntError> {
+    fn try_from_fen(value: &[AsciiChar]) -> Result<Self, core::num::ParseIntError> {
         Ok(Self::new(value.as_str().parse()?))
     }
 
@@ -292,7 +294,7 @@ impl Board {
 
     #[must_use]
     pub fn to_fen(&self) -> Vec<AsciiChar> {
-        let mut running_square_count = 0;
+        let mut running_square_count: u32 = 0;
         let mut out: Vec<AsciiChar> = vec![];
         for square in Square::all_fen_ordered() {
             match self[square] {

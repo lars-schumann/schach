@@ -29,8 +29,8 @@ pub enum Move {
     },
     Castling(CastlingSide),
 }
-impl std::fmt::Debug for Move {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for Move {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::Normal {
                 piece_kind,
@@ -70,8 +70,8 @@ pub struct Threat {
     pub target: Square,
 }
 
-impl std::fmt::Debug for Threat {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for Threat {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}: {:?} => {:?}", self.piece, self.start, self.target)
     }
 }

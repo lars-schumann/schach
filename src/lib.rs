@@ -11,11 +11,15 @@
     const_cmp,
     const_result_trait_fn,
     const_default,
-    generic_const_exprs,
     iter_collect_into,
     ascii_char,
     ascii_char_variants
 )]
+#![no_std]
+extern crate alloc;
+
+#[cfg(any(test, feature = "std"))]
+extern crate std;
 
 pub mod board;
 pub mod coord;

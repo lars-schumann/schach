@@ -2,6 +2,8 @@ use crate::coord::{Col, Row, Square};
 use crate::game::*;
 use crate::piece::Piece;
 use crate::player::PlayerKind;
+use alloc::vec;
+use std::println;
 
 #[test]
 fn search() {
@@ -106,7 +108,7 @@ fn test_mass_against_owl() {
     let max_depth = 3;
     let max_fens = 10;
     let skip_fens = 100;
-    let progress_thingy = std::cmp::max(max_fens / 1_000, 1);
+    let progress_thingy = core::cmp::max(max_fens / 1_000, 1);
     let fens = std::fs::read_to_string("./fens/lichess_puzzle_fens.txt").unwrap();
 
     let mut progress = 0;
