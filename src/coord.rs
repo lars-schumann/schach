@@ -6,109 +6,81 @@ pub struct Square {
     pub row: Row,
 }
 
-macro_rules! square {
-    ($square_col:tt $square_row:tt) => {
-        paste::paste! {
-            pub const [<$square_col $square_row>]: Self =
-            Self {
-                col:
-                match Col::try_from(letter_to_number!($square_col)){
-                    Ok(val) => val,
-                    Err(_) => panic!("illegal Column Index")
-                },
-                row: match Row::try_from($square_row){
-                    Ok(val) => val,
-                    Err(_) => panic!("illegal Row Index")
-                }
-            };
-        }
-    };
-}
-
-#[rustfmt::skip]
-macro_rules! letter_to_number {
-    (A) => { 1 };
-    (B) => { 2 };
-    (C) => { 3 };
-    (D) => { 4 };
-    (E) => { 5 };
-    (F) => { 6 };
-    (G) => { 7 };
-    (H) => { 8 };
-}
-
 impl Square {
-    square!(A 1);
-    square!(B 1);
-    square!(C 1);
-    square!(D 1);
-    square!(E 1);
-    square!(F 1);
-    square!(G 1);
-    square!(H 1);
+    const fn new(col: Col, row: Row) -> Self {
+        Self { col, row }
+    }
+    pub const A1: Self = Self::new(Col::C1, Row::R1);
+    pub const A2: Self = Self::new(Col::C1, Row::R2);
+    pub const A3: Self = Self::new(Col::C1, Row::R3);
+    pub const A4: Self = Self::new(Col::C1, Row::R4);
+    pub const A5: Self = Self::new(Col::C1, Row::R5);
+    pub const A6: Self = Self::new(Col::C1, Row::R6);
+    pub const A7: Self = Self::new(Col::C1, Row::R7);
+    pub const A8: Self = Self::new(Col::C1, Row::R8);
 
-    square!(A 2);
-    square!(B 2);
-    square!(C 2);
-    square!(D 2);
-    square!(E 2);
-    square!(F 2);
-    square!(G 2);
-    square!(H 2);
+    pub const B1: Self = Self::new(Col::C2, Row::R1);
+    pub const B2: Self = Self::new(Col::C2, Row::R2);
+    pub const B3: Self = Self::new(Col::C2, Row::R3);
+    pub const B4: Self = Self::new(Col::C2, Row::R4);
+    pub const B5: Self = Self::new(Col::C2, Row::R5);
+    pub const B6: Self = Self::new(Col::C2, Row::R6);
+    pub const B7: Self = Self::new(Col::C2, Row::R7);
+    pub const B8: Self = Self::new(Col::C2, Row::R8);
 
-    square!(A 3);
-    square!(B 3);
-    square!(C 3);
-    square!(D 3);
-    square!(E 3);
-    square!(F 3);
-    square!(G 3);
-    square!(H 3);
+    pub const C1: Self = Self::new(Col::C3, Row::R1);
+    pub const C2: Self = Self::new(Col::C3, Row::R2);
+    pub const C3: Self = Self::new(Col::C3, Row::R3);
+    pub const C4: Self = Self::new(Col::C3, Row::R4);
+    pub const C5: Self = Self::new(Col::C3, Row::R5);
+    pub const C6: Self = Self::new(Col::C3, Row::R6);
+    pub const C7: Self = Self::new(Col::C3, Row::R7);
+    pub const C8: Self = Self::new(Col::C3, Row::R8);
 
-    square!(A 4);
-    square!(B 4);
-    square!(C 4);
-    square!(D 4);
-    square!(E 4);
-    square!(F 4);
-    square!(G 4);
-    square!(H 4);
+    pub const D1: Self = Self::new(Col::C4, Row::R1);
+    pub const D2: Self = Self::new(Col::C4, Row::R2);
+    pub const D3: Self = Self::new(Col::C4, Row::R3);
+    pub const D4: Self = Self::new(Col::C4, Row::R4);
+    pub const D5: Self = Self::new(Col::C4, Row::R5);
+    pub const D6: Self = Self::new(Col::C4, Row::R6);
+    pub const D7: Self = Self::new(Col::C4, Row::R7);
+    pub const D8: Self = Self::new(Col::C4, Row::R8);
 
-    square!(A 5);
-    square!(B 5);
-    square!(C 5);
-    square!(D 5);
-    square!(E 5);
-    square!(F 5);
-    square!(G 5);
-    square!(H 5);
+    pub const E1: Self = Self::new(Col::C5, Row::R1);
+    pub const E2: Self = Self::new(Col::C5, Row::R2);
+    pub const E3: Self = Self::new(Col::C5, Row::R3);
+    pub const E4: Self = Self::new(Col::C5, Row::R4);
+    pub const E5: Self = Self::new(Col::C5, Row::R5);
+    pub const E6: Self = Self::new(Col::C5, Row::R6);
+    pub const E7: Self = Self::new(Col::C5, Row::R7);
+    pub const E8: Self = Self::new(Col::C5, Row::R8);
 
-    square!(A 6);
-    square!(B 6);
-    square!(C 6);
-    square!(D 6);
-    square!(E 6);
-    square!(F 6);
-    square!(G 6);
-    square!(H 6);
+    pub const F1: Self = Self::new(Col::C6, Row::R1);
+    pub const F2: Self = Self::new(Col::C6, Row::R2);
+    pub const F3: Self = Self::new(Col::C6, Row::R3);
+    pub const F4: Self = Self::new(Col::C6, Row::R4);
+    pub const F5: Self = Self::new(Col::C6, Row::R5);
+    pub const F6: Self = Self::new(Col::C6, Row::R6);
+    pub const F7: Self = Self::new(Col::C6, Row::R7);
+    pub const F8: Self = Self::new(Col::C6, Row::R8);
 
-    square!(A 7);
-    square!(B 7);
-    square!(C 7);
-    square!(D 7);
-    square!(E 7);
-    square!(F 7);
-    square!(G 7);
-    square!(H 7);
+    pub const G1: Self = Self::new(Col::C7, Row::R1);
+    pub const G2: Self = Self::new(Col::C7, Row::R2);
+    pub const G3: Self = Self::new(Col::C7, Row::R3);
+    pub const G4: Self = Self::new(Col::C7, Row::R4);
+    pub const G5: Self = Self::new(Col::C7, Row::R5);
+    pub const G6: Self = Self::new(Col::C7, Row::R6);
+    pub const G7: Self = Self::new(Col::C7, Row::R7);
+    pub const G8: Self = Self::new(Col::C7, Row::R8);
 
-    square!(A 8);
-    square!(B 8);
-    square!(C 8);
-    square!(D 8);
-    square!(E 8);
-    square!(F 8);
-    square!(G 8);
-    square!(H 8);
+    pub const H1: Self = Self::new(Col::C8, Row::R1);
+    pub const H2: Self = Self::new(Col::C8, Row::R2);
+    pub const H3: Self = Self::new(Col::C8, Row::R3);
+    pub const H4: Self = Self::new(Col::C8, Row::R4);
+    pub const H5: Self = Self::new(Col::C8, Row::R5);
+    pub const H6: Self = Self::new(Col::C8, Row::R6);
+    pub const H7: Self = Self::new(Col::C8, Row::R7);
+    pub const H8: Self = Self::new(Col::C8, Row::R8);
 }
 
 impl std::fmt::Debug for Square {
