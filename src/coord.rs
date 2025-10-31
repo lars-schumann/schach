@@ -1,3 +1,7 @@
+use self::Col as C;
+use self::Row as R;
+use self::Square as S;
+
 use crate::board::{COL_COUNT, ROW_COUNT};
 
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -6,81 +10,86 @@ pub struct Square {
     pub row: Row,
 }
 
+#[allow(clippy::use_self)]
 impl Square {
-    const fn new(col: Col, row: Row) -> Self {
+    #[must_use]
+    pub const fn new(col: Col, row: Row) -> Self {
         Self { col, row }
     }
-    pub const A1: Self = Self::new(Col::C1, Row::R1);
-    pub const A2: Self = Self::new(Col::C1, Row::R2);
-    pub const A3: Self = Self::new(Col::C1, Row::R3);
-    pub const A4: Self = Self::new(Col::C1, Row::R4);
-    pub const A5: Self = Self::new(Col::C1, Row::R5);
-    pub const A6: Self = Self::new(Col::C1, Row::R6);
-    pub const A7: Self = Self::new(Col::C1, Row::R7);
-    pub const A8: Self = Self::new(Col::C1, Row::R8);
+    const fn n(col: Col, row: Row) -> Self {
+        Self::new(col, row)
+    }
+    pub const A1: S = S::n(C::C1, R::R1);
+    pub const A2: S = S::n(C::C1, R::R2);
+    pub const A3: S = S::n(C::C1, R::R3);
+    pub const A4: S = S::n(C::C1, R::R4);
+    pub const A5: S = S::n(C::C1, R::R5);
+    pub const A6: S = S::n(C::C1, R::R6);
+    pub const A7: S = S::n(C::C1, R::R7);
+    pub const A8: S = S::n(C::C1, R::R8);
 
-    pub const B1: Self = Self::new(Col::C2, Row::R1);
-    pub const B2: Self = Self::new(Col::C2, Row::R2);
-    pub const B3: Self = Self::new(Col::C2, Row::R3);
-    pub const B4: Self = Self::new(Col::C2, Row::R4);
-    pub const B5: Self = Self::new(Col::C2, Row::R5);
-    pub const B6: Self = Self::new(Col::C2, Row::R6);
-    pub const B7: Self = Self::new(Col::C2, Row::R7);
-    pub const B8: Self = Self::new(Col::C2, Row::R8);
+    pub const B1: S = S::n(C::C2, R::R1);
+    pub const B2: S = S::n(C::C2, R::R2);
+    pub const B3: S = S::n(C::C2, R::R3);
+    pub const B4: S = S::n(C::C2, R::R4);
+    pub const B5: S = S::n(C::C2, R::R5);
+    pub const B6: S = S::n(C::C2, R::R6);
+    pub const B7: S = S::n(C::C2, R::R7);
+    pub const B8: S = S::n(C::C2, R::R8);
 
-    pub const C1: Self = Self::new(Col::C3, Row::R1);
-    pub const C2: Self = Self::new(Col::C3, Row::R2);
-    pub const C3: Self = Self::new(Col::C3, Row::R3);
-    pub const C4: Self = Self::new(Col::C3, Row::R4);
-    pub const C5: Self = Self::new(Col::C3, Row::R5);
-    pub const C6: Self = Self::new(Col::C3, Row::R6);
-    pub const C7: Self = Self::new(Col::C3, Row::R7);
-    pub const C8: Self = Self::new(Col::C3, Row::R8);
+    pub const C1: S = S::n(C::C3, R::R1);
+    pub const C2: S = S::n(C::C3, R::R2);
+    pub const C3: S = S::n(C::C3, R::R3);
+    pub const C4: S = S::n(C::C3, R::R4);
+    pub const C5: S = S::n(C::C3, R::R5);
+    pub const C6: S = S::n(C::C3, R::R6);
+    pub const C7: S = S::n(C::C3, R::R7);
+    pub const C8: S = S::n(C::C3, R::R8);
 
-    pub const D1: Self = Self::new(Col::C4, Row::R1);
-    pub const D2: Self = Self::new(Col::C4, Row::R2);
-    pub const D3: Self = Self::new(Col::C4, Row::R3);
-    pub const D4: Self = Self::new(Col::C4, Row::R4);
-    pub const D5: Self = Self::new(Col::C4, Row::R5);
-    pub const D6: Self = Self::new(Col::C4, Row::R6);
-    pub const D7: Self = Self::new(Col::C4, Row::R7);
-    pub const D8: Self = Self::new(Col::C4, Row::R8);
+    pub const D1: S = S::n(C::C4, R::R1);
+    pub const D2: S = S::n(C::C4, R::R2);
+    pub const D3: S = S::n(C::C4, R::R3);
+    pub const D4: S = S::n(C::C4, R::R4);
+    pub const D5: S = S::n(C::C4, R::R5);
+    pub const D6: S = S::n(C::C4, R::R6);
+    pub const D7: S = S::n(C::C4, R::R7);
+    pub const D8: S = S::n(C::C4, R::R8);
 
-    pub const E1: Self = Self::new(Col::C5, Row::R1);
-    pub const E2: Self = Self::new(Col::C5, Row::R2);
-    pub const E3: Self = Self::new(Col::C5, Row::R3);
-    pub const E4: Self = Self::new(Col::C5, Row::R4);
-    pub const E5: Self = Self::new(Col::C5, Row::R5);
-    pub const E6: Self = Self::new(Col::C5, Row::R6);
-    pub const E7: Self = Self::new(Col::C5, Row::R7);
-    pub const E8: Self = Self::new(Col::C5, Row::R8);
+    pub const E1: S = S::n(C::C5, R::R1);
+    pub const E2: S = S::n(C::C5, R::R2);
+    pub const E3: S = S::n(C::C5, R::R3);
+    pub const E4: S = S::n(C::C5, R::R4);
+    pub const E5: S = S::n(C::C5, R::R5);
+    pub const E6: S = S::n(C::C5, R::R6);
+    pub const E7: S = S::n(C::C5, R::R7);
+    pub const E8: S = S::n(C::C5, R::R8);
 
-    pub const F1: Self = Self::new(Col::C6, Row::R1);
-    pub const F2: Self = Self::new(Col::C6, Row::R2);
-    pub const F3: Self = Self::new(Col::C6, Row::R3);
-    pub const F4: Self = Self::new(Col::C6, Row::R4);
-    pub const F5: Self = Self::new(Col::C6, Row::R5);
-    pub const F6: Self = Self::new(Col::C6, Row::R6);
-    pub const F7: Self = Self::new(Col::C6, Row::R7);
-    pub const F8: Self = Self::new(Col::C6, Row::R8);
+    pub const F1: S = S::n(C::C6, R::R1);
+    pub const F2: S = S::n(C::C6, R::R2);
+    pub const F3: S = S::n(C::C6, R::R3);
+    pub const F4: S = S::n(C::C6, R::R4);
+    pub const F5: S = S::n(C::C6, R::R5);
+    pub const F6: S = S::n(C::C6, R::R6);
+    pub const F7: S = S::n(C::C6, R::R7);
+    pub const F8: S = S::n(C::C6, R::R8);
 
-    pub const G1: Self = Self::new(Col::C7, Row::R1);
-    pub const G2: Self = Self::new(Col::C7, Row::R2);
-    pub const G3: Self = Self::new(Col::C7, Row::R3);
-    pub const G4: Self = Self::new(Col::C7, Row::R4);
-    pub const G5: Self = Self::new(Col::C7, Row::R5);
-    pub const G6: Self = Self::new(Col::C7, Row::R6);
-    pub const G7: Self = Self::new(Col::C7, Row::R7);
-    pub const G8: Self = Self::new(Col::C7, Row::R8);
+    pub const G1: S = S::n(C::C7, R::R1);
+    pub const G2: S = S::n(C::C7, R::R2);
+    pub const G3: S = S::n(C::C7, R::R3);
+    pub const G4: S = S::n(C::C7, R::R4);
+    pub const G5: S = S::n(C::C7, R::R5);
+    pub const G6: S = S::n(C::C7, R::R6);
+    pub const G7: S = S::n(C::C7, R::R7);
+    pub const G8: S = S::n(C::C7, R::R8);
 
-    pub const H1: Self = Self::new(Col::C8, Row::R1);
-    pub const H2: Self = Self::new(Col::C8, Row::R2);
-    pub const H3: Self = Self::new(Col::C8, Row::R3);
-    pub const H4: Self = Self::new(Col::C8, Row::R4);
-    pub const H5: Self = Self::new(Col::C8, Row::R5);
-    pub const H6: Self = Self::new(Col::C8, Row::R6);
-    pub const H7: Self = Self::new(Col::C8, Row::R7);
-    pub const H8: Self = Self::new(Col::C8, Row::R8);
+    pub const H1: S = S::n(C::C8, R::R1);
+    pub const H2: S = S::n(C::C8, R::R2);
+    pub const H3: S = S::n(C::C8, R::R3);
+    pub const H4: S = S::n(C::C8, R::R4);
+    pub const H5: S = S::n(C::C8, R::R5);
+    pub const H6: S = S::n(C::C8, R::R6);
+    pub const H7: S = S::n(C::C8, R::R7);
+    pub const H8: S = S::n(C::C8, R::R8);
 }
 
 impl core::fmt::Debug for Square {
