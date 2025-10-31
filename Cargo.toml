@@ -5,9 +5,3 @@ edition = "2024"
 
 [dependencies]
 paste = "1.0.15"
-owlchess = { version = "0.4.0", optional = true }
-rayon = { version = "1.11.0", optional = true }
-
-[features]
-rayon = ["dep:rayon"]
-owlchess = ["dep:owlchess"]

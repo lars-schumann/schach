@@ -1,6 +1,5 @@
 use std::num::NonZeroU64;
 use std::ops::Not;
-use std::sync::Mutex;
 
 use crate::board::Board;
 use crate::coord::Square;
@@ -474,80 +473,47 @@ impl GameState {
         self
     }
 
-    #[cfg(feature = "rayon")]
     #[must_use]
     pub fn search(self, max_depth: u32) -> SearchStats {
-        use rayon::prelude::*;
+        let mut terminated_games_checkmate: Vec<Self> = vec![];
+        let mut terminated_games_draw: Vec<Self> = vec![];
+        let mut continued_games: Vec<Self> = vec![self];
+        let mut new_continued_games: Vec<Self> = vec![];
 
-        let terminated_games_checkmate: Mutex<Vec<Self>> = Mutex::new(vec![]);
-        let terminated_games_draw: Mutex<Vec<Self>> = Mutex::new(vec![]);
-        let mut continued_games: Mutex<Vec<Self>> = Mutex::new(vec![self]);
-        let mut new_continued_games: Mutex<Vec<Self>> = Mutex::new(vec![]);
-
-        let stats: Mutex<SearchStats> = Mutex::<SearchStats>::default();
+        let mut stats: SearchStats = SearchStats::default();
 
         for _ in 0..=max_depth {
-            continued_games
-                .lock()
-                .unwrap()
-                .clone()
-                .into_par_iter()
-                .for_each(|game| {
-                    let legal_moves: Vec<Move> = game.legal_moves().collect();
+            continued_games.clone().into_iter().for_each(|game| {
+                let legal_moves: Vec<Move> = game.legal_moves().collect();
 
-                    let owl_moves = owlchess::movegen::legal::gen_all(
-                        &owlchess::Board::from_fen(game.to_fen().as_str()).unwrap(),
-                    );
-
-                    if legal_moves.len() != owl_moves.len() {
-                        println!("----------------------");
-                        println!("fen: {}", game.to_fen().as_str());
-                        println!("----------------------");
-                        println!("schach moves:");
-                        for m in legal_moves {
-                            println!("{m:?}");
-                        }
-                        println!("----------------------");
-                        println!("owl moves:");
-                        for m in &owl_moves {
-                            println!("{m:?}");
-                        }
-                        println!("----------------------");
-
-                        panic!();
+                for mov in legal_moves.clone() {
+                    if matches!(mov, Move::EnPassant { .. }) {
+                        stats.en_passant += 1;
                     }
-
-                    for mov in legal_moves.clone() {
-                        if matches!(mov, Move::EnPassant { .. }) {
-                            stats.lock().unwrap().en_passant += 1;
-                        }
-                        match game.clone().step(mov, legal_moves.clone()) {
-                            StepResult::Terminated(GameResult {
-                                kind: GameResultKind::Win,
-                                final_game_state,
-                            }) => terminated_games_checkmate
-                                .lock()
-                                .unwrap()
-                                .push(final_game_state),
-                            StepResult::Terminated(GameResult {
-                                kind: GameResultKind::Draw(_),
-                                final_game_state,
-                            }) => terminated_games_draw.lock().unwrap().push(final_game_state),
-                            StepResult::Continued(game_state) => {
-                                new_continued_games.lock().unwrap().push(game_state);
-                            }
+                    match game.clone().step(mov, legal_moves.clone()) {
+                        StepResult::Terminated(GameResult {
+                            kind: GameResultKind::Win,
+                            final_game_state,
+                        }) => terminated_games_checkmate.push(final_game_state),
+                        StepResult::Terminated(GameResult {
+                            kind: GameResultKind::Draw(_),
+                            final_game_state,
+                        }) => terminated_games_draw.push(final_game_state),
+                        StepResult::Continued(game_state) => {
+                            new_continued_games.push(game_state);
                         }
                     }
-                });
+                }
+            });
 
             std::mem::swap(&mut continued_games, &mut new_continued_games);
-            new_continued_games.lock().unwrap().clear();
+            new_continued_games.clear();
         }
 
-        stats.lock().unwrap().countinued_games = continued_games.lock().unwrap().len();
-        stats.lock().unwrap().checkmated_games = terminated_games_checkmate.lock().unwrap().len();
-        stats.lock().unwrap().drawn_games = terminated_games_draw.lock().unwrap().len();
-        stats.into_inner().unwrap()
+        stats.countinued_games = continued_games.len();
+        stats.checkmated_games = terminated_games_checkmate.len();
+        stats.drawn_games = terminated_games_draw.len();
+        stats
     }
 }
 

@@ -3,7 +3,6 @@ use crate::game::*;
 use crate::piece::Piece;
 use crate::player::PlayerKind;
 
-#[cfg(feature = "rayon")]
 #[test]
 fn search() {
     let depth = 3;
@@ -102,7 +101,6 @@ fn test_mass_fens() {
     }
 }
 
-#[cfg(feature = "rayon")]
 #[test]
 fn test_mass_against_owl() {
     let max_depth = 3;
