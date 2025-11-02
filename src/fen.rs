@@ -1,12 +1,20 @@
-use crate::{
-    board::Board,
-    coord::{Col, ColIndexOutOfRange, Row, RowIndexOutOfRange, Square, SquareOutOfRange},
-    game::{CastlingRights, FiftyMoveRuleClock, FullMoveCount, GameState},
-    piece::Piece,
-    player::PlayerKind,
-};
+use crate::board::Board;
+use crate::coord::Col;
+use crate::coord::ColIndexOutOfRange;
+use crate::coord::Row;
+use crate::coord::RowIndexOutOfRange;
+use crate::coord::Square;
+use crate::coord::SquareOutOfRange;
+use crate::game::CastlingRights;
+use crate::game::FiftyMoveRuleClock;
+use crate::game::FullMoveCount;
+use crate::game::GameState;
+use crate::piece::Piece;
+use crate::player::PlayerKind;
+use alloc::borrow::ToOwned;
+use alloc::string::ToString;
+use alloc::vec;
 use alloc::vec::Vec;
-use alloc::{borrow::ToOwned, string::ToString, vec};
 use core::ascii::Char as AsciiChar;
 
 pub struct FenStrings {

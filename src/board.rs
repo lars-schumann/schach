@@ -1,13 +1,15 @@
-pub static COL_COUNT: usize = 8;
-pub static ROW_COUNT: usize = 8;
-
-use crate::coord::{Col, Row, Square as S};
+use crate::coord::Col;
+use crate::coord::Row;
+use crate::coord::Square as S;
 use crate::game::attacked_squares;
 use crate::mov::Threat;
-use crate::piece::{Piece, PieceKind};
+use crate::piece::Piece;
+use crate::piece::PieceKind;
 use crate::player::PlayerKind;
-
 use alloc::vec::Vec;
+
+pub static COL_COUNT: usize = 8;
+pub static ROW_COUNT: usize = 8;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Board(pub [[Option<Piece>; ROW_COUNT]; COL_COUNT]);

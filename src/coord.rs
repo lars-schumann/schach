@@ -1,8 +1,8 @@
 use self::Col as C;
 use self::Row as R;
 use self::Square as S;
-
-use crate::board::{COL_COUNT, ROW_COUNT};
+use crate::board::COL_COUNT;
+use crate::board::ROW_COUNT;
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Square {

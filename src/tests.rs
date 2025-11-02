@@ -1,4 +1,6 @@
-use crate::coord::{Col, Row, Square};
+use crate::coord::Col;
+use crate::coord::Row;
+use crate::coord::Square;
 use crate::game::*;
 use crate::piece::Piece;
 use crate::player::PlayerKind;

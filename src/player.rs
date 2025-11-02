@@ -1,4 +1,6 @@
-use crate::coord::{Offset, Row, Square as S};
+use crate::coord::Offset;
+use crate::coord::Row;
+use crate::coord::Square as S;
 use crate::game::CastlingSide as CS;
 use alloc::vec;
 use alloc::vec::Vec;

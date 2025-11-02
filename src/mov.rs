@@ -1,8 +1,7 @@
-use crate::{
-    coord::Square,
-    game::CastlingSide,
-    piece::{Piece, PieceKind},
-};
+use crate::coord::Square;
+use crate::game::CastlingSide;
+use crate::piece::Piece;
+use crate::piece::PieceKind;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Move {

@@ -1,13 +1,14 @@
+use crate::board::Board;
+use crate::coord::Square;
+use crate::mov::Move;
+use crate::mov::Threat;
+use crate::piece::Piece;
+use crate::piece::PieceKind;
+use crate::player::PlayerKind;
 use alloc::vec;
 use alloc::vec::Vec;
 use core::num::NonZeroU64;
 use core::ops::Not;
-
-use crate::board::Board;
-use crate::coord::Square;
-use crate::mov::{Move, Threat};
-use crate::piece::{Piece, PieceKind};
-use crate::player::PlayerKind;
 
 pub static REPETITIONS_TO_FORCED_DRAW_COUNT: usize = 5;
 pub static FIFTY_MOVE_RULE_COUNT: FiftyMoveRuleClock = FiftyMoveRuleClock(100);
