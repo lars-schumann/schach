@@ -4,7 +4,7 @@ use self::Square as S;
 use crate::board::COL_COUNT;
 use crate::board::ROW_COUNT;
 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Square {
     pub col: Col,
     pub row: Row,
@@ -92,11 +92,6 @@ impl Square {
     pub const H8: S = S::n(C::C8, R::R8);
 }
 
-impl core::fmt::Debug for Square {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "{:?}, {:?}", self.col, self.row)
-    }
-}
 impl Square {
     pub fn all() -> impl Iterator<Item = Self> + Clone + use<> {
         Col::COLS
@@ -290,28 +285,28 @@ pub struct Offset {
 }
 #[allow(clippy::upper_case_acronyms)]
 impl Offset {
-    pub const U: Self = Self { col: 0, row: 1 };
-    pub const R: Self = Self { col: 1, row: 0 };
-    pub const D: Self = Self::U * -1;
-    pub const L: Self = Self::R * -1;
-    pub const UL: Self = Self::U + Self::L;
-    pub const UR: Self = Self::U + Self::R;
-    pub const DL: Self = Self::D + Self::L;
-    pub const DR: Self = Self::D + Self::R;
-    pub const UUL: Self = Self::U + Self::UL;
-    pub const UUR: Self = Self::U + Self::UR;
-    pub const ULL: Self = Self::UL + Self::L;
-    pub const URR: Self = Self::UR + Self::R;
-    pub const DDL: Self = Self::D + Self::DL;
-    pub const DDR: Self = Self::D + Self::DR;
-    pub const DLL: Self = Self::DL + Self::L;
-    pub const DRR: Self = Self::DR + Self::R;
-    pub const UU: Self = Self::U + Self::U;
-    pub const DD: Self = Self::D + Self::D;
+    pub(crate) const U: Self = Self { col: 0, row: 1 };
+    pub(crate) const D: Self = Self::U * -1;
+    const R: Self = Self { col: 1, row: 0 };
+    const L: Self = Self::R * -1;
+    const UL: Self = Self::U + Self::L;
+    const UR: Self = Self::U + Self::R;
+    const DL: Self = Self::D + Self::L;
+    const DR: Self = Self::D + Self::R;
+    const UUL: Self = Self::U + Self::UL;
+    const UUR: Self = Self::U + Self::UR;
+    const ULL: Self = Self::UL + Self::L;
+    const URR: Self = Self::UR + Self::R;
+    const DDL: Self = Self::D + Self::DL;
+    const DDR: Self = Self::D + Self::DR;
+    const DLL: Self = Self::DL + Self::L;
+    const DRR: Self = Self::DR + Self::R;
+    const UU: Self = Self::U + Self::U;
+    const DD: Self = Self::D + Self::D;
 
-    pub const ROOK: [Self; 4] = [Self::U, Self::D, Self::L, Self::R];
-    pub const BISHOP: [Self; 4] = [Self::UL, Self::UR, Self::DL, Self::DR];
-    pub const QUEEN: [Self; 8] = [
+    pub(crate) const ROOK: [Self; 4] = [Self::U, Self::D, Self::L, Self::R];
+    pub(crate) const BISHOP: [Self; 4] = [Self::UL, Self::UR, Self::DL, Self::DR];
+    pub(crate) const QUEEN: [Self; 8] = [
         Self::U,
         Self::D,
         Self::L,
@@ -321,7 +316,7 @@ impl Offset {
         Self::DL,
         Self::DR,
     ];
-    pub const KING_DIRECT: [Self; 8] = [
+    pub(crate) const KING_DIRECT: [Self; 8] = [
         Self::U,
         Self::D,
         Self::L,
@@ -331,15 +326,15 @@ impl Offset {
         Self::DL,
         Self::DR,
     ];
-    pub const PAWN_UP_SINGLE: [Self; 1] = [Self::U];
-    pub const PAWN_UP_DOUBLE: [Self; 1] = [Self::UU];
-    pub const PAWN_UP_DIAGONAL: [Self; 2] = [Self::UL, Self::UR];
+    pub(crate) const PAWN_UP_SINGLE: [Self; 1] = [Self::U];
+    pub(crate) const PAWN_UP_DOUBLE: [Self; 1] = [Self::UU];
+    pub(crate) const PAWN_UP_DIAGONAL: [Self; 2] = [Self::UL, Self::UR];
 
-    pub const PAWN_DOWN_SINGLE: [Self; 1] = [Self::D];
-    pub const PAWN_DOWN_DOUBLE: [Self; 1] = [Self::D];
-    pub const PAWN_DOWN_DIAGONAL: [Self; 2] = [Self::DL, Self::DR];
+    pub(crate) const PAWN_DOWN_SINGLE: [Self; 1] = [Self::D];
+    pub(crate) const PAWN_DOWN_DOUBLE: [Self; 1] = [Self::D];
+    pub(crate) const PAWN_DOWN_DIAGONAL: [Self; 2] = [Self::DL, Self::DR];
 
-    pub const KNIGHT: [Self; 8] = [
+    pub(crate) const KNIGHT: [Self; 8] = [
         Self::UUL,
         Self::UUR,
         Self::ULL,

@@ -17,7 +17,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 use core::ascii::Char as AsciiChar;
 
-pub struct FenStrings {
+struct FenStrings {
     piece_placements: Vec<AsciiChar>,
     active_player: Vec<AsciiChar>,
     castling_availability: Vec<AsciiChar>,
@@ -96,7 +96,7 @@ impl GameState {
             piece_placements: Board::to_fen(board),
             active_player: vec![PlayerKind::to_ascii_char(*active_player)],
             castling_availability: CastlingRights::to_fen(*castling_rights),
-            en_passant_target_square: Square::to_fen(en_passant_target),
+            en_passant_target_square: Square::to_fen(*en_passant_target),
             half_move_clock: FiftyMoveRuleClock::to_fen(*fifty_move_rule_clock),
             full_move_number: FullMoveCount::to_fen(*full_move_count),
         };
@@ -120,7 +120,7 @@ impl GameState {
 
 impl CastlingRights {
     #[must_use]
-    pub fn from_fen(value: &[AsciiChar]) -> Self {
+    fn from_fen(value: &[AsciiChar]) -> Self {
         if value == [AsciiChar::HyphenMinus] {
             return Self::default();
         }
@@ -133,7 +133,7 @@ impl CastlingRights {
     }
 
     #[must_use]
-    pub fn to_fen(self) -> Vec<AsciiChar> {
+    fn to_fen(self) -> Vec<AsciiChar> {
         if self == Self::default() {
             return vec![AsciiChar::HyphenMinus];
         }
@@ -178,7 +178,7 @@ impl FiftyMoveRuleClock {
 pub struct MalformedPieceError;
 
 impl Piece {
-    pub const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, MalformedPieceError> {
+    const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, MalformedPieceError> {
         match value as u8 {
             b'P' => Ok(Self::PAWN_WHITE),
             b'N' => Ok(Self::KNIGHT_WHITE),
@@ -199,7 +199,7 @@ impl Piece {
     }
 
     #[must_use]
-    pub const fn to_ascii_char(value: Self) -> AsciiChar {
+    const fn to_ascii_char(value: Self) -> AsciiChar {
         use AsciiChar as AC;
         match value {
             Self::PAWN_WHITE => AC::CapitalP,   // `P`
@@ -227,7 +227,7 @@ pub enum InvalidPlayer {
 }
 
 impl PlayerKind {
-    pub const fn try_from_fen(value: &[AsciiChar]) -> Result<Self, InvalidPlayer> {
+    const fn try_from_fen(value: &[AsciiChar]) -> Result<Self, InvalidPlayer> {
         match value {
             [AsciiChar::SmallW] => Ok(Self::White), // `w`
             [AsciiChar::SmallB] => Ok(Self::Black), // `b`
@@ -238,7 +238,7 @@ impl PlayerKind {
     }
 
     #[must_use]
-    pub const fn to_ascii_char(self) -> AsciiChar {
+    const fn to_ascii_char(self) -> AsciiChar {
         match self {
             Self::White => AsciiChar::SmallW,
             Self::Black => AsciiChar::SmallB,
@@ -254,7 +254,7 @@ pub enum BoardFromFenError {
 }
 
 impl Board {
-    pub fn try_from_fen(value: &[AsciiChar]) -> Result<Self, BoardFromFenError> {
+    fn try_from_fen(value: &[AsciiChar]) -> Result<Self, BoardFromFenError> {
         fn fen_row_to_board_row(
             row: &[AsciiChar],
         ) -> Result<[Option<Piece>; 8], BoardFromFenError> {
@@ -301,7 +301,7 @@ impl Board {
     }
 
     #[must_use]
-    pub fn to_fen(&self) -> Vec<AsciiChar> {
+    fn to_fen(&self) -> Vec<AsciiChar> {
         let mut running_square_count: u32 = 0;
         let mut out: Vec<AsciiChar> = vec![];
         for square in Square::all_fen_ordered() {
@@ -342,20 +342,20 @@ impl Board {
 }
 
 impl Col {
-    pub const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, ColIndexOutOfRange> {
+    const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, ColIndexOutOfRange> {
         Self::try_from(u8::from(value) - b'a' + 1)
     }
     #[must_use]
-    pub const fn to_ascii_char(self) -> AsciiChar {
+    const fn to_ascii_char(self) -> AsciiChar {
         AsciiChar::from_u8(u8::from(self) + b'a' - 1).unwrap()
     }
 }
 impl Row {
-    pub const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, RowIndexOutOfRange> {
+    const fn try_from_ascii_char(value: AsciiChar) -> Result<Self, RowIndexOutOfRange> {
         Self::try_from(u8::from(value) - b'0')
     }
     #[must_use]
-    pub const fn to_ascii_char(self) -> AsciiChar {
+    const fn to_ascii_char(self) -> AsciiChar {
         AsciiChar::from_u8(u8::from(self) + b'0').unwrap()
     }
 }
@@ -373,7 +373,7 @@ impl From<SquareOutOfRange> for SquareFromFenError {
     }
 }
 impl Square {
-    pub fn try_from_fen(value: &[AsciiChar]) -> Result<Option<Self>, SquareFromFenError> {
+    fn try_from_fen(value: &[AsciiChar]) -> Result<Option<Self>, SquareFromFenError> {
         // supposed to look like `-` || `a5` / `d2` / `f7` / ...
         match value {
             [AsciiChar::HyphenMinus] => Ok(None), //  `-`
@@ -388,10 +388,90 @@ impl Square {
     }
 
     #[must_use]
-    pub fn to_fen(value: &Option<Self>) -> Vec<AsciiChar> {
+    fn to_fen(value: Option<Self>) -> Vec<AsciiChar> {
         match value {
             None => vec![AsciiChar::HyphenMinus], // `-`
-            Some(Self { col, row }) => vec![Col::to_ascii_char(*col), Row::to_ascii_char(*row)],
+            Some(Self { col, row }) => vec![Col::to_ascii_char(col), Row::to_ascii_char(row)],
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::println;
+
+    #[test]
+    fn test_squares() {
+        for square in Square::all() {
+            assert_eq!(
+                Some(square),
+                Square::try_from_fen(&Square::to_fen(Some(square))).unwrap()
+            );
+
+            println!("{square:?}: {}", Square::to_fen(Some(square)).as_str());
+        }
+    }
+
+    #[test]
+    fn test_columns() {
+        for col in Col::COLS {
+            assert_eq!(
+                col,
+                Col::try_from_ascii_char(Col::to_ascii_char(col)).unwrap()
+            );
+            println!("{col:?}: {}", Col::to_ascii_char(col).as_str());
+        }
+    }
+
+    #[test]
+    fn test_rows() {
+        for row in Row::ROWS {
+            assert_eq!(
+                row,
+                Row::try_from_ascii_char(Row::to_ascii_char(row)).unwrap()
+            );
+            println!("{row:?}: {}", Row::to_ascii_char(row).as_str());
+        }
+    }
+
+    #[test]
+    fn test_pieces() {
+        for piece in Piece::ALL {
+            assert_eq!(
+                piece,
+                Piece::try_from_ascii_char(Piece::to_ascii_char(piece)).unwrap()
+            );
+            println!("{piece}: {}", Piece::to_ascii_char(piece).as_str());
+        }
+    }
+
+    #[test]
+    fn test_player_kinds() {
+        for player_kind in [PlayerKind::White, PlayerKind::Black] {
+            assert_eq!(
+                player_kind,
+                PlayerKind::try_from_fen(vec![PlayerKind::to_ascii_char(player_kind)].as_slice())
+                    .unwrap()
+            );
+            println!(
+                "{player_kind:?}: {}",
+                PlayerKind::to_ascii_char(player_kind).as_str()
+            );
+        }
+    }
+
+    #[test]
+    fn test_castling_rights() {
+        for castling_rights in CastlingRights::all() {
+            assert_eq!(
+                castling_rights,
+                CastlingRights::from_fen(CastlingRights::to_fen(castling_rights).as_slice())
+            );
+            println!(
+                "{castling_rights:?}: {}",
+                CastlingRights::to_fen(castling_rights).as_str()
+            );
         }
     }
 }
