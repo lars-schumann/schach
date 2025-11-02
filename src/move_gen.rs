@@ -421,9 +421,13 @@ mod tests {
     use super::*;
     use std::println;
 
-    #[cfg_attr(feature = "__ci", ignore = "too expensive for CI")]
     #[test]
     fn search() {
+        if option_env!("CI").is_some() {
+            println!("skipped because this is too expensive for CI");
+            return;
+        }
+
         let depth = 3;
         let game = GameState::try_from_fen(
             "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
@@ -444,9 +448,12 @@ mod tests {
         println!("---------------------------");
     }
 
-    #[cfg_attr(feature = "__ci", ignore = "too expensive for CI")]
     #[test]
     fn test_mass_fens() {
+        if option_env!("CI").is_some() {
+            println!("skipped because this is too expensive for CI");
+            return;
+        }
         let fens = std::fs::read_to_string("./fens/fens.txt").unwrap();
 
         for fen in fens.lines() {
@@ -456,9 +463,12 @@ mod tests {
         }
     }
 
-    #[cfg_attr(feature = "__ci", ignore = "too expensive for CI")]
     #[test]
     fn test_mass_against_owl() {
+        if option_env!("CI").is_some() {
+            println!("skipped because this is too expensive for CI");
+            return;
+        }
         let max_depth = 2;
         let max_fens = 10;
         let skip_fens = 100;
