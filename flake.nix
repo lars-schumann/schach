@@ -31,6 +31,7 @@
 
           clippy
           bacon
+          cargo-hack
 
           trunk
 

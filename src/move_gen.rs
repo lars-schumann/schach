@@ -445,7 +445,7 @@ mod tests {
 
     #[test]
     fn test_mass_fens() {
-        let fens = std::fs::read_to_string("./fens/lichess_puzzle_fens.txt").unwrap();
+        let fens = std::fs::read_to_string("./fens/fens.txt").unwrap();
 
         for fen in fens.lines() {
             let schach_game = GameState::try_from_fen(fen).unwrap();
@@ -460,7 +460,7 @@ mod tests {
         let max_fens = 10;
         let skip_fens = 100;
         let progress_thingy = core::cmp::max(max_fens / 1_000, 1);
-        let fens = std::fs::read_to_string("./fens/lichess_puzzle_fens.txt").unwrap();
+        let fens = std::fs::read_to_string("./fens/fens.txt").unwrap();
 
         let mut progress = 0;
 
