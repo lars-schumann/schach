@@ -186,7 +186,7 @@ pub fn attacked_squares(
     let rays = directions.iter().map(move |direction| {
         (0..range_upper_bound)
             .map(move |i| starting_square + *direction * (i + 1))
-            .take_while(Result::is_ok) // ugly but right, once this is Err(_) once, itll _always_ be out of bounds!
+            .take_while(Result::is_ok) // ugly but right, once this is Err(_) once, it'll _always_ be out of bounds!
             .map(Result::unwrap)
     });
 
