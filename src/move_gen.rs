@@ -421,6 +421,7 @@ mod tests {
     use super::*;
     use std::println;
 
+    #[cfg_attr(feature = "__ci", ignore = "too expensive for CI")]
     #[test]
     fn search() {
         let depth = 3;
@@ -443,6 +444,7 @@ mod tests {
         println!("---------------------------");
     }
 
+    #[cfg_attr(feature = "__ci", ignore = "too expensive for CI")]
     #[test]
     fn test_mass_fens() {
         let fens = std::fs::read_to_string("./fens/fens.txt").unwrap();
@@ -454,6 +456,7 @@ mod tests {
         }
     }
 
+    #[cfg_attr(feature = "__ci", ignore = "too expensive for CI")]
     #[test]
     fn test_mass_against_owl() {
         let max_depth = 2;
