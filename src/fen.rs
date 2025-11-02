@@ -287,7 +287,7 @@ impl Board {
 
         let mut new_board = Self::empty();
 
-        //TODO: unfuck this
+        //TODO: un-fuck this
         for row in Row::ROWS {
             for col in Col::COLS {
                 new_board[Square {

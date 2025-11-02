@@ -301,8 +301,6 @@ impl Offset {
     const DDR: Self = Self::D + Self::DR;
     const DLL: Self = Self::DL + Self::L;
     const DRR: Self = Self::DR + Self::R;
-    const UU: Self = Self::U + Self::U;
-    const DD: Self = Self::D + Self::D;
 
     pub(crate) const ROOK: [Self; 4] = [Self::U, Self::D, Self::L, Self::R];
     pub(crate) const BISHOP: [Self; 4] = [Self::UL, Self::UR, Self::DL, Self::DR];
@@ -326,12 +324,8 @@ impl Offset {
         Self::DL,
         Self::DR,
     ];
-    pub(crate) const PAWN_UP_SINGLE: [Self; 1] = [Self::U];
-    pub(crate) const PAWN_UP_DOUBLE: [Self; 1] = [Self::UU];
-    pub(crate) const PAWN_UP_DIAGONAL: [Self; 2] = [Self::UL, Self::UR];
 
-    pub(crate) const PAWN_DOWN_SINGLE: [Self; 1] = [Self::D];
-    pub(crate) const PAWN_DOWN_DOUBLE: [Self; 1] = [Self::D];
+    pub(crate) const PAWN_UP_DIAGONAL: [Self; 2] = [Self::UL, Self::UR];
     pub(crate) const PAWN_DOWN_DIAGONAL: [Self; 2] = [Self::DL, Self::DR];
 
     pub(crate) const KNIGHT: [Self; 8] = [

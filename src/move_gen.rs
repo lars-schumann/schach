@@ -55,7 +55,7 @@ impl GameState {
             new_continued_games.clear();
         }
 
-        stats.countinued_games = continued_games.len();
+        stats.continued_games = continued_games.len();
         stats.checkmated_games = terminated_games_checkmate.len();
         stats.drawn_games = terminated_games_draw.len();
         stats
@@ -392,7 +392,7 @@ impl GameState {
             };
 
             if square.row != self.active_player.pawn_starting_row() {
-                continue; // pawns can only double-move when they havent moved yet!
+                continue; // pawns can only double-move when they haven't moved yet!
             }
 
             if self.board[two_in_front].is_some() {
@@ -410,7 +410,7 @@ impl GameState {
 
 #[derive(Default)]
 pub struct SearchStats {
-    pub countinued_games: usize,
+    pub continued_games: usize,
     pub checkmated_games: usize,
     pub drawn_games: usize,
     pub en_passant: usize,
@@ -437,7 +437,7 @@ mod tests {
         println!("depth: {depth}");
         println!("#checkmate: {}", stats.checkmated_games);
         println!("#drawn games: {}", stats.drawn_games);
-        println!("#continued games: {}", stats.countinued_games);
+        println!("#continued games: {}", stats.continued_games);
         println!("#en passant: {}", stats.en_passant);
         println!("elapsed: {:?}", before.elapsed());
         println!("---------------------------");
