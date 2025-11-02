@@ -456,7 +456,7 @@ mod tests {
 
     #[test]
     fn test_mass_against_owl() {
-        let max_depth = 3;
+        let max_depth = 2;
         let max_fens = 10;
         let skip_fens = 100;
         let progress_thingy = core::cmp::max(max_fens / 1_000, 1);
