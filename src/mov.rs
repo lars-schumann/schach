@@ -3,67 +3,6 @@ use crate::game::CastlingSide;
 use crate::piece::Piece;
 use crate::piece::PieceKind;
 
-#[derive(Copy, Clone, PartialEq, Eq)]
-enum Move {
-    Normal {
-        piece_kind: PieceKind,
-        start: Square,
-        target: Square,
-        is_capture: bool,
-    },
-    DoubleStep {
-        start: Square,
-        target: Square,
-    },
-    Promotion {
-        start: Square,
-        target: Square,
-        is_capture: bool,
-        replacement: PieceKind,
-    },
-    EnPassant {
-        start: Square,
-        target: Square,
-        affected_square: Square,
-    },
-    Castling(CastlingSide),
-}
-impl core::fmt::Debug for Move {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            | Self::Normal {
-                piece_kind,
-                start,
-                target,
-                is_capture,
-            } => {
-                write!(f, "{piece_kind:?}: {start:?} -> {target:?} {is_capture}",)
-            }
-            | Self::DoubleStep { start, target } => {
-                write!(f, "Double Step: {start:?} -> {target:?}")
-            }
-            | Self::Promotion {
-                start,
-                target,
-                is_capture,
-                replacement,
-            } => write!(
-                f,
-                "Promotion: {start:?} -> {target:?} to: {replacement:?} {is_capture}",
-            ),
-            | Self::EnPassant {
-                start,
-                target,
-                affected_square,
-            } => write!(
-                f,
-                "En Passant: {start:?} -> {target:?}, affected: {affected_square:?}",
-            ),
-            | Self::Castling(castling_side) => write!(f, "{castling_side:?}",),
-        }
-    }
-}
-
 #[derive(Clone, Copy)]
 pub struct Threat {
     pub piece: Piece,
