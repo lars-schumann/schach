@@ -23,9 +23,9 @@ extern crate std;
 
 pub mod board;
 pub mod coord;
-pub mod fen;
 pub mod game;
 pub mod mov;
 pub mod move_gen;
 pub mod piece;
 pub mod player;
+pub mod notation;
