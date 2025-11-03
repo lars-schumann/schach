@@ -80,3 +80,87 @@ pub struct EnPassantTargetSquare {
     pub inner: Square,
     pub half_turn_round: u64,
 }
+
+pub enum NewMove {
+    Pawn(PawnMove),
+    Knight {
+        start: Square,
+        target: Square,
+        is_capture: bool,
+    },
+    Bishop {
+        start: Square,
+        target: Square,
+        is_capture: bool,
+    },
+    Rook {
+        start: Square,
+        target: Square,
+        is_capture: bool,
+    },
+    Queen {
+        start: Square,
+        target: Square,
+        is_capture: bool,
+    },
+    King(KingMove),
+}
+
+pub enum PawnMove {
+    Step {
+        start: Square,
+        target: Square,
+    },
+    DoubleStep {
+        start: Square,
+        target: Square,
+    },
+    Capture {
+        start: Square,
+        target: Square,
+    },
+    Promotion {
+        start: Square,
+        target: Square,
+        replacement: PieceKind,
+        is_capture: bool,
+    },
+}
+
+pub enum KingMove {
+    Normal {
+        start: Square,
+        target: Square,
+        is_capture: bool,
+    },
+    Castle(CastlingSide),
+}
+
+impl NewMove {
+    #[must_use]
+    pub const fn is_capture(&self) -> bool {
+        match self {
+            Self::Knight { is_capture, .. }
+            | Self::Bishop { is_capture, .. }
+            | Self::Rook { is_capture, .. }
+            | Self::Queen { is_capture, .. }
+            | Self::King(KingMove::Normal { is_capture, .. })
+            | Self::Pawn(PawnMove::Promotion { is_capture, .. }) => *is_capture,
+            Self::Pawn(PawnMove::Capture { .. }) => true,
+            Self::Pawn(PawnMove::Step { .. } | PawnMove::DoubleStep { .. })
+            | Self::King(KingMove::Castle(_)) => false,
+        }
+    }
+
+    #[must_use]
+    pub const fn piece_kind(&self) -> PieceKind {
+        match self {
+            Self::Pawn(_) => PieceKind::Pawn,
+            Self::Knight { .. } => PieceKind::Knight,
+            Self::Bishop { .. } => PieceKind::Bishop,
+            Self::Rook { .. } => PieceKind::Rook,
+            Self::Queen { .. } => PieceKind::Queen,
+            Self::King(_) => PieceKind::King,
+        }
+    }
+}
