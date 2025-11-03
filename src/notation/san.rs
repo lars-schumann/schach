@@ -82,7 +82,7 @@ mod tests {
         let game = GameState::new();
         let legal_moves = game.legal_moves();
         for mov in legal_moves {
-            println!("{:?}", thingy(game.clone(), &mov));
+            //println!("{:?}", thingy(game.clone(), &mov));
         }
     }
 }
