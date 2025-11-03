@@ -11,10 +11,9 @@ use crate::piece::PieceKind;
 use alloc::vec;
 use alloc::vec::Vec;
 use core::ascii::Char as AsciiChar;
-use std::println;
 
 #[must_use]
-pub fn thingy(game: GameState, mov: &Move) {
+pub fn thingy(game: GameState, mov: &Move) -> Vec<AsciiChar> {
     let legal_moves: Vec<Move> = game.legal_moves().collect();
     assert!(legal_moves.iter().any(|m| m == mov));
 
@@ -70,7 +69,7 @@ pub fn thingy(game: GameState, mov: &Move) {
         }
     }
 
-    println!("{:?}", [thingy, append].concat());
+    [thingy, append].concat()
 }
 
 #[cfg(test)]
@@ -83,7 +82,7 @@ mod tests {
         let game = GameState::new();
         let legal_moves = game.legal_moves();
         for mov in legal_moves {
-            thingy(game.clone(), &mov);
+            println!("{:?}", thingy(game.clone(), &mov));
         }
     }
 }
