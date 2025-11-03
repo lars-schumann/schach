@@ -106,17 +106,17 @@ impl NewMove {
     pub const fn capture_affected_square(&self) -> Option<Square> {
         match self {
             | Self::Pawn(
-                PawnMove::SimpleCapture { target, .. }
-                | PawnMove::Promotion { is_capture: true, target, .. },
+                | PawnMove::SimpleCapture { target, .. }
+                | PawnMove::Promotion { is_capture: true, target, .. }
+                | PawnMove::EnPassant { affected: target, .. }
             )
             | Self::Knight { is_capture: true, target, .. }
             | Self::Bishop { is_capture: true, target, .. }
             | Self::Rook { is_capture: true, target, .. }
             | Self::Queen { is_capture: true, target, .. }
             | Self::King(KingMove::Normal { is_capture: true, target, .. }) => Some(*target),
-            | Self::Pawn(PawnMove::EnPassant { affected, .. }) => Some(*affected),
             | Self::Pawn(
-                PawnMove::SimpleStep { .. }
+                | PawnMove::SimpleStep { .. }
                 | PawnMove::DoubleStep { .. }
                 | PawnMove::Promotion { is_capture: false, .. },
             )
