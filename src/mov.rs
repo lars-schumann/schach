@@ -106,63 +106,24 @@ impl NewMove {
         match self {
             | Self::Pawn(
                 PawnMove::SimpleCapture { target, .. }
-                | PawnMove::Promotion {
-                    is_capture: true,
-                    target,
-                    ..
-                },
+                | PawnMove::Promotion { is_capture: true, target, .. },
             )
-            | Self::Knight {
-                is_capture: true,
-                target,
-                ..
-            }
-            | Self::Bishop {
-                is_capture: true,
-                target,
-                ..
-            }
-            | Self::Rook {
-                is_capture: true,
-                target,
-                ..
-            }
-            | Self::Queen {
-                is_capture: true,
-                target,
-                ..
-            }
-            | Self::King(KingMove::Normal {
-                is_capture: true,
-                target,
-                ..
-            }) => Some(*target),
+            | Self::Knight { is_capture: true, target, .. }
+            | Self::Bishop { is_capture: true, target, .. }
+            | Self::Rook { is_capture: true, target, .. }
+            | Self::Queen { is_capture: true, target, .. }
+            | Self::King(KingMove::Normal { is_capture: true, target, .. }) => Some(*target),
             | Self::Pawn(PawnMove::EnPassant { affected, .. }) => Some(*affected),
             | Self::Pawn(
                 PawnMove::SimpleStep { .. }
                 | PawnMove::DoubleStep { .. }
-                | PawnMove::Promotion {
-                    is_capture: false, ..
-                },
+                | PawnMove::Promotion { is_capture: false, .. },
             )
-            | Self::Knight {
-                is_capture: false, ..
-            }
-            | Self::Bishop {
-                is_capture: false, ..
-            }
-            | Self::Rook {
-                is_capture: false, ..
-            }
-            | Self::Queen {
-                is_capture: false, ..
-            }
-            | Self::King(
-                KingMove::Normal {
-                    is_capture: false, ..
-                }
-                | KingMove::Castle(_),
-            ) => None,
+            | Self::Knight { is_capture: false, .. }
+            | Self::Bishop { is_capture: false, .. }
+            | Self::Rook { is_capture: false, .. }
+            | Self::Queen { is_capture: false, .. }
+            | Self::King(KingMove::Normal { is_capture: false, .. } | KingMove::Castle(_)) => None,
         }
     }
 
