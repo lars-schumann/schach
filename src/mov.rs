@@ -4,7 +4,7 @@ use crate::piece::Piece;
 use crate::piece::PieceKind;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum Move {
+enum Move {
     Normal {
         piece_kind: PieceKind,
         start: Square,
@@ -31,7 +31,7 @@ pub enum Move {
 impl core::fmt::Debug for Move {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::Normal {
+            | Self::Normal {
                 piece_kind,
                 start,
                 target,
@@ -39,8 +39,10 @@ impl core::fmt::Debug for Move {
             } => {
                 write!(f, "{piece_kind:?}: {start:?} -> {target:?} {is_capture}",)
             }
-            Self::DoubleStep { start, target } => write!(f, "Double Step: {start:?} -> {target:?}"),
-            Self::Promotion {
+            | Self::DoubleStep { start, target } => {
+                write!(f, "Double Step: {start:?} -> {target:?}")
+            }
+            | Self::Promotion {
                 start,
                 target,
                 is_capture,
@@ -49,7 +51,7 @@ impl core::fmt::Debug for Move {
                 f,
                 "Promotion: {start:?} -> {target:?} to: {replacement:?} {is_capture}",
             ),
-            Self::EnPassant {
+            | Self::EnPassant {
                 start,
                 target,
                 affected_square,
@@ -57,7 +59,7 @@ impl core::fmt::Debug for Move {
                 f,
                 "En Passant: {start:?} -> {target:?}, affected: {affected_square:?}",
             ),
-            Self::Castling(castling_side) => write!(f, "{castling_side:?}",),
+            | Self::Castling(castling_side) => write!(f, "{castling_side:?}",),
         }
     }
 }
@@ -81,6 +83,7 @@ pub struct EnPassantTargetSquare {
     pub half_turn_round: u64,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum NewMove {
     Pawn(PawnMove),
     Knight {
@@ -106,8 +109,9 @@ pub enum NewMove {
     King(KingMove),
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum PawnMove {
-    Step {
+    SimpleStep {
         start: Square,
         target: Square,
     },
@@ -115,9 +119,14 @@ pub enum PawnMove {
         start: Square,
         target: Square,
     },
-    Capture {
+    SimpleCapture {
         start: Square,
         target: Square,
+    },
+    EnPassant {
+        start: Square,
+        target: Square,
+        affected: Square,
     },
     Promotion {
         start: Square,
@@ -127,6 +136,7 @@ pub enum PawnMove {
     },
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum KingMove {
     Normal {
         start: Square,
@@ -140,27 +150,92 @@ impl NewMove {
     #[must_use]
     pub const fn is_capture(&self) -> bool {
         match self {
-            Self::Knight { is_capture, .. }
+            | Self::Knight { is_capture, .. }
             | Self::Bishop { is_capture, .. }
             | Self::Rook { is_capture, .. }
             | Self::Queen { is_capture, .. }
             | Self::King(KingMove::Normal { is_capture, .. })
             | Self::Pawn(PawnMove::Promotion { is_capture, .. }) => *is_capture,
-            Self::Pawn(PawnMove::Capture { .. }) => true,
-            Self::Pawn(PawnMove::Step { .. } | PawnMove::DoubleStep { .. })
+            | Self::Pawn(PawnMove::SimpleCapture { .. } | PawnMove::EnPassant { .. }) => true,
+            | Self::Pawn(PawnMove::SimpleStep { .. } | PawnMove::DoubleStep { .. })
             | Self::King(KingMove::Castle(_)) => false,
+        }
+    }
+
+    #[must_use]
+    pub const fn capture_affected_square(&self) -> Option<Square> {
+        match self {
+            | Self::Pawn(
+                PawnMove::SimpleCapture { target, .. }
+                | PawnMove::Promotion {
+                    is_capture: true,
+                    target,
+                    ..
+                },
+            )
+            | Self::Knight {
+                is_capture: true,
+                target,
+                ..
+            }
+            | Self::Bishop {
+                is_capture: true,
+                target,
+                ..
+            }
+            | Self::Rook {
+                is_capture: true,
+                target,
+                ..
+            }
+            | Self::Queen {
+                is_capture: true,
+                target,
+                ..
+            }
+            | Self::King(KingMove::Normal {
+                is_capture: true,
+                target,
+                ..
+            }) => Some(*target),
+            | Self::Pawn(PawnMove::EnPassant { affected, .. }) => Some(*affected),
+            | Self::Pawn(
+                PawnMove::SimpleStep { .. }
+                | PawnMove::DoubleStep { .. }
+                | PawnMove::Promotion {
+                    is_capture: false, ..
+                },
+            )
+            | Self::Knight {
+                is_capture: false, ..
+            }
+            | Self::Bishop {
+                is_capture: false, ..
+            }
+            | Self::Rook {
+                is_capture: false, ..
+            }
+            | Self::Queen {
+                is_capture: false, ..
+            }
+            | Self::King(
+                KingMove::Normal {
+                    is_capture: false, ..
+                }
+                | KingMove::Castle(_),
+            ) => None,
         }
     }
 
     #[must_use]
     pub const fn piece_kind(&self) -> PieceKind {
         match self {
-            Self::Pawn(_) => PieceKind::Pawn,
-            Self::Knight { .. } => PieceKind::Knight,
-            Self::Bishop { .. } => PieceKind::Bishop,
-            Self::Rook { .. } => PieceKind::Rook,
-            Self::Queen { .. } => PieceKind::Queen,
-            Self::King(_) => PieceKind::King,
+            | Self::Pawn(_) => PieceKind::Pawn,
+            | Self::Knight { .. } => PieceKind::Knight,
+            | Self::Bishop { .. } => PieceKind::Bishop,
+            | Self::Rook { .. } => PieceKind::Rook,
+            | Self::Queen { .. } => PieceKind::Queen,
+            | Self::King(_) => PieceKind::King,
         }
     }
 }
