@@ -23,7 +23,7 @@ pub struct EnPassantTargetSquare {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum NewMove {
+pub enum Move {
     Pawn(PawnMove),
     Knight {
         start: Square,
@@ -85,7 +85,7 @@ pub enum KingMove {
     Castle(CastlingSide),
 }
 
-impl NewMove {
+impl Move {
     #[must_use]
     pub const fn is_capture(&self) -> bool {
         match self {

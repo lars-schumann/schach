@@ -3,7 +3,7 @@ use crate::game::GameResult;
 use crate::game::GameResultKind;
 use crate::game::GameState;
 use crate::game::StepResult;
-use crate::mov::NewMove;
+use crate::mov::Move;
 use crate::piece::Piece;
 use crate::piece::PieceKind;
 use alloc::vec;
@@ -12,8 +12,8 @@ use core::ascii::Char as AsciiChar;
 use std::println;
 
 #[must_use]
-pub fn thingy(game: GameState, mov: &NewMove) {
-    let legal_moves: Vec<NewMove> = game.legal_moves().collect();
+pub fn thingy(game: GameState, mov: &Move) {
+    let legal_moves: Vec<Move> = game.legal_moves().collect();
     assert!(legal_moves.iter().any(|m| m == mov));
 
     let owner = game.active_player;

@@ -1,6 +1,6 @@
 use crate::board::Board;
 use crate::coord::Square;
-use crate::mov::NewMove;
+use crate::mov::Move;
 use crate::mov::Threat;
 use crate::player::PlayerKind;
 use alloc::vec;
@@ -165,7 +165,7 @@ impl CastlingRights {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Position {
     pub board: Board,
-    pub possible_moves: Vec<NewMove>,
+    pub possible_moves: Vec<Move>,
 }
 
 #[must_use]
