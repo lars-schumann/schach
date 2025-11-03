@@ -1,17 +1,18 @@
-use crate::board::Board;
-use crate::coord::Square;
 use crate::game::CastlingSide;
+use crate::game::GameResult;
+use crate::game::GameResultKind;
 use crate::game::GameState;
-use crate::game::{self};
+use crate::game::StepResult;
 use crate::mov::Move;
 use crate::piece::Piece;
 use crate::piece::PieceKind;
 use alloc::vec;
 use alloc::vec::Vec;
 use core::ascii::Char as AsciiChar;
+use std::println;
 
 #[must_use]
-pub fn thingy(game: GameState, mov: &Move) -> Vec<AsciiChar> {
+pub fn thingy(game: GameState, mov: &Move) {
     let legal_moves: Vec<Move> = game.legal_moves().collect();
     assert!(legal_moves.iter().any(|m| m == mov));
 
@@ -97,10 +98,37 @@ pub fn thingy(game: GameState, mov: &Move) -> Vec<AsciiChar> {
 
     let outcome = game.step(*mov, legal_moves);
 
-    let appendage = match outcome {
-        game::StepResult::Terminated(game_result) => todo!(),
-        game::StepResult::Continued(game_state) => todo!(),
-    };
+    let mut append = vec![];
+    match outcome {
+        StepResult::Terminated(GameResult {
+            kind: GameResultKind::Win,
+            ..
+        }) => append.push(AsciiChar::NumberSign),
+        StepResult::Terminated(GameResult {
+            kind: GameResultKind::Draw(..),
+            ..
+        }) => {}
+        StepResult::Continued(future) => {
+            if future.board.is_king_checked(owner.opponent()) {
+                append.push(AsciiChar::PlusSign);
+            }
+        }
+    }
 
-    todo!()
+    println!("{:?}", [thingy, append].concat());
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::println;
+
+    #[test]
+    fn test_thingy() {
+        let game = GameState::new();
+        let legal_moves = game.legal_moves();
+        for mov in legal_moves {
+            thingy(game.clone(), &mov);
+        }
+    }
 }
