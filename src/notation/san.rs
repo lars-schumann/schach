@@ -29,7 +29,9 @@ pub fn thingy(game: GameState, mov: &NewMove) {
         | StepResult::Terminated(GameResult {
             kind: GameResultKind::Win,
             ..
-        }) => append.push(AsciiChar::NumberSign),
+        }) => {
+            append.push(AsciiChar::NumberSign);
+        }
         | StepResult::Terminated(GameResult {
             kind: GameResultKind::Draw(..),
             ..

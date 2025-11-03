@@ -102,6 +102,7 @@ impl NewMove {
     }
 
     #[must_use]
+    #[rustfmt::skip]
     pub const fn capture_affected_square(&self) -> Option<Square> {
         match self {
             | Self::Pawn(
