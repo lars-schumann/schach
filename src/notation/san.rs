@@ -3,7 +3,9 @@ use crate::game::GameResult;
 use crate::game::GameResultKind;
 use crate::game::GameState;
 use crate::game::StepResult;
+use crate::mov::KingMove;
 use crate::mov::Move;
+use crate::mov::PawnMove;
 use crate::piece::Piece;
 use crate::piece::PieceKind;
 use alloc::vec;
@@ -18,8 +20,33 @@ pub fn thingy(game: GameState, mov: &Move) {
 
     let owner = game.active_player;
 
+    #[rustfmt::skip]
     let thingy = match mov {
-        | _ => todo!(),
+        Move::Pawn(
+            PawnMove::SimpleStep { start, target } | PawnMove::DoubleStep { start, target },
+        ) => todo!(),
+        Move::Pawn(PawnMove::EnPassant { start, target, affected }) => todo!(),
+        Move::Pawn(PawnMove::Promotion { start, target, replacement, is_capture }) => todo!(),
+        Move::Pawn(PawnMove::SimpleCapture { start, target }) => todo!(),
+        | Move::Knight { start, target, is_capture, }
+        | Move::Bishop { start, target, is_capture, }
+        | Move::Rook { start, target, is_capture, }
+        | Move::Queen { start, target, is_capture, }
+        | Move::King( 
+            KingMove::Normal { start, target, is_capture } 
+          ) => todo!(),
+        Move::King(KingMove::Castle(CastlingSide::Kingside)) => vec![
+            AsciiChar::CapitalO,
+            AsciiChar::HyphenMinus,
+            AsciiChar::CapitalO,
+        ],
+        Move::King(KingMove::Castle(CastlingSide::Queenside)) => vec![
+            AsciiChar::CapitalO,
+            AsciiChar::HyphenMinus,
+            AsciiChar::CapitalO,
+            AsciiChar::HyphenMinus,
+            AsciiChar::CapitalO,
+        ], 
     };
 
     let outcome = game.step(*mov, legal_moves);
