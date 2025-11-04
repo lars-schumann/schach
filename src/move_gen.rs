@@ -439,7 +439,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "owlchess")]
     fn test_mass_against_owl() {
         crate::testing::bail_if_no_expensive_test_opt_in!();
 
@@ -462,7 +461,6 @@ mod tests {
         }
     }
 
-    #[cfg(feature = "owlchess")]
     fn owl_checker(game: &GameState) {
         let schach_move_count = game.legal_moves().count();
         let owl_move_count = owlchess::movegen::legal::gen_all(
