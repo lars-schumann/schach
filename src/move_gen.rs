@@ -432,7 +432,7 @@ mod tests {
 
         for fen in fens.lines() {
             let schach_game = GameState::try_from_fen(fen).unwrap();
-            let schach_fen = schach_game.to_fen();
+            let schach_fen = schach_game.to_fen_repr();
             assert_eq!(fen, schach_fen.as_str());
         }
     }

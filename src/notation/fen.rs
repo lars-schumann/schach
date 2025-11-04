@@ -57,13 +57,13 @@ impl GameState {
         let board = Board::try_from_fen(fen.piece_placements.as_slice()).unwrap();
 
         let fifty_move_rule_clock =
-            FiftyMoveRuleClock::try_from_fen(fen.half_move_clock.as_slice()).unwrap();
+            FiftyMoveRuleClock::try_from_fen_repr(fen.half_move_clock.as_slice()).unwrap();
 
         let castling_rights = CastlingRights::from_fen(&fen.castling_availability);
 
         let active_player = PlayerKind::try_from_fen(fen.active_player.as_slice()).unwrap();
         let en_passant_target =
-            Square::try_from_fen(fen.en_passant_target_square.as_slice()).unwrap();
+            Square::try_from_fen_repr(fen.en_passant_target_square.as_slice()).unwrap();
         let full_move_count = FullMoveCount::try_from_fen(fen.full_move_number.as_slice()).unwrap();
 
         Ok(Self {
@@ -79,7 +79,7 @@ impl GameState {
     }
 
     #[must_use]
-    pub fn to_fen(&self) -> Vec<AsciiChar> {
+    pub fn to_fen_repr(&self) -> Vec<AsciiChar> {
         use AsciiChar::Space;
         let Self {
             board,
@@ -93,12 +93,12 @@ impl GameState {
         } = self;
 
         let fen = FenStrings {
-            piece_placements: Board::to_fen(board),
+            piece_placements: Board::to_fen_repr(board),
             active_player: vec![PlayerKind::to_ascii_char(*active_player)],
-            castling_availability: CastlingRights::to_fen(*castling_rights),
-            en_passant_target_square: Square::option_to_fen(*en_passant_target),
-            half_move_clock: FiftyMoveRuleClock::to_fen(*fifty_move_rule_clock),
-            full_move_number: FullMoveCount::to_fen(*full_move_count),
+            castling_availability: CastlingRights::to_fen_repr(*castling_rights),
+            en_passant_target_square: Square::option_to_fen_repr(*en_passant_target),
+            half_move_clock: FiftyMoveRuleClock::to_fen_repr(*fifty_move_rule_clock),
+            full_move_number: FullMoveCount::to_fen_repr(*full_move_count),
         };
 
         [
@@ -133,7 +133,7 @@ impl CastlingRights {
     }
 
     #[must_use]
-    fn to_fen(self) -> Vec<AsciiChar> {
+    fn to_fen_repr(self) -> Vec<AsciiChar> {
         if self == Self::none_available() {
             return vec![AsciiChar::HyphenMinus];
         }
@@ -160,17 +160,17 @@ impl FullMoveCount {
         value.as_str().parse().map(Self)
     }
 
-    fn to_fen(self) -> Vec<AsciiChar> {
+    fn to_fen_repr(self) -> Vec<AsciiChar> {
         self.0.to_string().as_ascii().unwrap().to_owned()
     }
 }
 
 impl FiftyMoveRuleClock {
-    fn try_from_fen(value: &[AsciiChar]) -> Result<Self, core::num::ParseIntError> {
+    fn try_from_fen_repr(value: &[AsciiChar]) -> Result<Self, core::num::ParseIntError> {
         Ok(Self::new(value.as_str().parse()?))
     }
 
-    fn to_fen(self) -> Vec<AsciiChar> {
+    fn to_fen_repr(self) -> Vec<AsciiChar> {
         self.0.to_string().as_ascii().unwrap().to_owned()
     }
 }
@@ -301,7 +301,7 @@ impl Board {
     }
 
     #[must_use]
-    fn to_fen(&self) -> Vec<AsciiChar> {
+    fn to_fen_repr(&self) -> Vec<AsciiChar> {
         let mut running_square_count: u32 = 0;
         let mut out: Vec<AsciiChar> = vec![];
         for square in Square::all() {
@@ -373,7 +373,7 @@ impl From<SquareOutOfRange> for SquareFromFenError {
     }
 }
 impl Square {
-    fn try_from_fen(value: &[AsciiChar]) -> Result<Option<Self>, SquareFromFenError> {
+    fn try_from_fen_repr(value: &[AsciiChar]) -> Result<Option<Self>, SquareFromFenError> {
         // supposed to look like `-` || `a5` / `d2` / `f7` / ...
         match value {
             [AsciiChar::HyphenMinus] => Ok(None), //  `-`
@@ -388,16 +388,16 @@ impl Square {
     }
 
     #[must_use]
-    pub(super) fn to_fen(self) -> Vec<AsciiChar> {
-        vec![Col::to_ascii_char(self.col), Row::to_ascii_char(self.row)]
+    pub(super) const fn to_fen_repr(self) -> [AsciiChar; 2] {
+        [Col::to_ascii_char(self.col), Row::to_ascii_char(self.row)]
     }
 
     #[must_use]
-    fn option_to_fen(value: Option<Self>) -> Vec<AsciiChar> {
+    fn option_to_fen_repr(value: Option<Self>) -> Vec<AsciiChar> {
         #[allow(clippy::option_if_let_else)]
         match value {
             None => vec![AsciiChar::HyphenMinus], // `-`
-            Some(square) => square.to_fen(),
+            Some(square) => square.to_fen_repr().to_vec(),
         }
     }
 }
@@ -410,10 +410,10 @@ mod tests {
     #[test]
     fn test_squares() {
         for square in Square::all() {
-            println!("{square:?}: {}", Square::to_fen(square).as_str());
+            println!("{square:?}: {}", Square::to_fen_repr(square).as_str());
             assert_eq!(
                 Some(square),
-                Square::try_from_fen(&Square::to_fen(square)).unwrap()
+                Square::try_from_fen_repr(&Square::to_fen_repr(square)).unwrap()
             );
         }
     }
@@ -471,11 +471,11 @@ mod tests {
         for castling_rights in CastlingRights::all() {
             println!(
                 "{castling_rights:?}: {}",
-                CastlingRights::to_fen(castling_rights).as_str()
+                CastlingRights::to_fen_repr(castling_rights).as_str()
             );
             assert_eq!(
                 castling_rights,
-                CastlingRights::from_fen(CastlingRights::to_fen(castling_rights).as_slice())
+                CastlingRights::from_fen(CastlingRights::to_fen_repr(castling_rights).as_slice())
             );
         }
     }

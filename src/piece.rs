@@ -12,6 +12,22 @@ pub enum PieceKind {
 }
 impl PieceKind {
     pub const PROMOTION_OPTIONS: [Self; 4] = [Self::Knight, Self::Bishop, Self::Rook, Self::Queen];
+
+    #[must_use]
+    pub const fn to_white_black(self) -> Piece {
+        Piece {
+            kind: self,
+            owner: PlayerKind::Black,
+        }
+    }
+
+    #[must_use]
+    pub const fn to_white_piece(self) -> Piece {
+        Piece {
+            kind: self,
+            owner: PlayerKind::White,
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
