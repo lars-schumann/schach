@@ -122,7 +122,7 @@ impl CastlingRights {
     #[must_use]
     fn from_fen(value: &[AsciiChar]) -> Self {
         if value == [AsciiChar::HyphenMinus] {
-            return Self::default();
+            return Self::none_available();
         }
         Self {
             white_kingside: value.contains(&AsciiChar::CapitalK), // `K`
@@ -410,59 +410,58 @@ mod tests {
     #[test]
     fn test_squares() {
         for square in Square::all() {
+            println!("{square:?}: {}", Square::to_fen(square).as_str());
             assert_eq!(
                 Some(square),
                 Square::try_from_fen(&Square::to_fen(square)).unwrap()
             );
-
-            println!("{square:?}: {}", Square::to_fen(square).as_str());
         }
     }
 
     #[test]
     fn test_columns() {
         for col in Col::COLS {
+            println!("{col:?}: {}", Col::to_ascii_char(col).as_str());
             assert_eq!(
                 col,
                 Col::try_from_ascii_char(Col::to_ascii_char(col)).unwrap()
             );
-            println!("{col:?}: {}", Col::to_ascii_char(col).as_str());
         }
     }
 
     #[test]
     fn test_rows() {
         for row in Row::ROWS {
+            println!("{row:?}: {}", Row::to_ascii_char(row).as_str());
             assert_eq!(
                 row,
                 Row::try_from_ascii_char(Row::to_ascii_char(row)).unwrap()
             );
-            println!("{row:?}: {}", Row::to_ascii_char(row).as_str());
         }
     }
 
     #[test]
     fn test_pieces() {
         for piece in Piece::ALL {
+            println!("{piece}: {}", Piece::to_ascii_char(piece).as_str());
             assert_eq!(
                 piece,
                 Piece::try_from_ascii_char(Piece::to_ascii_char(piece)).unwrap()
             );
-            println!("{piece}: {}", Piece::to_ascii_char(piece).as_str());
         }
     }
 
     #[test]
     fn test_player_kinds() {
         for player_kind in [PlayerKind::White, PlayerKind::Black] {
+            println!(
+                "{player_kind:?}: {}",
+                PlayerKind::to_ascii_char(player_kind).as_str()
+            );
             assert_eq!(
                 player_kind,
                 PlayerKind::try_from_fen(vec![PlayerKind::to_ascii_char(player_kind)].as_slice())
                     .unwrap()
-            );
-            println!(
-                "{player_kind:?}: {}",
-                PlayerKind::to_ascii_char(player_kind).as_str()
             );
         }
     }
@@ -470,13 +469,13 @@ mod tests {
     #[test]
     fn test_castling_rights() {
         for castling_rights in CastlingRights::all() {
-            assert_eq!(
-                castling_rights,
-                CastlingRights::from_fen(CastlingRights::to_fen(castling_rights).as_slice())
-            );
             println!(
                 "{castling_rights:?}: {}",
                 CastlingRights::to_fen(castling_rights).as_str()
+            );
+            assert_eq!(
+                castling_rights,
+                CastlingRights::from_fen(CastlingRights::to_fen(castling_rights).as_slice())
             );
         }
     }
