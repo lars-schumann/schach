@@ -129,7 +129,7 @@ impl GameState {
 }
 
 #[allow(clippy::struct_excessive_bools)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct CastlingRights {
     pub white_kingside: bool,
     pub white_queenside: bool,
@@ -159,6 +159,16 @@ impl CastlingRights {
             .flat_map(|a| vec![(a, false), (a, true)])
             .flat_map(|a| vec![(a, false), (a, true)])
             .map(|(((a, b), c), d)| Self::new(a, b, c, d))
+    }
+}
+impl Default for CastlingRights {
+    fn default() -> Self {
+        Self {
+            white_kingside: true,
+            white_queenside: true,
+            black_kingside: true,
+            black_queenside: true,
+        }
     }
 }
 
