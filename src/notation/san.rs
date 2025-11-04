@@ -48,7 +48,7 @@ pub fn long_algebraic(game: GameState, mov: &Move) -> Vec<AsciiChar> {
                 start.to_fen_repr().as_slice(),
                 optional_capture_symbol,
                 target.to_fen_repr().as_slice(),
-                [replacement.to_white_black().to_ascii_char()].as_slice(),
+                [replacement.to_white_piece().to_ascii_char()].as_slice(),
             ]
             .concat()
         }
@@ -65,6 +65,7 @@ pub fn long_algebraic(game: GameState, mov: &Move) -> Vec<AsciiChar> {
                 [].as_slice()
             };
             [
+                [mov.piece_kind().to_white_piece().to_ascii_char()].as_slice(),
                 start.to_fen_repr().as_slice(),
                 optional_capture_symbol,
                 target.to_fen_repr().as_slice(),
@@ -119,7 +120,7 @@ mod tests {
         let game = GameState::new();
         let legal_moves = game.legal_moves();
         for mov in legal_moves {
-            //println!("{:?}", thingy(game.clone(), &mov));
+            println!("{:?}", long_algebraic(game.clone(), &mov));
         }
     }
 }

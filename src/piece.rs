@@ -14,7 +14,7 @@ impl PieceKind {
     pub const PROMOTION_OPTIONS: [Self; 4] = [Self::Knight, Self::Bishop, Self::Rook, Self::Queen];
 
     #[must_use]
-    pub const fn to_white_black(self) -> Piece {
+    pub const fn to_black_piece(self) -> Piece {
         Piece {
             kind: self,
             owner: PlayerKind::Black,
