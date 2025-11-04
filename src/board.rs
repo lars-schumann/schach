@@ -1,5 +1,6 @@
 use crate::coord::Col;
 use crate::coord::Row;
+use crate::coord::Square;
 use crate::coord::Square as S;
 use crate::game::attacked_squares;
 use crate::mov::Threat;
@@ -93,32 +94,6 @@ impl Default for Board {
         Self::new()
     }
 }
-impl core::fmt::Debug for Board {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        writeln!(f)?;
-        for row in Row::ROWS.into_iter().rev() {
-            write!(f, "{}", i8::from(row))?;
-            for col in Col::COLS {
-                match self[S { col, row }] {
-                    None => {
-                        if (i8::from(row) + i8::from(col)) % 2 == 0 {
-                            write!(f, "□ ",)?;
-                        } else {
-                            write!(f, "■ ",)?;
-                        }
-                    }
-                    Some(piece) => write!(f, "{piece} ")?,
-                }
-            }
-            writeln!(f)?;
-        }
-        write!(f, "  ")?;
-        for col in Col::COLS {
-            write!(f, "{} ", i8::from(col))?;
-        }
-        Ok(())
-    }
-}
 impl const core::ops::Index<S> for Board {
     type Output = Option<Piece>;
     fn index(&self, index: S) -> &Self::Output {
@@ -134,36 +109,64 @@ impl const core::ops::IndexMut<S> for Board {
         &mut self.0[col][row]
     }
 }
-
-pub struct DebugBoard {
+impl core::fmt::Debug for Board {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        writeln!(f)?;
+        for square in Square::all() {
+            if square.col == Col::C1 {
+                write!(f, "{}", i8::from(square.row))?;
+            }
+            match self[square] {
+                Some(piece) => write!(f, "{piece} ")?,
+                None => {
+                    if square.is_black() {
+                        write!(f, "□ ",)?;
+                    } else {
+                        write!(f, "■ ",)?;
+                    }
+                }
+            }
+            if square.col == Col::C8 {
+                writeln!(f)?;
+            }
+        }
+        write!(f, "  ")?;
+        for col in Col::COLS {
+            write!(f, "{} ", i8::from(col))?;
+        }
+        Ok(())
+    }
+}
+pub(crate) struct DebugBoard {
     pub inner: Board,
-    pub attacked_squares: Vec<S>,
+    pub highlighted_squares: Vec<S>,
 }
 impl core::fmt::Debug for DebugBoard {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         writeln!(f)?;
-        for row in Row::ROWS.into_iter().rev() {
-            write!(f, "{}", i8::from(row))?;
-            for col in Col::COLS {
-                if self.attacked_squares.contains(&S { col, row }) {
-                    write!(f, "\x1B[31m",)?;
-                }
-                match self.inner[S { col, row }] {
-                    None => {
-                        if (i8::from(row) + i8::from(col)) % 2 == 0 {
-                            write!(f, "□ ",)?;
-                        } else {
-                            write!(f, "■ ",)?;
-                        }
+        for square in Square::all() {
+            if square.col == Col::C1 {
+                write!(f, "{}", i8::from(square.row))?;
+            }
+            if self.highlighted_squares.contains(&square) {
+                write!(f, "\x1B[31m",)?;
+            }
+            match self.inner[square] {
+                Some(piece) => write!(f, "{piece} ")?,
+                None => {
+                    if square.is_black() {
+                        write!(f, "□ ",)?;
+                    } else {
+                        write!(f, "■ ",)?;
                     }
-
-                    Some(piece) => write!(f, "{piece} ")?,
-                }
-                if self.attacked_squares.contains(&S { col, row }) {
-                    write!(f, "\x1B[0m",)?;
                 }
             }
-            writeln!(f)?;
+            if self.highlighted_squares.contains(&square) {
+                write!(f, "\x1B[0m",)?;
+            }
+            if square.col == Col::C8 {
+                writeln!(f)?;
+            }
         }
         write!(f, "  ")?;
         for col in Col::COLS {

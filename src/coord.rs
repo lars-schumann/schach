@@ -3,6 +3,7 @@ use self::Row as R;
 use self::Square as S;
 use crate::board::COL_COUNT;
 use crate::board::ROW_COUNT;
+use core::ops::Not;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Square {
@@ -16,6 +17,15 @@ impl Square {
     pub const fn new(col: Col, row: Row) -> Self {
         Self { col, row }
     }
+    #[must_use]
+    pub const fn is_black(self) -> bool {
+        (u8::from(self.col) + u8::from(self.row)).is_multiple_of(2)
+    }
+    #[must_use]
+    pub const fn is_white(self) -> bool {
+        self.is_black().not()
+    }
+
     const fn n(col: Col, row: Row) -> Self {
         Self::new(col, row)
     }
@@ -94,12 +104,6 @@ impl Square {
 
 impl Square {
     pub fn all() -> impl Iterator<Item = Self> + Clone + use<> {
-        Col::COLS
-            .into_iter()
-            .flat_map(|col| Row::ROWS.into_iter().map(move |row| Self { col, row }))
-    }
-
-    pub fn all_fen_ordered() -> impl Iterator<Item = Self> + Clone + use<> {
         Row::ROWS
             .into_iter()
             .rev()

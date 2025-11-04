@@ -304,7 +304,7 @@ impl Board {
     fn to_fen(&self) -> Vec<AsciiChar> {
         let mut running_square_count: u32 = 0;
         let mut out: Vec<AsciiChar> = vec![];
-        for square in Square::all_fen_ordered() {
+        for square in Square::all() {
             match self[square] {
                 None => running_square_count += 1,
                 Some(piece) => {
