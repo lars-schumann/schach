@@ -134,7 +134,7 @@ impl CastlingRights {
 
     #[must_use]
     fn to_fen(self) -> Vec<AsciiChar> {
-        if self == Self::default() {
+        if self == Self::none_available() {
             return vec![AsciiChar::HyphenMinus];
         }
         let mut out = vec![];

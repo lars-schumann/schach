@@ -152,6 +152,16 @@ impl CastlingRights {
             black_queenside,
         }
     }
+    #[must_use]
+    pub const fn all_available() -> Self {
+        Self::new(true, true, true, true)
+    }
+
+    #[must_use]
+    pub const fn none_available() -> Self {
+        Self::new(false, false, false, false)
+    }
+
     pub fn all() -> impl Iterator<Item = Self> + Clone {
         [false, true]
             .into_iter()
@@ -163,12 +173,7 @@ impl CastlingRights {
 }
 impl Default for CastlingRights {
     fn default() -> Self {
-        Self {
-            white_kingside: true,
-            white_queenside: true,
-            black_kingside: true,
-            black_queenside: true,
-        }
+        Self::all_available()
     }
 }
 
