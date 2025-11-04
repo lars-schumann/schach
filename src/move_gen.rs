@@ -402,10 +402,7 @@ mod tests {
 
     #[test]
     fn search() {
-        if option_env!("CI").is_some() {
-            println!("skipped because this is too expensive for CI");
-            return;
-        }
+        crate::testing::bail_if_no_expensive_test_opt_in!();
 
         let depth = 3;
         let game = GameState::try_from_fen(
@@ -429,10 +426,8 @@ mod tests {
 
     #[test]
     fn test_mass_fens() {
-        if option_env!("CI").is_some() {
-            println!("skipped because this is too expensive for CI");
-            return;
-        }
+        crate::testing::bail_if_no_expensive_test_opt_in!();
+
         let fens = std::fs::read_to_string("./fens/fens.txt").unwrap();
 
         for fen in fens.lines() {
@@ -444,10 +439,8 @@ mod tests {
 
     #[test]
     fn test_mass_against_owl() {
-        if option_env!("CI").is_some() {
-            println!("skipped because this is too expensive for CI");
-            return;
-        }
+        crate::testing::bail_if_no_expensive_test_opt_in!();
+
         let max_depth = 2;
         let max_fens = 10;
         let skip_fens = 100;

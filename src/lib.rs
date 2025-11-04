@@ -29,3 +29,4 @@ pub mod move_gen;
 pub mod piece;
 pub mod player;
 pub mod notation;
+pub mod testing;
