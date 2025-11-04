@@ -21,7 +21,7 @@ use core::ops::Not;
 
 impl GameState {
     #[must_use]
-    pub fn search(self, max_depth: u32) -> SearchStats {
+    pub fn search(self, max_depth: u32, checker: impl Fn(&Self)) -> SearchStats {
         let mut terminated_games_checkmate: Vec<Self> = vec![];
         let mut terminated_games_draw: Vec<Self> = vec![];
         let mut continued_games: Vec<Self> = vec![self];
@@ -31,6 +31,7 @@ impl GameState {
 
         for _ in 0..=max_depth {
             continued_games.clone().into_iter().for_each(|game| {
+                checker(&game);
                 let legal_moves: Vec<Move> = game.legal_moves().collect();
 
                 for mov in legal_moves.clone() {
@@ -412,7 +413,7 @@ mod tests {
 
         let before = std::time::Instant::now();
 
-        let stats = game.search(depth);
+        let stats = game.search(depth, |_| ());
 
         println!("---------------------------");
         println!("depth: {depth}");
@@ -438,6 +439,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "owlchess")]
     fn test_mass_against_owl() {
         crate::testing::bail_if_no_expensive_test_opt_in!();
 
@@ -452,11 +454,21 @@ mod tests {
         for fen in fens.lines().skip(skip_fens).take(max_fens) {
             let mut game = GameState::try_from_fen(fen).unwrap();
             game.is_perft = true;
-            let _ = game.search(max_depth);
+            let _ = game.search(max_depth, owl_checker);
             progress += 1;
             if progress % progress_thingy == 0 {
                 println!("{progress}/{max_fens}");
             }
         }
+    }
+
+    #[cfg(feature = "owlchess")]
+    fn owl_checker(game: &GameState) {
+        let schach_move_count = game.legal_moves().count();
+        let owl_move_count = owlchess::movegen::legal::gen_all(
+            &owlchess::Board::from_fen(game.to_fen_repr().as_str()).unwrap(),
+        )
+        .len();
+        assert_eq!(schach_move_count, owl_move_count);
     }
 }
