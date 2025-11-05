@@ -119,6 +119,7 @@ impl GameState {
         let current_position = Position {
             board: game.board,
             possible_moves: all_legal_moves,
+            castling_rights: game.castling_rights,
         };
 
         // handle fifty move rule

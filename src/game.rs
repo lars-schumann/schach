@@ -181,6 +181,7 @@ impl Default for CastlingRights {
 pub struct Position {
     pub board: Board,
     pub possible_moves: Vec<Move>,
+    pub castling_rights: CastlingRights,
 }
 
 #[must_use]
