@@ -45,7 +45,7 @@ pub fn long_algebraic(game: GameState, mov: &Move) -> Vec<AsciiChar> {
         | Move::Queen { start, target, .. }
         | Move::King(KingMove::Normal { start, target, .. }) => {
             let piece_representation = matches!(mov, Move::Pawn(_))
-                .then_some([mov.piece_kind().to_white_piece().to_ascii_char()]);
+                .then_some([mov.piece_kind().to_white_piece().to_fen_repr()]);
 
             let start = start.to_fen_repr();
 
@@ -55,7 +55,7 @@ pub fn long_algebraic(game: GameState, mov: &Move) -> Vec<AsciiChar> {
 
             let promotion_replacement = match mov {
                 Move::Pawn(PawnMove::Promotion { replacement, .. }) => {
-                    Some([replacement.to_white_piece().to_ascii_char()])
+                    Some([replacement.to_white_piece().to_fen_repr()])
                 }
                 _ => None,
             };

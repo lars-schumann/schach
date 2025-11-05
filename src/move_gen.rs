@@ -511,7 +511,7 @@ mod tests {
 
         for fen in fens.lines() {
             let schach_game = GameState::try_from_fen(fen).unwrap();
-            let schach_fen = schach_game.to_fen_repr();
+            let schach_fen = schach_game.to_fen();
             assert_eq!(fen, schach_fen.as_str());
         }
     }
@@ -542,7 +542,7 @@ mod tests {
     fn owl_checker(game: &GameState) {
         let schach_move_count = game.legal_moves().count();
         let owl_move_count = owlchess::movegen::legal::gen_all(
-            &owlchess::Board::from_fen(game.to_fen_repr().as_str()).unwrap(),
+            &owlchess::Board::from_fen(game.to_fen().as_str()).unwrap(),
         )
         .len();
         assert_eq!(schach_move_count, owl_move_count);
