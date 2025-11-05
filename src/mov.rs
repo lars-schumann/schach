@@ -4,10 +4,10 @@ use crate::piece::Piece;
 use crate::piece::PieceKind;
 
 #[derive(Clone, Copy)]
-pub struct Threat {
-    pub piece: Piece,
-    pub start: Square,
-    pub target: Square,
+pub (crate) struct Threat {
+    pub (crate) piece: Piece,
+    pub (crate) start: Square,
+    pub (crate) target: Square,
 }
 
 impl core::fmt::Debug for Threat {

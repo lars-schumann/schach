@@ -7,8 +7,8 @@ use alloc::vec;
 use alloc::vec::Vec;
 use core::num::NonZeroU64;
 
-pub static REPETITIONS_TO_FORCED_DRAW_COUNT: usize = 5;
-pub static FIFTY_MOVE_RULE_COUNT: FiftyMoveRuleClock = FiftyMoveRuleClock(100);
+pub(crate) static REPETITIONS_TO_FORCED_DRAW_COUNT: usize = 5;
+pub(crate) static FIFTY_MOVE_RULE_COUNT: FiftyMoveRuleClock = FiftyMoveRuleClock(100);
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum CastlingSide {
