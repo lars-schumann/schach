@@ -123,9 +123,10 @@ impl GameState {
         };
 
         // handle fifty move rule
-        match (mov.piece_kind(), mov.is_capture()) {
-            | (PieceKind::Pawn, _) | (_, true) => game.fifty_move_rule_clock.reset(),
-            | _ => game.fifty_move_rule_clock.increase(),
+        if mov.piece_kind() == PieceKind::Pawn || mov.is_capture() {
+            game.fifty_move_rule_clock.reset();
+        } else {
+            game.fifty_move_rule_clock.increase();
         }
 
         // handle our own castling rights
@@ -141,19 +142,16 @@ impl GameState {
                     }
                 }
             }
-            | _ => { /*nothing */ }
+            _ => { /*nothing */ }
         }
 
         // handle opponents castling rights
-        match mov.capture_affected_square() {
-            | Some(affected) => {
-                for castling_side in [CastlingSide::Kingside, CastlingSide::Queenside] {
-                    if affected == game.active_player.opponent().rook_start(castling_side) {
-                        game.deny_castling(game.active_player.opponent(), castling_side);
-                    }
+        if let Some(affected) = mov.capture_affected_square() {
+            for castling_side in [CastlingSide::Kingside, CastlingSide::Queenside] {
+                if affected == game.active_player.opponent().rook_start(castling_side) {
+                    game.deny_castling(game.active_player.opponent(), castling_side);
                 }
             }
-            | None => { /*nothing */ }
         }
 
         // handle en passant target

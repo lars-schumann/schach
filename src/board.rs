@@ -2,6 +2,7 @@ use crate::coord::Col;
 use crate::coord::Row;
 use crate::coord::Square;
 use crate::coord::Square as S;
+use crate::game::PieceCounts;
 use crate::game::attacked_squares;
 use crate::mov::Threat;
 use crate::piece::Piece;
@@ -63,30 +64,41 @@ impl Board {
     pub fn new() -> Self {
         let mut board = Self::empty();
 
-        board[S::A1] = Some(Piece::ROOK_WHITE);
-        board[S::B1] = Some(Piece::KNIGHT_WHITE);
-        board[S::C1] = Some(Piece::BISHOP_WHITE);
-        board[S::D1] = Some(Piece::QUEEN_WHITE);
-        board[S::E1] = Some(Piece::KING_WHITE);
-        board[S::F1] = Some(Piece::BISHOP_WHITE);
-        board[S::G1] = Some(Piece::KNIGHT_WHITE);
-        board[S::H1] = Some(Piece::ROOK_WHITE);
+        board[S::A1] = Some(Piece::WHITE_ROOK);
+        board[S::B1] = Some(Piece::WHITE_KNIGHT);
+        board[S::C1] = Some(Piece::WHITE_BISHOP);
+        board[S::D1] = Some(Piece::WHITE_QUEEN);
+        board[S::E1] = Some(Piece::WHITE_KING);
+        board[S::F1] = Some(Piece::WHITE_BISHOP);
+        board[S::G1] = Some(Piece::WHITE_KNIGHT);
+        board[S::H1] = Some(Piece::WHITE_ROOK);
 
-        board[S::A8] = Some(Piece::ROOK_BLACK);
-        board[S::B8] = Some(Piece::KNIGHT_BLACK);
-        board[S::C8] = Some(Piece::BISHOP_BLACK);
-        board[S::D8] = Some(Piece::QUEEN_BLACK);
-        board[S::E8] = Some(Piece::KING_BLACK);
-        board[S::F8] = Some(Piece::BISHOP_BLACK);
-        board[S::G8] = Some(Piece::KNIGHT_BLACK);
-        board[S::H8] = Some(Piece::ROOK_BLACK);
+        board[S::A8] = Some(Piece::BLACK_ROOK);
+        board[S::B8] = Some(Piece::BLACK_KNIGHT);
+        board[S::C8] = Some(Piece::BLACK_BISHOP);
+        board[S::D8] = Some(Piece::BLACK_QUEEN);
+        board[S::E8] = Some(Piece::BLACK_KING);
+        board[S::F8] = Some(Piece::BLACK_BISHOP);
+        board[S::G8] = Some(Piece::BLACK_KNIGHT);
+        board[S::H8] = Some(Piece::BLACK_ROOK);
 
         for col in Col::COLS {
-            board[S { col, row: Row::R2 }] = Some(Piece::PAWN_WHITE);
-            board[S { col, row: Row::R7 }] = Some(Piece::PAWN_BLACK);
+            board[S { col, row: Row::R2 }] = Some(Piece::WHITE_PAWN);
+            board[S { col, row: Row::R7 }] = Some(Piece::BLACK_PAWN);
         }
 
         board
+    }
+
+    #[must_use]
+    pub fn piece_counts(&self) -> PieceCounts {
+        let mut piece_counts = PieceCounts::default();
+        for square in Square::all() {
+            if let Some(piece) = self[square] {
+                piece_counts[piece] += 1;
+            }
+        }
+        piece_counts
     }
 }
 impl Default for Board {

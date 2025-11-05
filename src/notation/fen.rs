@@ -182,19 +182,19 @@ pub struct MalformedPieceError;
 impl Piece {
     pub(super) const fn try_from_fen_repr(value: AsciiChar) -> Result<Self, MalformedPieceError> {
         match value as u8 {
-            b'P' => Ok(Self::PAWN_WHITE),
-            b'N' => Ok(Self::KNIGHT_WHITE),
-            b'B' => Ok(Self::BISHOP_WHITE),
-            b'R' => Ok(Self::ROOK_WHITE),
-            b'Q' => Ok(Self::QUEEN_WHITE),
-            b'K' => Ok(Self::KING_WHITE),
+            b'P' => Ok(Self::WHITE_PAWN),
+            b'N' => Ok(Self::WHITE_KNIGHT),
+            b'B' => Ok(Self::WHITE_BISHOP),
+            b'R' => Ok(Self::WHITE_ROOK),
+            b'Q' => Ok(Self::WHITE_QUEEN),
+            b'K' => Ok(Self::WHITE_KING),
 
-            b'p' => Ok(Self::PAWN_BLACK),
-            b'n' => Ok(Self::KNIGHT_BLACK),
-            b'b' => Ok(Self::BISHOP_BLACK),
-            b'r' => Ok(Self::ROOK_BLACK),
-            b'q' => Ok(Self::QUEEN_BLACK),
-            b'k' => Ok(Self::KING_BLACK),
+            b'p' => Ok(Self::BLACK_PAWN),
+            b'n' => Ok(Self::BLACK_KNIGHT),
+            b'b' => Ok(Self::BLACK_BISHOP),
+            b'r' => Ok(Self::BLACK_ROOK),
+            b'q' => Ok(Self::BLACK_QUEEN),
+            b'k' => Ok(Self::BLACK_KING),
 
             _ => Err(MalformedPieceError),
         }
@@ -204,19 +204,19 @@ impl Piece {
     pub(super) const fn to_fen_repr(self) -> AsciiChar {
         use AsciiChar as AC;
         match self {
-            Self::PAWN_WHITE => AC::CapitalP,   // `P`
-            Self::KNIGHT_WHITE => AC::CapitalN, // `N`
-            Self::BISHOP_WHITE => AC::CapitalB, // `B`
-            Self::ROOK_WHITE => AC::CapitalR,   // `R`
-            Self::QUEEN_WHITE => AC::CapitalQ,  // `Q`
-            Self::KING_WHITE => AC::CapitalK,   // `K`
+            Self::WHITE_PAWN => AC::CapitalP,   // `P`
+            Self::WHITE_KNIGHT => AC::CapitalN, // `N`
+            Self::WHITE_BISHOP => AC::CapitalB, // `B`
+            Self::WHITE_ROOK => AC::CapitalR,   // `R`
+            Self::WHITE_QUEEN => AC::CapitalQ,  // `Q`
+            Self::WHITE_KING => AC::CapitalK,   // `K`
 
-            Self::PAWN_BLACK => AC::SmallP,   // `p`
-            Self::KNIGHT_BLACK => AC::SmallN, // `n`
-            Self::BISHOP_BLACK => AC::SmallB, // `b`
-            Self::ROOK_BLACK => AC::SmallR,   // `r`
-            Self::QUEEN_BLACK => AC::SmallQ,  // `q`
-            Self::KING_BLACK => AC::SmallK,   // `k`
+            Self::BLACK_PAWN => AC::SmallP,   // `p`
+            Self::BLACK_KNIGHT => AC::SmallN, // `n`
+            Self::BLACK_BISHOP => AC::SmallB, // `b`
+            Self::BLACK_ROOK => AC::SmallR,   // `r`
+            Self::BLACK_QUEEN => AC::SmallQ,  // `q`
+            Self::BLACK_KING => AC::SmallK,   // `k`
         }
     }
 }

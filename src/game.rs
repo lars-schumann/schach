@@ -2,10 +2,13 @@ use crate::board::Board;
 use crate::coord::Square;
 use crate::mov::Move;
 use crate::mov::Threat;
+use crate::piece::Piece;
 use crate::player::PlayerKind;
 use alloc::vec;
 use alloc::vec::Vec;
 use core::num::NonZeroU64;
+use core::ops::Index;
+use core::ops::IndexMut;
 
 pub(crate) static REPETITIONS_TO_FORCED_DRAW_COUNT: usize = 5;
 pub(crate) static FIFTY_MOVE_RULE_COUNT: FiftyMoveRuleClock = FiftyMoveRuleClock(100);
@@ -34,6 +37,64 @@ pub struct GameResult {
 pub enum StepResult {
     Terminated(GameResult),
     Continued(GameState),
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
+pub struct PieceCounts {
+    pub white_pawn: u8,
+    pub white_knight: u8,
+    pub white_bishop: u8,
+    pub white_rook: u8,
+    pub white_queen: u8,
+    pub white_king: u8,
+    pub black_pawn: u8,
+    pub black_knight: u8,
+    pub black_bishop: u8,
+    pub black_rook: u8,
+    pub black_queen: u8,
+    pub black_king: u8,
+}
+impl Index<Piece> for PieceCounts {
+    type Output = u8;
+
+    fn index(&self, index: Piece) -> &Self::Output {
+        #[rustfmt::skip]
+        match index {
+            Piece::WHITE_PAWN   => &self.white_pawn,
+            Piece::WHITE_KNIGHT => &self.white_knight,
+            Piece::WHITE_BISHOP => &self.white_bishop,
+            Piece::WHITE_ROOK   => &self.white_rook,
+            Piece::WHITE_QUEEN  => &self.white_queen,
+            Piece::WHITE_KING   => &self.white_king,
+
+            Piece::BLACK_PAWN   => &self.black_pawn,
+            Piece::BLACK_KNIGHT => &self.black_knight,
+            Piece::BLACK_BISHOP => &self.black_bishop,
+            Piece::BLACK_ROOK   => &self.black_rook,
+            Piece::BLACK_QUEEN  => &self.black_queen,
+            Piece::BLACK_KING   => &self.black_king,
+        }
+    }
+}
+impl IndexMut<Piece> for PieceCounts {
+    fn index_mut(&mut self, index: Piece) -> &mut Self::Output {
+        #[rustfmt::skip]
+        match index {
+            Piece::WHITE_PAWN   => &mut self.white_pawn,
+            Piece::WHITE_KNIGHT => &mut self.white_knight,
+            Piece::WHITE_BISHOP => &mut self.white_bishop,
+            Piece::WHITE_ROOK   => &mut self.white_rook,
+            Piece::WHITE_QUEEN  => &mut self.white_queen,
+            Piece::WHITE_KING   => &mut self.white_king,
+
+            Piece::BLACK_PAWN   => &mut self.black_pawn,
+            Piece::BLACK_KNIGHT => &mut self.black_knight,
+            Piece::BLACK_BISHOP => &mut self.black_bishop,
+            Piece::BLACK_ROOK   => &mut self.black_rook,
+            Piece::BLACK_QUEEN  => &mut self.black_queen,
+            Piece::BLACK_KING   => &mut self.black_king,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug)]

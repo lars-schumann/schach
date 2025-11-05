@@ -1,6 +1,10 @@
 use crate::coord::Offset;
 use crate::player::PlayerKind;
 
+macro_rules! no_fmt {
+    ($($beautiful_code:tt)*) => { $($beautiful_code)* }
+}
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum PieceKind {
     Pawn,
@@ -32,13 +36,13 @@ impl PieceKind {
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Piece {
-    pub kind: PieceKind,
     pub owner: PlayerKind,
+    pub kind: PieceKind,
 }
 impl Piece {
     #[must_use]
-    pub const fn new(kind: PieceKind, owner: PlayerKind) -> Self {
-        Self { kind, owner }
+    pub const fn new(owner: PlayerKind, kind: PieceKind) -> Self {
+        Self { owner, kind }
     }
     #[must_use]
     pub const fn threat_directions(&self) -> (&[Offset], Range) {
@@ -53,52 +57,54 @@ impl Piece {
         }
     }
 
-    pub const PAWN_WHITE: Self = Self::new(PieceKind::Pawn, PlayerKind::White);
-    pub const KNIGHT_WHITE: Self = Self::new(PieceKind::Knight, PlayerKind::White);
-    pub const BISHOP_WHITE: Self = Self::new(PieceKind::Bishop, PlayerKind::White);
-    pub const ROOK_WHITE: Self = Self::new(PieceKind::Rook, PlayerKind::White);
-    pub const QUEEN_WHITE: Self = Self::new(PieceKind::Queen, PlayerKind::White);
-    pub const KING_WHITE: Self = Self::new(PieceKind::King, PlayerKind::White);
+    no_fmt! {
+    pub const WHITE_PAWN:   Self = Self::new(PlayerKind::White, PieceKind::Pawn);
+    pub const WHITE_KNIGHT: Self = Self::new(PlayerKind::White, PieceKind::Knight);
+    pub const WHITE_BISHOP: Self = Self::new(PlayerKind::White, PieceKind::Bishop);
+    pub const WHITE_ROOK:   Self = Self::new(PlayerKind::White, PieceKind::Rook);
+    pub const WHITE_QUEEN:  Self = Self::new(PlayerKind::White, PieceKind::Queen);
+    pub const WHITE_KING:   Self = Self::new(PlayerKind::White, PieceKind::King);
 
-    pub const PAWN_BLACK: Self = Self::new(PieceKind::Pawn, PlayerKind::Black);
-    pub const KNIGHT_BLACK: Self = Self::new(PieceKind::Knight, PlayerKind::Black);
-    pub const BISHOP_BLACK: Self = Self::new(PieceKind::Bishop, PlayerKind::Black);
-    pub const ROOK_BLACK: Self = Self::new(PieceKind::Rook, PlayerKind::Black);
-    pub const QUEEN_BLACK: Self = Self::new(PieceKind::Queen, PlayerKind::Black);
-    pub const KING_BLACK: Self = Self::new(PieceKind::King, PlayerKind::Black);
+    pub const BLACK_PAWN:   Self = Self::new(PlayerKind::Black, PieceKind::Pawn);
+    pub const BLACK_KNIGHT: Self = Self::new(PlayerKind::Black, PieceKind::Knight);
+    pub const BLACK_BISHOP: Self = Self::new(PlayerKind::Black, PieceKind::Bishop);
+    pub const BLACK_ROOK:   Self = Self::new(PlayerKind::Black, PieceKind::Rook);
+    pub const BLACK_QUEEN:  Self = Self::new(PlayerKind::Black, PieceKind::Queen);
+    pub const BLACK_KING:   Self = Self::new(PlayerKind::Black, PieceKind::King);
+    }
 
     pub const ALL: [Self; 12] = [
-        Self::PAWN_WHITE,
-        Self::KING_WHITE,
-        Self::BISHOP_WHITE,
-        Self::ROOK_WHITE,
-        Self::QUEEN_WHITE,
-        Self::KING_WHITE,
-        Self::PAWN_BLACK,
-        Self::KNIGHT_BLACK,
-        Self::BISHOP_BLACK,
-        Self::ROOK_BLACK,
-        Self::QUEEN_BLACK,
-        Self::KING_BLACK,
+        Self::WHITE_PAWN,
+        Self::WHITE_KING,
+        Self::WHITE_BISHOP,
+        Self::WHITE_ROOK,
+        Self::WHITE_QUEEN,
+        Self::WHITE_KING,
+        Self::BLACK_PAWN,
+        Self::BLACK_KNIGHT,
+        Self::BLACK_BISHOP,
+        Self::BLACK_ROOK,
+        Self::BLACK_QUEEN,
+        Self::BLACK_KING,
     ];
 }
 
 impl core::fmt::Display for Piece {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let symbol = match *self {
-            Self::PAWN_WHITE => "♙",
-            Self::KNIGHT_WHITE => "♘",
-            Self::BISHOP_WHITE => "♗",
-            Self::ROOK_WHITE => "♖",
-            Self::QUEEN_WHITE => "♕",
-            Self::KING_WHITE => "♔",
+            Self::WHITE_PAWN => "♙",
+            Self::WHITE_KNIGHT => "♘",
+            Self::WHITE_BISHOP => "♗",
+            Self::WHITE_ROOK => "♖",
+            Self::WHITE_QUEEN => "♕",
+            Self::WHITE_KING => "♔",
 
-            Self::PAWN_BLACK => "♟",
-            Self::KNIGHT_BLACK => "♞",
-            Self::BISHOP_BLACK => "♝",
-            Self::ROOK_BLACK => "♜",
-            Self::QUEEN_BLACK => "♛",
-            Self::KING_BLACK => "♚",
+            Self::BLACK_PAWN => "♟",
+            Self::BLACK_KNIGHT => "♞",
+            Self::BLACK_BISHOP => "♝",
+            Self::BLACK_ROOK => "♜",
+            Self::BLACK_QUEEN => "♛",
+            Self::BLACK_KING => "♚",
         };
         write!(f, "{symbol}")
     }
