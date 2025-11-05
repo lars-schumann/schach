@@ -478,6 +478,7 @@ mod tests {
         println!("---------------------------");
     }
 
+    #[cfg(feature = "rand")]
     #[test]
     fn many_random_walks() {
         crate::testing::bail_if_no_expensive_test_opt_in!();
