@@ -19,28 +19,36 @@ pub enum CastlingSide {
     Queenside,
 }
 
+#[derive_const(Clone)]
+#[derive(Debug, Copy, Hash, PartialEq, Eq)]
 pub enum DrawKind {
     Stalemate,
     ThreefoldRepetition,
     FiftyMove,
+    InsufficientMaterial,
 }
 
+#[derive_const(Clone)]
+#[derive(Debug, Copy, Hash, PartialEq, Eq)]
 pub enum GameResultKind {
     Draw(DrawKind),
     Win,
 }
+
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct GameResult {
     pub kind: GameResultKind,
     pub final_game_state: GameState,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum StepResult {
     Terminated(GameResult),
     Continued(GameState),
 }
 
 #[derive_const(Default, Clone, PartialEq, Eq)]
-#[derive(Debug, Copy)]
+#[derive(Debug, Copy, Hash)]
 pub struct PieceCounts {
     pub white_pawn: u8,
     pub white_knight: u8,
@@ -59,6 +67,20 @@ impl PieceCounts {
     pub const KINGS_ONLY: Self = Self {
         white_king: 1,
         black_king: 1,
+        ..Default::default()
+    };
+
+    pub const WHITE_KING_AND_TWO_KNIGHTS: Self = Self {
+        white_king: 1,
+        white_knight: 2,
+        black_king: 1,
+        ..Default::default()
+    };
+
+    pub const BLACK_KING_AND_TWO_KNIGHTS: Self = Self {
+        black_king: 1,
+        black_knight: 2,
+        white_king: 1,
         ..Default::default()
     };
 }
@@ -105,7 +127,8 @@ impl IndexMut<Piece> for PieceCounts {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive_const(PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Hash)]
 pub struct FullMoveCount(pub NonZeroU64); // non-zero & unsized because this always starts at 1 and cant decrease 
 impl const Default for FullMoveCount {
     fn default() -> Self {
@@ -144,7 +167,7 @@ pub enum RuleSet {
     Perft,
 }
 
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct GameState {
     pub board: Board,
     pub fifty_move_rule_clock: FiftyMoveRuleClock,
