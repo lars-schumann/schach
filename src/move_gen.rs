@@ -163,6 +163,21 @@ impl GameState {
             game.en_passant_target = None;
         }
 
+        let future = game.clone().with_opponent_active();
+        if future.legal_moves().count() == 0 {
+            return if future.board.is_king_checked(future.active_player) {
+                StepResult::Terminated(GameResult {
+                    kind: GameResultKind::Win,
+                    final_game_state: game,
+                })
+            } else {
+                StepResult::Terminated(GameResult {
+                    kind: GameResultKind::Draw(DrawKind::Stalemate),
+                    final_game_state: game,
+                })
+            };
+        }
+
         if game.is_perft.not() {
             game.position_history.push(current_position.clone());
 
@@ -185,21 +200,6 @@ impl GameState {
                     final_game_state: game,
                 });
             }
-        }
-
-        let future = game.clone().with_opponent_active();
-        if future.legal_moves().count() == 0 {
-            return if future.board.is_king_checked(future.active_player) {
-                StepResult::Terminated(GameResult {
-                    kind: GameResultKind::Win,
-                    final_game_state: game,
-                })
-            } else {
-                StepResult::Terminated(GameResult {
-                    kind: GameResultKind::Draw(DrawKind::Stalemate),
-                    final_game_state: game,
-                })
-            };
         }
 
         if game.active_player == PlayerKind::Black {
