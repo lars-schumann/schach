@@ -8,6 +8,7 @@ use crate::game::GameResultKind;
 use crate::game::GameState;
 use crate::game::Position;
 use crate::game::REPETITIONS_TO_FORCED_DRAW_COUNT;
+use crate::game::RuleSet;
 use crate::game::StepResult;
 use crate::mov::KingMove;
 use crate::mov::Move;
@@ -178,7 +179,7 @@ impl GameState {
             };
         }
 
-        if game.is_perft.not() {
+        if game.rule_set == RuleSet::Standard {
             game.position_history.push(current_position.clone());
 
             if game
@@ -529,7 +530,7 @@ mod tests {
 
         for fen in fens.lines().skip(skip_fens).take(max_fens) {
             let mut game = GameState::try_from_fen(fen).unwrap();
-            game.is_perft = true;
+            game.rule_set = RuleSet::Perft;
             let _ = game.search(max_depth, owl_checker);
             progress += 1;
             if progress % progress_thingy == 0 {

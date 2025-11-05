@@ -9,6 +9,7 @@ use crate::game::CastlingRights;
 use crate::game::FiftyMoveRuleClock;
 use crate::game::FullMoveCount;
 use crate::game::GameState;
+use crate::game::RuleSet;
 use crate::piece::Piece;
 use crate::player::PlayerKind;
 use alloc::borrow::ToOwned;
@@ -72,7 +73,7 @@ impl GameState {
             fifty_move_rule_clock,
             castling_rights,
             position_history: vec![],
-            is_perft: false,
+            rule_set: RuleSet::Standard,
             active_player,
             en_passant_target,
             full_move_count,
@@ -88,7 +89,7 @@ impl GameState {
             position_history: _, // not part of fen
             en_passant_target,
             active_player,
-            is_perft: _, // not part of fen
+            rule_set: _, // not part of fen
             full_move_count,
         } = self;
 

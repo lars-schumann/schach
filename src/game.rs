@@ -129,6 +129,13 @@ impl FiftyMoveRuleClock {
     }
 }
 
+#[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RuleSet {
+    #[default]
+    Standard,
+    Perft,
+}
+
 #[derive(Default, Clone)]
 pub struct GameState {
     pub board: Board,
@@ -137,7 +144,7 @@ pub struct GameState {
     pub position_history: Vec<Position>,
     pub en_passant_target: Option<Square>,
     pub active_player: PlayerKind,
-    pub is_perft: bool,
+    pub rule_set: RuleSet,
     pub full_move_count: FullMoveCount,
 }
 
@@ -150,7 +157,7 @@ impl GameState {
     #[must_use]
     pub fn perft() -> Self {
         Self {
-            is_perft: true,
+            rule_set: RuleSet::Perft,
             ..Default::default()
         }
     }
