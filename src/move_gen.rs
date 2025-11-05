@@ -123,6 +123,10 @@ impl GameState {
             castling_rights: game.castling_rights,
         };
 
+        if game.rule_set != RuleSet::Perft {
+            game.position_history.push(current_position.clone());
+        }
+
         // handle fifty move rule
         if mov.piece_kind() == PieceKind::Pawn || mov.is_capture() {
             game.fifty_move_rule_clock.reset();
@@ -179,9 +183,7 @@ impl GameState {
             };
         }
 
-        if game.rule_set == RuleSet::Standard {
-            game.position_history.push(current_position.clone());
-
+        if game.rule_set != RuleSet::Perft {
             if game
                 .position_history
                 .iter()
@@ -202,6 +204,11 @@ impl GameState {
                 });
             }
         }
+
+        let piece_counts = game.board.piece_counts();
+
+
+        
 
         if game.active_player == PlayerKind::Black {
             game.full_move_count.increase();
