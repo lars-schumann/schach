@@ -6,6 +6,7 @@ use crate::game::FIFTY_MOVE_RULE_COUNT;
 use crate::game::GameResult;
 use crate::game::GameResultKind;
 use crate::game::GameState;
+use crate::game::PieceCounts;
 use crate::game::Position;
 use crate::game::REPETITIONS_TO_FORCED_DRAW_COUNT;
 use crate::game::RuleSet;
@@ -207,8 +208,12 @@ impl GameState {
 
         let piece_counts = game.board.piece_counts();
 
-
-        
+        if piece_counts == PieceCounts::KINGS_ONLY {
+            return StepResult::Terminated(GameResult {
+                kind: GameResultKind::Draw(DrawKind::InsufficientMaterial),
+                final_game_state: game,
+            });
+        }
 
         if game.active_player == PlayerKind::Black {
             game.full_move_count.increase();
