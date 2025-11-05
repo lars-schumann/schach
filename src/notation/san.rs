@@ -10,86 +10,79 @@ use alloc::vec;
 use alloc::vec::Vec;
 use core::ascii::Char as AsciiChar;
 
+const O_O: [AsciiChar; 3] = [
+    AsciiChar::CapitalO,
+    AsciiChar::HyphenMinus,
+    AsciiChar::CapitalO,
+];
+
+const O_O_O: [AsciiChar; 5] = [
+    AsciiChar::CapitalO,
+    AsciiChar::HyphenMinus,
+    AsciiChar::CapitalO,
+    AsciiChar::HyphenMinus,
+    AsciiChar::CapitalO,
+];
+
 #[must_use]
 pub fn long_algebraic(game: GameState, mov: &Move) -> Vec<AsciiChar> {
     let legal_moves: Vec<Move> = game.legal_moves().collect();
     assert!(legal_moves.iter().any(|m| m == mov));
 
-    let owner = game.active_player;
+    let active_player = game.active_player;
 
-    #[rustfmt::skip]
-    let thingy = match mov {
+    let core_move_notation = match mov {
         Move::Pawn(
-            | PawnMove::SimpleStep { start, target } 
-            | PawnMove::DoubleStep { start, target },
-        ) => [
-            start.to_fen_repr().as_slice(),
-            target.to_fen_repr().as_slice(),
-        ]
-        .concat(),
-        Move::Pawn(
-            | PawnMove::SimpleCapture { start, target } 
-            | PawnMove::EnPassant { start, target, .. },
-        ) => [
-            start.to_fen_repr().as_slice(),
-            [AsciiChar::SmallX].as_slice(),
-            target.to_fen_repr().as_slice(),
-        ]
-        .concat(),
-        Move::Pawn(
-            PawnMove::Promotion { start, target, replacement, is_capture,
-        }) => {
-            let optional_capture_symbol = if *is_capture {
-                [AsciiChar::SmallX].as_slice()
-            } else {
-                [].as_slice()
+            PawnMove::SimpleStep { start, target }
+            | PawnMove::DoubleStep { start, target }
+            | PawnMove::SimpleCapture { start, target }
+            | PawnMove::EnPassant { start, target, .. }
+            | PawnMove::Promotion { start, target, .. },
+        )
+        | Move::Knight { start, target, .. }
+        | Move::Bishop { start, target, .. }
+        | Move::Rook { start, target, .. }
+        | Move::Queen { start, target, .. }
+        | Move::King(KingMove::Normal { start, target, .. }) => {
+            let piece_representation = matches!(mov, Move::Pawn(_))
+                .then_some([mov.piece_kind().to_white_piece().to_ascii_char()]);
+
+            let start = start.to_fen_repr();
+
+            let capture_symbol = mov.is_capture().then_some([AsciiChar::SmallX]);
+
+            let target = target.to_fen_repr();
+
+            let promotion_replacement = match mov {
+                Move::Pawn(PawnMove::Promotion { replacement, .. }) => {
+                    Some([replacement.to_white_piece().to_ascii_char()])
+                }
+                _ => None,
             };
+
+            #[rustfmt::skip]
             [
-                start.to_fen_repr().as_slice(),
-                optional_capture_symbol,
-                target.to_fen_repr().as_slice(),
-                [replacement.to_white_piece().to_ascii_char()].as_slice(),
+                piece_representation.as_ref().map_or_default(<[_; 1]>::as_slice),
+                start.as_slice(),
+                capture_symbol.as_ref().map_or_default(<[_; 1]>::as_slice),
+                target.as_slice(),
+                promotion_replacement.as_ref().map_or_default(<[_; 1]>::as_slice),
             ]
             .concat()
         }
-        | Move::Knight { start, target, is_capture, }
-        | Move::Bishop { start, target, is_capture, }
-        | Move::Rook { start, target, is_capture, }
-        | Move::Queen { start, target, is_capture, }
-        | Move::King(
-            KingMove::Normal { start, target, is_capture,}
-        ) => {
-            let optional_capture_symbol = if *is_capture {
-                [AsciiChar::SmallX].as_slice()
-            } else {
-                [].as_slice()
-            };
-            [
-                [mov.piece_kind().to_white_piece().to_ascii_char()].as_slice(),
-                start.to_fen_repr().as_slice(),
-                optional_capture_symbol,
-                target.to_fen_repr().as_slice(),
-            ]
-            .concat()
-        }
-        Move::King(KingMove::Castle(CastlingSide::Kingside)) => vec![
-            AsciiChar::CapitalO,
-            AsciiChar::HyphenMinus,
-            AsciiChar::CapitalO,
-        ],
-        Move::King(KingMove::Castle(CastlingSide::Queenside)) => vec![
-            AsciiChar::CapitalO,
-            AsciiChar::HyphenMinus,
-            AsciiChar::CapitalO,
-            AsciiChar::HyphenMinus,
-            AsciiChar::CapitalO,
-        ],
+        Move::King(KingMove::Castle(CastlingSide::Kingside)) => O_O.to_vec(),
+        Move::King(KingMove::Castle(CastlingSide::Queenside)) => O_O_O.to_vec(),
     };
 
     let outcome = game.step(*mov, legal_moves);
 
     let mut append = vec![];
     match outcome {
+        | StepResult::Continued(future) => {
+            if future.board.is_king_checked(active_player.opponent()) {
+                append.push(AsciiChar::PlusSign);
+            }
+        }
         | StepResult::Terminated(GameResult {
             kind: GameResultKind::Win,
             ..
@@ -97,17 +90,12 @@ pub fn long_algebraic(game: GameState, mov: &Move) -> Vec<AsciiChar> {
             append.push(AsciiChar::NumberSign);
         }
         | StepResult::Terminated(GameResult {
-            kind: GameResultKind::Draw(..),
+            kind: GameResultKind::Draw(_),
             ..
-        }) => {}
-        | StepResult::Continued(future) => {
-            if future.board.is_king_checked(owner.opponent()) {
-                append.push(AsciiChar::PlusSign);
-            }
-        }
+        }) => { /* TODO: nothing yet, this isn't Ascii :[ 1/2 / 1/2 or smt */ }
     }
 
-    [thingy, append].concat()
+    [core_move_notation, append].concat()
 }
 
 #[cfg(test)]

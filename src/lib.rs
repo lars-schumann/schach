@@ -13,7 +13,9 @@
     const_default,
     iter_collect_into,
     ascii_char,
-    ascii_char_variants
+    ascii_char_variants,
+    result_option_map_or_default,
+    stmt_expr_attributes
 )]
 #![no_std]
 extern crate alloc;
@@ -26,7 +28,7 @@ pub mod coord;
 pub mod game;
 pub mod mov;
 pub mod move_gen;
+pub mod notation;
 pub mod piece;
 pub mod player;
-pub mod notation;
 pub mod testing;
