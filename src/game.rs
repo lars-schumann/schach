@@ -39,7 +39,8 @@ pub enum StepResult {
     Continued(GameState),
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
+#[derive_const(Default, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy)]
 pub struct PieceCounts {
     pub white_pawn: u8,
     pub white_knight: u8,
@@ -53,6 +54,13 @@ pub struct PieceCounts {
     pub black_rook: u8,
     pub black_queen: u8,
     pub black_king: u8,
+}
+impl PieceCounts {
+    pub const KINGS_ONLY: Self = Self {
+        white_king: 1,
+        black_king: 1,
+        ..Default::default()
+    };
 }
 impl Index<Piece> for PieceCounts {
     type Output = u8;

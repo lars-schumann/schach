@@ -11,6 +11,8 @@
     const_cmp,
     const_result_trait_fn,
     const_default,
+    const_clone,
+    derive_const,
     iter_collect_into,
     ascii_char,
     ascii_char_variants,
