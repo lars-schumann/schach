@@ -16,12 +16,6 @@ impl core::fmt::Debug for Threat {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct EnPassantTargetSquare {
-    pub inner: Square,
-    pub half_turn_round: u64,
-}
-
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Move {
     Pawn(PawnMove),
