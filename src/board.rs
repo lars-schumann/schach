@@ -21,7 +21,7 @@ impl Board {
         Self([[None; ROW_COUNT]; COL_COUNT])
     }
 
-    pub fn threatening_moves_by(
+    pub(crate) fn threatening_moves_by(
         &self,
         threatened_by: PlayerKind,
     ) -> impl Iterator<Item = Threat> + Clone + use<'_> {
