@@ -6,128 +6,34 @@ use crate::piece::PieceKind;
 #[derive(Clone, Copy)]
 pub (crate) struct Threat {
     pub (crate) piece: Piece,
-    pub (crate) start: Square,
-    pub (crate) target: Square,
+    pub (crate) origin: Square,
+    pub (crate) destination: Square,
 }
 
 impl core::fmt::Debug for Threat {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "{}: {:?} => {:?}", self.piece, self.start, self.target)
+        write!(f, "{}: {:?} => {:?}", self.piece, self.origin, self.destination)
     }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum Move {
+pub enum MoveKind {
     Pawn(PawnMove),
-    Knight {
-        start: Square,
-        target: Square,
-        is_capture: bool,
-    },
+    Knight {is_capture: bool,},
     Bishop {
-        start: Square,
-        target: Square,
         is_capture: bool,
     },
     Rook {
-        start: Square,
-        target: Square,
         is_capture: bool,
     },
     Queen {
-        start: Square,
-        target: Square,
         is_capture: bool,
     },
     King(KingMove),
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum PawnMove {
-    SimpleStep {
-        start: Square,
-        target: Square,
-    },
-    DoubleStep {
-        start: Square,
-        target: Square,
-    },
-    SimpleCapture {
-        start: Square,
-        target: Square,
-    },
-    EnPassant {
-        start: Square,
-        target: Square,
-        affected: Square,
-    },
-    Promotion {
-        start: Square,
-        target: Square,
-        replacement: PieceKind,
-        is_capture: bool,
-    },
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum KingMove {
-    Normal {
-        start: Square,
-        target: Square,
-        is_capture: bool,
-    },
-    Castle{king_start: Square, king_target: Square, rook_start: Square, rook_target: Square, castling_side: CastlingSide},
-}
-
-impl Move {
-    #[must_use]
-    pub const fn is_capture(&self) -> bool {
-        match self {
-            | Self::Knight { is_capture, .. }
-            | Self::Bishop { is_capture, .. }
-            | Self::Rook { is_capture, .. }
-            | Self::Queen { is_capture, .. }
-            | Self::King(KingMove::Normal { is_capture, .. })
-            | Self::Pawn(PawnMove::Promotion { is_capture, .. }) => *is_capture,
-            | Self::Pawn(PawnMove::SimpleCapture { .. } | PawnMove::EnPassant { .. }) => true,
-            | Self::Pawn(PawnMove::SimpleStep { .. } | PawnMove::DoubleStep { .. })
-            | Self::King(KingMove::Castle{..}) => false,
-        }
-    }
-
-    #[must_use]
-    #[rustfmt::skip]
-    pub const fn capture_affected_square(&self) -> Option<Square> {
-        match self {
-            | Self::Pawn(
-                | PawnMove::SimpleCapture { target, .. }
-                | PawnMove::Promotion { is_capture: true, target, .. }
-                | PawnMove::EnPassant { affected: target, .. }
-            )
-            | Self::Knight { is_capture: true, target, .. }
-            | Self::Bishop { is_capture: true, target, .. }
-            | Self::Rook { is_capture: true, target, .. }
-            | Self::Queen { is_capture: true, target, .. }
-            | Self::King(
-                KingMove::Normal { is_capture: true, target, .. }
-            ) => Some(*target),
-            | Self::Pawn(
-                | PawnMove::SimpleStep { .. }
-                | PawnMove::DoubleStep { .. }
-                | PawnMove::Promotion { is_capture: false, .. },
-            )
-            | Self::Knight { is_capture: false, .. }
-            | Self::Bishop { is_capture: false, .. }
-            | Self::Rook { is_capture: false, .. }
-            | Self::Queen { is_capture: false, .. }
-            | Self::King(
-                | KingMove::Normal { is_capture: false, .. } 
-                | KingMove::Castle{..}
-            ) => None,
-        }
-    }
-
-    #[must_use]
+impl MoveKind{
+     #[must_use]
     pub const fn piece_kind(&self) -> PieceKind {
         match self {
             | Self::Pawn(_) => PieceKind::Pawn,
@@ -136,6 +42,67 @@ impl Move {
             | Self::Rook { .. } => PieceKind::Rook,
             | Self::Queen { .. } => PieceKind::Queen,
             | Self::King(_) => PieceKind::King,
+        }
+    }
+}
+
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct Move{
+    pub kind: MoveKind,
+    pub origin: Square,
+    pub destination: Square,
+
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum PawnMove {
+    SimpleStep,
+    DoubleStep,
+    SimpleCapture,
+    EnPassant {affected: Square,},
+    Promotion {
+        replacement: PieceKind,
+        is_capture: bool,
+    },
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum KingMove {
+    Normal {
+        
+        is_capture: bool,
+    },
+    Castle{rook_start: Square, rook_target: Square, castling_side: CastlingSide},
+}
+
+impl Move {
+    #[must_use]
+    pub const fn is_capture(&self) -> bool {
+        match self.kind {
+            | MoveKind::Knight { is_capture, .. }
+            | MoveKind::Bishop { is_capture, .. }
+            | MoveKind::Rook { is_capture, .. }
+            | MoveKind::Queen { is_capture, .. }
+            | MoveKind::King(KingMove::Normal { is_capture, .. })
+            | MoveKind::Pawn(PawnMove::Promotion { is_capture, .. }) => is_capture,
+            | MoveKind::Pawn(PawnMove::SimpleCapture { .. } | PawnMove::EnPassant { .. }) => true,
+            | MoveKind::Pawn(PawnMove::SimpleStep { .. } | PawnMove::DoubleStep { .. })
+            | MoveKind::King(KingMove::Castle{..}) => false,
+        }
+    }
+
+    #[must_use]
+    #[rustfmt::skip]
+    pub const fn capture_affected_square(&self) -> Option<Square> {
+        
+        if let MoveKind::Pawn(PawnMove::EnPassant { affected }) = self.kind{
+            return Some(affected);
+        }
+        if self.is_capture(){
+            Some(self.destination)
+        } else{
+            None
         }
     }
 }

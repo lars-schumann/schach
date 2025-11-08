@@ -32,7 +32,7 @@ impl Board {
         S::all().flat_map(move |square| {
             attacked_squares(self, square, threatened_by)
                 .into_iter()
-                .map(|threat| threat.target)
+                .map(|threat| threat.destination)
         })
     }
 

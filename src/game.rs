@@ -324,8 +324,8 @@ pub fn attacked_squares(
     out.into_iter()
         .map(|target_square| Threat {
             piece,
-            start: starting_square,
-            target: target_square,
+            origin: starting_square,
+            destination: target_square,
         })
         .collect()
 }

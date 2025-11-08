@@ -5,6 +5,7 @@ use crate::game::GameState;
 use crate::game::StepResult;
 use crate::mov::KingMove;
 use crate::mov::Move;
+use crate::mov::MoveKind;
 use crate::mov::PawnMove;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -51,28 +52,32 @@ fn notation_creator(
 
     let active_player = game.active_player;
 
-    let core_move_notation = match mov {
-        Move::Pawn(
-            PawnMove::SimpleStep { start, target }
-            | PawnMove::DoubleStep { start, target }
-            | PawnMove::SimpleCapture { start, target }
-            | PawnMove::EnPassant { start, target, .. }
-            | PawnMove::Promotion { start, target, .. },
-        )
-        | Move::Knight { start, target, .. }
-        | Move::Bishop { start, target, .. }
-        | Move::Rook { start, target, .. }
-        | Move::Queen { start, target, .. }
-        | Move::King(KingMove::Normal { start, target, .. }) => {
-            let piece_repr = (matches!(mov, Move::Pawn(_)))
-                .not()
-                .then_some([mov.piece_kind().to_white_piece().to_fen_repr()]);
+    let core_move_notation = match mov.kind {
+        MoveKind::King(KingMove::Castle {
+            castling_side: CastlingSide::Kingside,
+            ..
+        }) => O_O.to_vec(),
+        MoveKind::King(KingMove::Castle {
+            castling_side: CastlingSide::Queenside,
+            ..
+        }) => O_O_O.to_vec(),
+        MoveKind::Pawn(_)
+        | MoveKind::Knight { .. }
+        | MoveKind::Bishop { .. }
+        | MoveKind::Rook { .. }
+        | MoveKind::Queen { .. }
+        | MoveKind::King(KingMove::Normal { .. }) => {
+            let piece_repr = (matches!(mov.kind, MoveKind::Pawn(_))).not().then_some([mov
+                .kind
+                .piece_kind()
+                .to_white_piece()
+                .to_fen_repr()]);
 
             let start_square_repr = match ambiguation_level {
                 AmbiguationLevel::OriginEmpty => [].to_vec(),
-                AmbiguationLevel::OriginFileOnly => [start.col.to_fen_repr()].to_vec(),
-                AmbiguationLevel::OriginRankOnly => [start.row.to_fen_repr()].to_vec(),
-                AmbiguationLevel::OriginFull => start.to_fen_repr().to_vec(),
+                AmbiguationLevel::OriginFileOnly => [mov.origin.col.to_fen_repr()].to_vec(),
+                AmbiguationLevel::OriginRankOnly => [mov.origin.row.to_fen_repr()].to_vec(),
+                AmbiguationLevel::OriginFull => mov.origin.to_fen_repr().to_vec(),
             };
 
             let capture_symbol = if mov.is_capture() {
@@ -81,10 +86,10 @@ fn notation_creator(
                 capture_representation.no_capture.map(|c| [c])
             };
 
-            let target = target.to_fen_repr();
+            let target = mov.destination.to_fen_repr();
 
-            let promotion_replacement = match mov {
-                Move::Pawn(PawnMove::Promotion { replacement, .. }) => {
+            let promotion_replacement = match mov.kind {
+                MoveKind::Pawn(PawnMove::Promotion { replacement, .. }) => {
                     Some([replacement.to_white_piece().to_fen_repr()])
                 }
                 _ => None,
@@ -100,14 +105,6 @@ fn notation_creator(
             ]
             .concat()
         }
-        Move::King(KingMove::Castle {
-            castling_side: CastlingSide::Kingside,
-            ..
-        }) => O_O.to_vec(),
-        Move::King(KingMove::Castle {
-            castling_side: CastlingSide::Queenside,
-            ..
-        }) => O_O_O.to_vec(),
     };
 
     let outcome = game.step(mov, legal_moves);
@@ -148,7 +145,7 @@ pub fn long_algebraic_notation(game: GameState, mov: Move) -> Vec<AsciiChar> {
 }
 
 #[must_use]
-pub fn standard_algebraic_notation(game: GameState, mov: Move) -> Vec<AsciiChar> {
+pub fn standard_algebraic_notation(game: &GameState, mov: Move) -> Vec<AsciiChar> {
     let capture_repr = CaptureRepresentation {
         capture: Some(AsciiChar::SmallX),
         no_capture: None,
@@ -164,27 +161,7 @@ pub fn standard_algebraic_notation(game: GameState, mov: Move) -> Vec<AsciiChar>
     legal_moves.swap_remove(mov_index);
 
     match mov {
-        Move::Pawn(
-            PawnMove::SimpleStep { start, target }
-            | PawnMove::DoubleStep { start, target }
-            | PawnMove::SimpleCapture { start, target }
-            | PawnMove::EnPassant { start, target, .. }
-            | PawnMove::Promotion { start, target, .. },
-        )
-        | Move::Knight { start, target, .. }
-        | Move::Bishop { start, target, .. }
-        | Move::Rook { start, target, .. }
-        | Move::Queen { start, target, .. }
-        | Move::King(KingMove::Normal { start, target, .. }) => {
-            let interfering_moves = legal_moves
-                .iter()
-                .filter(|m| m.piece_kind() == mov.piece_kind());
-
-            todo!()
-        }
-        Move::King(KingMove::Castle { .. }) => {
-            notation_creator(game, mov, AmbiguationLevel::OriginEmpty, capture_repr)
-        }
+        _ => todo!(),
     }
 }
 #[cfg(test)]

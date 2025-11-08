@@ -13,6 +13,7 @@ use crate::game::RuleSet;
 use crate::game::StepResult;
 use crate::mov::KingMove;
 use crate::mov::Move;
+use crate::mov::MoveKind;
 use crate::mov::PawnMove;
 use crate::mov::Threat;
 use crate::piece::Piece;
@@ -39,7 +40,13 @@ impl GameState {
                 let legal_moves: Vec<Move> = game.legal_moves().collect();
 
                 for mov in legal_moves.clone() {
-                    if matches!(mov, Move::Pawn(PawnMove::EnPassant { .. })) {
+                    if matches!(
+                        mov,
+                        Move {
+                            kind: MoveKind::Pawn(PawnMove::EnPassant { .. }),
+                            ..
+                        }
+                    ) {
                         stats.en_passant += 1;
                     }
                     match game.clone().step(mov, legal_moves.clone()) {
@@ -130,7 +137,7 @@ impl GameState {
         }
 
         // handle fifty move rule
-        if mov.piece_kind() == PieceKind::Pawn || mov.is_capture() {
+        if mov.kind.piece_kind() == PieceKind::Pawn || mov.is_capture() {
             game.fifty_move_rule_clock.reset();
         } else {
             game.fifty_move_rule_clock.increase();
@@ -138,13 +145,20 @@ impl GameState {
 
         // handle our own castling rights
         match mov {
-            Move::King(_) => {
+            Move {
+                kind: MoveKind::King(_),
+                ..
+            } => {
                 game.deny_castling(game.active_player, CastlingSide::Kingside);
                 game.deny_castling(game.active_player, CastlingSide::Queenside);
             }
-            Move::Rook { start, .. } => {
+            Move {
+                kind: MoveKind::Rook { .. },
+                origin,
+                ..
+            } => {
                 for castling_side in [CastlingSide::Kingside, CastlingSide::Queenside] {
-                    if start == game.active_player.rook_start(castling_side) {
+                    if origin == game.active_player.rook_start(castling_side) {
                         game.deny_castling(game.active_player, castling_side);
                     }
                 }
@@ -162,8 +176,13 @@ impl GameState {
         }
 
         // handle en passant target
-        if let Move::Pawn(PawnMove::DoubleStep { target, .. }) = mov {
-            let en_passant_target = (target + game.active_player.backwards_one_row())
+        if let Move {
+            kind: MoveKind::Pawn(PawnMove::DoubleStep),
+            destination,
+            ..
+        } = mov
+        {
+            let en_passant_target = (destination + game.active_player.backwards_one_row())
                 .expect("this cannot be outside the board");
             game.en_passant_target = Some(en_passant_target);
         } else {
@@ -225,50 +244,33 @@ impl GameState {
 
     #[must_use]
     pub const fn apply_move_to_board(mut self, m: Move) -> Self {
-        match m {
-            | Move::Pawn(
-                PawnMove::SimpleStep { start, target }
-                | PawnMove::DoubleStep { start, target }
-                | PawnMove::SimpleCapture { start, target },
+        self.board.mov(m.origin, m.destination);
+        match m.kind {
+            | MoveKind::Pawn(
+                PawnMove::SimpleStep | PawnMove::DoubleStep | PawnMove::SimpleCapture,
             )
-            | Move::Knight { start, target, .. }
-            | Move::Bishop { start, target, .. }
-            | Move::Rook { start, target, .. }
-            | Move::Queen { start, target, .. }
-            | Move::King(KingMove::Normal { start, target, .. }) => {
-                self.board.mov(start, target);
-            }
+            | MoveKind::Knight { .. }
+            | MoveKind::Bishop { .. }
+            | MoveKind::Rook { .. }
+            | MoveKind::Queen { .. }
+            | MoveKind::King(KingMove::Normal { .. }) => { /*nothing */ }
 
-            Move::Pawn(PawnMove::EnPassant {
-                start,
-                target,
-                affected,
-            }) => {
-                self.board.mov(start, target);
+            MoveKind::Pawn(PawnMove::EnPassant { affected }) => {
                 self.board[affected] = None;
             }
 
-            Move::Pawn(PawnMove::Promotion {
-                start,
-                target,
-                replacement,
-                ..
-            }) => {
-                self.board.mov(start, target);
-                self.board[target] = Some(Piece {
+            MoveKind::Pawn(PawnMove::Promotion { replacement, .. }) => {
+                self.board[m.destination] = Some(Piece {
                     kind: replacement,
                     owner: self.active_player,
                 });
             }
 
-            Move::King(KingMove::Castle {
-                king_start,
-                king_target,
+            MoveKind::King(KingMove::Castle {
                 rook_start,
                 rook_target,
                 castling_side: _,
             }) => {
-                self.board.mov(king_start, king_target);
                 self.board.mov(rook_start, rook_target);
             }
         }
@@ -312,14 +314,14 @@ impl GameState {
                         .iter()
                         .all(|square| self.board[*square].is_none())
             })
-            .map(|castling_side| {
-                Move::King(KingMove::Castle {
-                    king_start: self.active_player.king_start(),
-                    king_target: self.active_player.king_castling_target(castling_side),
+            .map(|castling_side| Move {
+                kind: MoveKind::King(KingMove::Castle {
                     rook_start: self.active_player.rook_start(castling_side),
                     rook_target: self.active_player.rook_castling_target(castling_side),
                     castling_side,
-                })
+                }),
+                origin: self.active_player.king_start(),
+                destination: self.active_player.king_castling_target(castling_side),
             })
     }
 
@@ -331,66 +333,68 @@ impl GameState {
 
     #[must_use]
     fn threat_to_move_candidate(&self, threat: Threat) -> Vec<Move> {
-        match (threat.piece.kind, self.board[threat.target]) {
-            | (PieceKind::Knight, target_square) => vec![Move::Knight {
-                start: threat.start,
-                target: threat.target,
-                is_capture: target_square.is_some(),
+        let is_capture = self.board[threat.destination].is_some();
+        let origin = threat.origin;
+        let destination = threat.destination;
+        match threat.piece.kind {
+            PieceKind::Knight => vec![Move {
+                kind: MoveKind::Knight { is_capture },
+                origin,
+                destination,
             }],
-            | (PieceKind::Bishop, target_square) => vec![Move::Bishop {
-                start: threat.start,
-                target: threat.target,
-                is_capture: target_square.is_some(),
+            PieceKind::Bishop => vec![Move {
+                kind: MoveKind::Bishop { is_capture },
+                origin,
+                destination,
             }],
-            | (PieceKind::Rook, target_square) => vec![Move::Rook {
-                start: threat.start,
-                target: threat.target,
-                is_capture: target_square.is_some(),
+            PieceKind::Rook => vec![Move {
+                kind: MoveKind::Rook { is_capture },
+                origin,
+                destination,
             }],
-            | (PieceKind::Queen, target_square) => vec![Move::Queen {
-                start: threat.start,
-                target: threat.target,
-                is_capture: target_square.is_some(),
+            PieceKind::Queen => vec![Move {
+                kind: MoveKind::Queen { is_capture },
+                origin,
+                destination,
             }],
-            | (PieceKind::King, target_square) => vec![Move::King(KingMove::Normal {
-                start: threat.start,
-                target: threat.target,
-                is_capture: target_square.is_some(),
-            })],
-            | (PieceKind::Pawn, Some(_)) => {
-                if threat.target.row == self.active_player.pawn_promotion_row() {
+            PieceKind::King => vec![Move {
+                kind: MoveKind::King(KingMove::Normal { is_capture }),
+                origin,
+                destination,
+            }],
+            PieceKind::Pawn if is_capture => {
+                if threat.destination.row == self.active_player.pawn_promotion_row() {
                     PieceKind::PROMOTION_OPTIONS
                         .iter()
-                        .map(|promotion_option| {
-                            Move::Pawn(PawnMove::Promotion {
-                                start: threat.start,
-                                target: threat.target,
+                        .map(|promotion_option| Move {
+                            kind: MoveKind::Pawn(PawnMove::Promotion {
                                 is_capture: true,
                                 replacement: *promotion_option,
-                            })
+                            }),
+                            origin,
+                            destination,
                         })
                         .collect()
                 } else {
-                    vec![Move::Pawn(PawnMove::SimpleCapture {
-                        start: threat.start,
-                        target: threat.target,
-                    })]
+                    vec![Move {
+                        kind: MoveKind::Pawn(PawnMove::SimpleCapture),
+                        origin,
+                        destination,
+                    }]
                 }
             }
-            | (PieceKind::Pawn, None) => {
+            PieceKind::Pawn => {
                 //en passant case, this is never gonna lead to promotion
-                if let Some(en_passant_target) = self.en_passant_target
-                    && threat.target == en_passant_target
-                {
-                    vec![Move::Pawn(PawnMove::EnPassant {
-                        start: threat.start,
-                        target: threat.target,
-                        affected: (threat.target + self.active_player.backwards_one_row())
-                            .expect("how is this not on the board?"),
-                    })]
-                } else {
-                    vec![]
-                }
+                self.en_passant_target.map_or_else(Vec::new, |destination| {
+                    vec![Move {
+                        kind: MoveKind::Pawn(PawnMove::EnPassant {
+                            affected: (threat.destination + self.active_player.backwards_one_row())
+                                .expect("how is this not on the board?"),
+                        }),
+                        origin,
+                        destination,
+                    }]
+                })
             }
         }
     }
@@ -419,20 +423,21 @@ impl GameState {
             if one_in_front.row == self.active_player.pawn_promotion_row() {
                 PieceKind::PROMOTION_OPTIONS
                     .iter()
-                    .map(|promotion_option| {
-                        Move::Pawn(PawnMove::Promotion {
-                            start: square,
-                            target: one_in_front,
+                    .map(|promotion_option| Move {
+                        kind: MoveKind::Pawn(PawnMove::Promotion {
                             is_capture: false,
                             replacement: *promotion_option,
-                        })
+                        }),
+                        origin: square,
+                        destination: one_in_front,
                     })
                     .collect_into(&mut candidates);
             } else {
-                candidates.push(Move::Pawn(PawnMove::SimpleStep {
-                    start: square,
-                    target: one_in_front,
-                }));
+                candidates.push(Move {
+                    kind: MoveKind::Pawn(PawnMove::SimpleStep),
+                    origin: square,
+                    destination: one_in_front,
+                });
             }
 
             let Ok(two_in_front) = square + self.active_player.forwards_one_row() * 2 else {
@@ -447,10 +452,11 @@ impl GameState {
                 continue; // pawns cant capture moving forward!
             }
 
-            candidates.push(Move::Pawn(PawnMove::DoubleStep {
-                start: square,
-                target: two_in_front,
-            }));
+            candidates.push(Move {
+                kind: MoveKind::Pawn(PawnMove::DoubleStep),
+                origin: square,
+                destination: two_in_front,
+            });
         }
         candidates
     }
