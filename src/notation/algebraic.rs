@@ -7,6 +7,7 @@ use crate::mov::KingMove;
 use crate::mov::Move;
 use crate::mov::MoveKind;
 use crate::mov::PawnMove;
+use crate::piece::PieceKind;
 use alloc::vec;
 use alloc::vec::Vec;
 use core::ascii::Char as AsciiChar;
@@ -171,6 +172,10 @@ pub fn standard_algebraic_notation(game: GameState, mov: Move) -> Vec<AsciiChar>
         .collect::<Vec<_>>();
 
     if interfering_moves.is_empty() {
+        if mov.kind.piece_kind() == PieceKind::Pawn && mov.is_capture() {
+            //Pawns always have the File when capturing!
+            return notation_creator(game, mov, AmbiguationLevel::OriginFileOnly, capture_repr);
+        }
         return notation_creator(game, mov, AmbiguationLevel::OriginEmpty, capture_repr);
     }
 
