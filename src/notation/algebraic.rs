@@ -145,7 +145,7 @@ pub fn long_algebraic_notation(game: GameState, mov: Move) -> Vec<AsciiChar> {
 }
 
 #[must_use]
-pub fn standard_algebraic_notation(game: &GameState, mov: Move) -> Vec<AsciiChar> {
+pub fn standard_algebraic_notation(game: GameState, mov: Move) -> Vec<AsciiChar> {
     let capture_repr = CaptureRepresentation {
         capture: Some(AsciiChar::SmallX),
         no_capture: None,
@@ -160,9 +160,37 @@ pub fn standard_algebraic_notation(game: &GameState, mov: Move) -> Vec<AsciiChar
 
     legal_moves.swap_remove(mov_index);
 
-    match mov {
-        _ => todo!(),
+    if matches!(mov.kind, MoveKind::King(KingMove::Castle { .. })) {
+        return notation_creator(game, mov, AmbiguationLevel::OriginEmpty, capture_repr);
     }
+
+    let interfering_moves = legal_moves
+        .iter()
+        .filter(|legal| legal.kind.piece_kind() == mov.kind.piece_kind())
+        .filter(|legal| legal.destination == mov.destination)
+        .collect::<Vec<_>>();
+
+    if interfering_moves.is_empty() {
+        return notation_creator(game, mov, AmbiguationLevel::OriginEmpty, capture_repr);
+    }
+
+    if interfering_moves
+        .iter()
+        .any(|inter| inter.origin.row == mov.origin.row)
+        .not()
+    {
+        return notation_creator(game, mov, AmbiguationLevel::OriginRankOnly, capture_repr);
+    }
+
+    if interfering_moves
+        .iter()
+        .any(|inter| inter.origin.col == mov.origin.col)
+        .not()
+    {
+        return notation_creator(game, mov, AmbiguationLevel::OriginFileOnly, capture_repr);
+    }
+
+    notation_creator(game, mov, AmbiguationLevel::OriginFull, capture_repr)
 }
 #[cfg(test)]
 mod tests {
@@ -174,7 +202,7 @@ mod tests {
         let game = GameState::new();
         let legal_moves = game.legal_moves();
         for mov in legal_moves {
-            println!("{:?}", long_algebraic_notation(game.clone(), mov));
+            println!("{:?}", standard_algebraic_notation(game.clone(), mov));
         }
     }
 }
