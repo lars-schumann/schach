@@ -356,7 +356,7 @@ impl Col {
         Self::try_from(u8::from(value) - b'a' + 1)
     }
     #[must_use]
-    const fn to_fen_repr(self) -> AsciiChar {
+    pub(crate) const fn to_fen_repr(self) -> AsciiChar {
         AsciiChar::from_u8(u8::from(self) + b'a' - 1).unwrap()
     }
 }
@@ -365,7 +365,7 @@ impl Row {
         Self::try_from(u8::from(value) - b'0')
     }
     #[must_use]
-    const fn to_fen_repr(self) -> AsciiChar {
+    pub(crate) const fn to_fen_repr(self) -> AsciiChar {
         AsciiChar::from_u8(u8::from(self) + b'0').unwrap()
     }
 }

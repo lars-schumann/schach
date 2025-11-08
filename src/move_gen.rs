@@ -15,7 +15,6 @@ use crate::mov::KingMove;
 use crate::mov::Move;
 use crate::mov::PawnMove;
 use crate::mov::Threat;
-use crate::notation::san::long_algebraic;
 use crate::piece::Piece;
 use crate::piece::PieceKind;
 use crate::player::PlayerKind;
@@ -80,6 +79,8 @@ impl GameState {
         while max_depth > depth {
             use rand::seq::IndexedRandom;
 
+            use crate::notation::algebraic::long_algebraic_notation;
+
             depth += 1;
 
             checker(&game);
@@ -89,7 +90,7 @@ impl GameState {
                 .expect("If the game has no legal moves, it should've ended last turn")
                 .to_owned();
 
-            move_history.push(long_algebraic(game.clone(), &random_move));
+            move_history.push(long_algebraic_notation(game.clone(), random_move));
 
             match game.clone().step(random_move, legal_moves.clone()) {
                 StepResult::Continued(game_state) => {
@@ -464,7 +465,10 @@ pub struct WalkStats {
 
 #[cfg(test)]
 mod tests {
+    use crate::notation::algebraic::long_algebraic_notation;
+
     use super::*;
+    use std::dbg;
     use std::io::Write;
     use std::print;
     use std::println;
@@ -493,14 +497,14 @@ mod tests {
     #[cfg(feature = "rand")]
     #[test]
     fn many_random_walks() {
-        crate::testing::skip_if_no_expensive_test_opt_in!();
+        //crate::testing::skip_if_no_expensive_test_opt_in!();
 
         let max_depth = 1_000;
         let walk_count = 100;
         let game = GameState::default();
 
         for i in 0..walk_count {
-            let stats = game.clone().random_walk(max_depth, owl_checker);
+            let stats = game.clone().random_walk(max_depth, owl_checker_depth_1);
             println!("{i}: {}", stats.final_depth);
             if stats.final_depth > max_depth - 300 {
                 for (i, mov) in stats.move_history.chunks(2).enumerate() {
@@ -543,7 +547,7 @@ mod tests {
         for fen in fens.lines().skip(skip_fens).take(max_fens) {
             let mut game = GameState::try_from_fen(fen).unwrap();
             game.rule_set = RuleSet::Perft;
-            let _ = game.search(max_depth, owl_checker);
+            let _ = game.search(max_depth, owl_checker_move_count);
             progress += 1;
             if progress % progress_thingy == 0 {
                 println!("{progress}/{max_fens}");
@@ -551,12 +555,34 @@ mod tests {
         }
     }
 
-    fn owl_checker(game: &GameState) {
+    fn owl_checker_move_count(game: &GameState) {
         let schach_move_count = game.legal_moves().count();
         let owl_move_count = owlchess::movegen::legal::gen_all(
             &owlchess::Board::from_fen(game.to_fen().as_str()).unwrap(),
         )
         .len();
         assert_eq!(schach_move_count, owl_move_count);
+    }
+
+    fn owl_checker_depth_1(game: &GameState) {
+        let schach_all_legals = game.legal_moves().collect::<Vec<_>>();
+        for mov in &schach_all_legals {
+            let schach_move_lan = dbg!(long_algebraic_notation(game.clone(), *mov));
+            let owl_board = owlchess::Board::from_fen(game.to_fen().as_str()).unwrap();
+            let owl_move = owlchess::Move::from_san(schach_move_lan.as_str(), &owl_board).unwrap();
+            let new_owl_board = owl_board.make_move(owl_move).unwrap();
+            let StepResult::Continued(new_schach_board) =
+                game.clone().step(*mov, schach_all_legals.clone())
+            else {
+                continue;
+            };
+
+            let new_owl_move_count = owlchess::movegen::legal::gen_all(&new_owl_board)
+                .iter()
+                .count();
+            let new_schach_move_count = new_schach_board.legal_moves().count();
+
+            assert_eq!(new_schach_move_count, new_owl_move_count);
+        }
     }
 }
