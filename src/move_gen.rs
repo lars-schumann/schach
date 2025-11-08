@@ -385,7 +385,7 @@ impl GameState {
             }
             PieceKind::Pawn => {
                 //en passant case, this is never gonna lead to promotion
-                self.en_passant_target.map_or_else(Vec::new, |destination| {
+                if Some(destination) == self.en_passant_target {
                     vec![Move {
                         kind: MoveKind::Pawn(PawnMove::EnPassant {
                             affected: (threat.destination + self.active_player.backwards_one_row())
@@ -394,7 +394,9 @@ impl GameState {
                         origin,
                         destination,
                     }]
-                })
+                } else {
+                    vec![]
+                }
             }
         }
     }
@@ -512,7 +514,7 @@ mod tests {
     #[cfg(feature = "rand")]
     #[test]
     fn many_random_walks() {
-        crate::testing::skip_if_no_expensive_test_opt_in!();
+        //crate::testing::skip_if_no_expensive_test_opt_in!();
 
         let max_depth = 1_000;
         let walk_count = 100;
@@ -582,9 +584,10 @@ mod tests {
     fn owl_checker_depth_1(game: &GameState) {
         let schach_all_legals = game.legal_moves().collect::<Vec<_>>();
         for mov in &schach_all_legals {
-            let schach_move_lan = standard_algebraic_notation(game.clone(), *mov);
+            let schach_move_san = standard_algebraic_notation(game.clone(), *mov);
             let owl_board = owlchess::Board::from_fen(game.to_fen().as_str()).unwrap();
-            let owl_move = owlchess::Move::from_san(schach_move_lan.as_str(), &owl_board).unwrap();
+            let owl_move =
+                owlchess::Move::from_san(dbg!(schach_move_san.as_str()), &owl_board).unwrap();
             let new_owl_board = owl_board.make_move(owl_move).unwrap();
             let StepResult::Continued(new_schach_board) =
                 game.clone().step(*mov, schach_all_legals.clone())
@@ -607,8 +610,9 @@ mod tests {
 
             for mov in &new_schach_legals {
                 println!(
-                    "{}",
-                    long_algebraic_notation(new_schach_board.clone(), *mov).as_str()
+                    "lan: {}  san: {}",
+                    long_algebraic_notation(new_schach_board.clone(), *mov).as_str(),
+                    standard_algebraic_notation(new_schach_board.clone(), *mov).as_str()
                 );
             }
             let new_schach_move_count = new_schach_legals.len();
