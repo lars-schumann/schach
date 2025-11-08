@@ -480,6 +480,7 @@ pub struct WalkStats {
 #[cfg(test)]
 mod tests {
     use crate::notation::algebraic::long_algebraic_notation;
+    use crate::notation::algebraic::standard_algebraic_notation;
 
     use super::*;
     use std::dbg;
@@ -511,7 +512,7 @@ mod tests {
     #[cfg(feature = "rand")]
     #[test]
     fn many_random_walks() {
-        //crate::testing::skip_if_no_expensive_test_opt_in!();
+        crate::testing::skip_if_no_expensive_test_opt_in!();
 
         let max_depth = 1_000;
         let walk_count = 100;
@@ -581,7 +582,7 @@ mod tests {
     fn owl_checker_depth_1(game: &GameState) {
         let schach_all_legals = game.legal_moves().collect::<Vec<_>>();
         for mov in &schach_all_legals {
-            let schach_move_lan = dbg!(long_algebraic_notation(game.clone(), *mov));
+            let schach_move_lan = standard_algebraic_notation(game.clone(), *mov);
             let owl_board = owlchess::Board::from_fen(game.to_fen().as_str()).unwrap();
             let owl_move = owlchess::Move::from_san(schach_move_lan.as_str(), &owl_board).unwrap();
             let new_owl_board = owl_board.make_move(owl_move).unwrap();
@@ -591,10 +592,26 @@ mod tests {
                 continue;
             };
 
+            let binding = new_schach_board.to_fen();
+            let new_schach_fen = binding.as_str();
+            let new_owl_fen = new_owl_board.as_fen();
+
+            println!("schach: {new_schach_fen}");
+            println!("owl___: {new_owl_fen}");
+
             let new_owl_move_count = owlchess::movegen::legal::gen_all(&new_owl_board)
                 .iter()
                 .count();
-            let new_schach_move_count = new_schach_board.legal_moves().count();
+
+            let new_schach_legals = new_schach_board.legal_moves().collect::<Vec<_>>();
+
+            for mov in &new_schach_legals {
+                println!(
+                    "{}",
+                    long_algebraic_notation(new_schach_board.clone(), *mov).as_str()
+                );
+            }
+            let new_schach_move_count = new_schach_legals.len();
 
             assert_eq!(new_schach_move_count, new_owl_move_count);
         }
