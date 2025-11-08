@@ -76,7 +76,7 @@ pub enum KingMove {
         target: Square,
         is_capture: bool,
     },
-    Castle(CastlingSide),
+    Castle{king_start: Square, king_target: Square, rook_start: Square, rook_target: Square, castling_side: CastlingSide},
 }
 
 impl Move {
@@ -91,7 +91,7 @@ impl Move {
             | Self::Pawn(PawnMove::Promotion { is_capture, .. }) => *is_capture,
             | Self::Pawn(PawnMove::SimpleCapture { .. } | PawnMove::EnPassant { .. }) => true,
             | Self::Pawn(PawnMove::SimpleStep { .. } | PawnMove::DoubleStep { .. })
-            | Self::King(KingMove::Castle(_)) => false,
+            | Self::King(KingMove::Castle{..}) => false,
         }
     }
 
@@ -122,7 +122,7 @@ impl Move {
             | Self::Queen { is_capture: false, .. }
             | Self::King(
                 | KingMove::Normal { is_capture: false, .. } 
-                | KingMove::Castle(_)
+                | KingMove::Castle{..}
             ) => None,
         }
     }

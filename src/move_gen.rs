@@ -261,15 +261,15 @@ impl GameState {
                 });
             }
 
-            Move::King(KingMove::Castle(castling_side)) => {
-                self.board.mov(
-                    self.active_player.king_start(),
-                    self.active_player.king_castling_target(castling_side),
-                );
-                self.board.mov(
-                    self.active_player.rook_start(castling_side),
-                    self.active_player.rook_castling_target(castling_side),
-                );
+            Move::King(KingMove::Castle {
+                king_start,
+                king_target,
+                rook_start,
+                rook_target,
+                castling_side: _,
+            }) => {
+                self.board.mov(king_start, king_target);
+                self.board.mov(rook_start, rook_target);
             }
         }
         self
@@ -312,7 +312,15 @@ impl GameState {
                         .iter()
                         .all(|square| self.board[*square].is_none())
             })
-            .map(|castling_side| Move::King(KingMove::Castle(castling_side)))
+            .map(|castling_side| {
+                Move::King(KingMove::Castle {
+                    king_start: self.active_player.king_start(),
+                    king_target: self.active_player.king_castling_target(castling_side),
+                    rook_start: self.active_player.rook_start(castling_side),
+                    rook_target: self.active_player.rook_castling_target(castling_side),
+                    castling_side,
+                })
+            })
     }
 
     fn threatening_move_candidates(&self) -> impl Iterator<Item = Move> + Clone + use<'_> {

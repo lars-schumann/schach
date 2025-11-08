@@ -100,8 +100,14 @@ fn notation_creator(
             ]
             .concat()
         }
-        Move::King(KingMove::Castle(CastlingSide::Kingside)) => O_O.to_vec(),
-        Move::King(KingMove::Castle(CastlingSide::Queenside)) => O_O_O.to_vec(),
+        Move::King(KingMove::Castle {
+            castling_side: CastlingSide::Kingside,
+            ..
+        }) => O_O.to_vec(),
+        Move::King(KingMove::Castle {
+            castling_side: CastlingSide::Queenside,
+            ..
+        }) => O_O_O.to_vec(),
     };
 
     let outcome = game.step(mov, legal_moves);
@@ -176,7 +182,7 @@ pub fn standard_algebraic_notation(game: GameState, mov: Move) -> Vec<AsciiChar>
 
             todo!()
         }
-        Move::King(KingMove::Castle(_)) => {
+        Move::King(KingMove::Castle { .. }) => {
             notation_creator(game, mov, AmbiguationLevel::OriginEmpty, capture_repr)
         }
     }
