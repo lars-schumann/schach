@@ -511,6 +511,27 @@ mod tests {
         println!("---------------------------");
     }
 
+    #[test]
+    fn perft() {
+        crate::testing::skip_if_no_expensive_test_opt_in!();
+
+        let depth = 3;
+        let game = GameState::perft();
+
+        let before = std::time::Instant::now();
+
+        let stats = game.search(depth, |_| ());
+
+        println!("---------------------------");
+        println!("depth: {depth}");
+        println!("#checkmate: {}", stats.checkmated_games);
+        println!("#drawn games: {}", stats.drawn_games);
+        println!("#continued games: {}", stats.continued_games);
+        println!("#en passant: {}", stats.en_passant);
+        println!("elapsed: {:?}", before.elapsed());
+        println!("---------------------------");
+    }
+
     #[cfg(feature = "rand")]
     #[test]
     fn many_random_walks() {
