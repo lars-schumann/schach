@@ -152,12 +152,11 @@ pub fn standard_algebraic_notation(game: GameState, mov: Move) -> Vec<AsciiChar>
         no_capture: None,
     };
     let mut legal_moves = game.legal_moves().collect::<Vec<_>>();
+
     let mov_index = legal_moves
         .iter()
-        .enumerate()
-        .find(|m| *m.1 == mov)
-        .expect("passed illegal move")
-        .0;
+        .position(|m| *m == mov)
+        .expect("passed illegal move");
 
     legal_moves.swap_remove(mov_index);
 
@@ -165,7 +164,18 @@ pub fn standard_algebraic_notation(game: GameState, mov: Move) -> Vec<AsciiChar>
         .iter()
         .filter(|legal| legal.kind.piece_kind() == mov.kind.piece_kind())
         .filter(|legal| legal.destination == mov.destination)
-        .collect::<Vec<_>>();
+        .filter(|legal| {
+            // for the Promotion case, remove Duplicate Promotions to just different pieces.
+            if matches!(mov.kind, MoveKind::Pawn(PawnMove::Promotion { .. }))
+                && legal.origin == mov.origin
+                && legal.destination == mov.destination
+            {
+                return false;
+            }
+            true
+        });
+
+    let interfering_moves = interfering_moves.collect::<Vec<_>>();
 
     if interfering_moves.is_empty() {
         if mov.kind.piece_kind() == PieceKind::Pawn && mov.is_capture() {
