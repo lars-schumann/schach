@@ -298,13 +298,11 @@ impl Board {
         let mut new_board = Self::empty();
 
         //TODO: un-fuck this
-        for row in Row::ALL {
-            for col in Col::ALL {
-                new_board[Square {
-                    col: Col::try_from(u8::from(row)).unwrap(),
-                    row: Row::try_from(9 - u8::from(col)).unwrap(),
-                }] = piece_placements_chunked[Square { col, row }];
-            }
+        for square in Square::ALL {
+            new_board[Square {
+                col: Col::try_from(u8::from(square.row)).unwrap(),
+                row: Row::try_from(9 - u8::from(square.col)).unwrap(),
+            }] = piece_placements_chunked[square];
         }
 
         Ok(new_board)
