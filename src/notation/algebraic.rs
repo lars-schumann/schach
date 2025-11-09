@@ -161,10 +161,6 @@ pub fn standard_algebraic_notation(game: GameState, mov: Move) -> Vec<AsciiChar>
 
     legal_moves.swap_remove(mov_index);
 
-    if matches!(mov.kind, MoveKind::King(KingMove::Castle { .. })) {
-        return notation_creator(game, mov, AmbiguationLevel::OriginEmpty, capture_repr);
-    }
-
     let interfering_moves = legal_moves
         .iter()
         .filter(|legal| legal.kind.piece_kind() == mov.kind.piece_kind())
