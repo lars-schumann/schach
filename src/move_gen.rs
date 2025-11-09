@@ -87,7 +87,7 @@ impl GameState {
         while max_depth > depth {
             use rand::seq::IndexedRandom;
 
-            use crate::notation::algebraic::long_algebraic_notation;
+            use crate::notation::san::long_algebraic_notation;
 
             depth += 1;
 
@@ -270,7 +270,7 @@ impl GameState {
             MoveKind::King(KingMove::Castle {
                 rook_start,
                 rook_target,
-                castling_side: _,
+                ..
             }) => {
                 self.board.mov(rook_start, rook_target);
             }
@@ -405,7 +405,7 @@ impl GameState {
     #[must_use]
     fn pawn_step_candidates(&self) -> Vec<Move> {
         let mut candidates = vec![];
-        for square in Square::all() {
+        for square in Square::ALL {
             let player = self.active_player;
             if !(self.board[square]
                 == Some(Piece {
@@ -482,8 +482,8 @@ pub struct WalkStats {
 
 #[cfg(test)]
 mod tests {
-    use crate::notation::algebraic::long_algebraic_notation;
-    use crate::notation::algebraic::standard_algebraic_notation;
+    use crate::notation::san::long_algebraic_notation;
+    use crate::notation::san::standard_algebraic_notation;
 
     use super::*;
     use std::io::Write;

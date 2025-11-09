@@ -25,12 +25,14 @@ impl Board {
         &self,
         threatened_by: PlayerKind,
     ) -> impl Iterator<Item = Threat> + Clone + use<'_> {
-        S::all().flat_map(move |square| crate::game::attacked_squares(self, square, threatened_by))
+        S::ALL
+            .iter()
+            .flat_map(move |square| crate::game::attacked_squares(self, *square, threatened_by))
     }
 
     pub fn threatened_squares_by(&self, threatened_by: PlayerKind) -> impl Iterator<Item = S> {
-        S::all().flat_map(move |square| {
-            attacked_squares(self, square, threatened_by)
+        S::ALL.iter().flat_map(move |square| {
+            attacked_squares(self, *square, threatened_by)
                 .into_iter()
                 .map(|threat| threat.destination)
         })
@@ -38,9 +40,10 @@ impl Board {
 
     #[must_use]
     pub fn king_position(&self, king_owner: PlayerKind) -> S {
-        S::all()
+        *S::ALL
+            .iter()
             .find(|square| {
-                self[*square]
+                self[**square]
                     == Some(Piece {
                         kind: PieceKind::King,
                         owner: king_owner,
@@ -82,7 +85,7 @@ impl Board {
         board[S::G8] = Some(Piece::BLACK_KNIGHT);
         board[S::H8] = Some(Piece::BLACK_ROOK);
 
-        for col in Col::COLS {
+        for col in Col::ALL {
             board[S { col, row: Row::R2 }] = Some(Piece::WHITE_PAWN);
             board[S { col, row: Row::R7 }] = Some(Piece::BLACK_PAWN);
         }
@@ -93,7 +96,7 @@ impl Board {
     #[must_use]
     pub fn piece_counts(&self) -> PieceCounts {
         let mut piece_counts = PieceCounts::default();
-        for square in Square::all() {
+        for square in Square::ALL {
             if let Some(piece) = self[square] {
                 piece_counts[piece] += 1;
             }
@@ -124,7 +127,7 @@ impl const core::ops::IndexMut<S> for Board {
 impl core::fmt::Debug for Board {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         writeln!(f)?;
-        for square in Square::all() {
+        for square in Square::ALL {
             if square.col == Col::C1 {
                 write!(f, "{}", i8::from(square.row))?;
             }
@@ -143,7 +146,7 @@ impl core::fmt::Debug for Board {
             }
         }
         write!(f, "  ")?;
-        for col in Col::COLS {
+        for col in Col::ALL {
             write!(f, "{} ", i8::from(col))?;
         }
         Ok(())
@@ -158,7 +161,7 @@ pub(crate) struct DebugBoard {
 impl core::fmt::Debug for DebugBoard {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         writeln!(f)?;
-        for square in Square::all() {
+        for square in Square::ALL {
             if square.col == Col::C1 {
                 write!(f, "{}", i8::from(square.row))?;
             }
@@ -183,7 +186,7 @@ impl core::fmt::Debug for DebugBoard {
             }
         }
         write!(f, "  ")?;
-        for col in Col::COLS {
+        for col in Col::ALL {
             write!(f, "{} ", i8::from(col))?;
         }
         Ok(())

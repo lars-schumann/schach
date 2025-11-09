@@ -298,8 +298,8 @@ impl Board {
         let mut new_board = Self::empty();
 
         //TODO: un-fuck this
-        for row in Row::ROWS {
-            for col in Col::COLS {
+        for row in Row::ALL {
+            for col in Col::ALL {
                 new_board[Square {
                     col: Col::try_from(u8::from(row)).unwrap(),
                     row: Row::try_from(9 - u8::from(col)).unwrap(),
@@ -314,7 +314,7 @@ impl Board {
     fn to_fen_repr(&self) -> Vec<AsciiChar> {
         let mut running_square_count: u32 = 0;
         let mut out: Vec<AsciiChar> = vec![];
-        for square in Square::all() {
+        for square in Square::ALL {
             match self[square] {
                 None => running_square_count += 1,
                 Some(piece) => {
@@ -419,7 +419,7 @@ mod tests {
 
     #[test]
     fn test_squares_fen_round_trip() {
-        for square in Square::all() {
+        for square in Square::ALL {
             println!("{square:?}: {}", Square::to_fen_repr(square).as_str());
             assert_eq!(
                 Some(square),
@@ -430,7 +430,7 @@ mod tests {
 
     #[test]
     fn test_columns_fen_round_trip() {
-        for col in Col::COLS {
+        for col in Col::ALL {
             println!("{col:?}: {}", Col::to_fen_repr(col).as_str());
             assert_eq!(col, Col::try_from_fen_repr(Col::to_fen_repr(col)).unwrap());
         }
@@ -438,7 +438,7 @@ mod tests {
 
     #[test]
     fn test_rows_fen_round_trip() {
-        for row in Row::ROWS {
+        for row in Row::ALL {
             println!("{row:?}: {}", Row::to_fen_repr(row).as_str());
             assert_eq!(row, Row::try_from_fen_repr(Row::to_fen_repr(row)).unwrap());
         }
