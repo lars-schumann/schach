@@ -514,7 +514,7 @@ mod tests {
     #[cfg(feature = "rand")]
     #[test]
     fn many_random_walks() {
-        //crate::testing::skip_if_no_expensive_test_opt_in!();
+        crate::testing::skip_if_no_expensive_test_opt_in!();
 
         let max_depth = 1_000;
         let walk_count = 100;
