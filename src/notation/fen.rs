@@ -418,7 +418,7 @@ mod tests {
     use std::println;
 
     #[test]
-    fn test_squares() {
+    fn test_squares_fen_round_trip() {
         for square in Square::all() {
             println!("{square:?}: {}", Square::to_fen_repr(square).as_str());
             assert_eq!(
@@ -429,7 +429,7 @@ mod tests {
     }
 
     #[test]
-    fn test_columns() {
+    fn test_columns_fen_round_trip() {
         for col in Col::COLS {
             println!("{col:?}: {}", Col::to_fen_repr(col).as_str());
             assert_eq!(col, Col::try_from_fen_repr(Col::to_fen_repr(col)).unwrap());
@@ -437,7 +437,7 @@ mod tests {
     }
 
     #[test]
-    fn test_rows() {
+    fn test_rows_fen_round_trip() {
         for row in Row::ROWS {
             println!("{row:?}: {}", Row::to_fen_repr(row).as_str());
             assert_eq!(row, Row::try_from_fen_repr(Row::to_fen_repr(row)).unwrap());
@@ -445,7 +445,7 @@ mod tests {
     }
 
     #[test]
-    fn test_pieces() {
+    fn test_pieces_fen_round_trip() {
         for piece in Piece::ALL {
             println!("{piece}: {}", Piece::to_fen_repr(piece).as_str());
             assert_eq!(
@@ -456,7 +456,7 @@ mod tests {
     }
 
     #[test]
-    fn test_player_kinds() {
+    fn test_player_kind_fens_round_trip() {
         for player_kind in [PlayerKind::White, PlayerKind::Black] {
             println!(
                 "{player_kind:?}: {}",
@@ -473,7 +473,7 @@ mod tests {
     }
 
     #[test]
-    fn test_castling_rights() {
+    fn test_castling_rights_fen_round_trip() {
         for castling_rights in CastlingRights::all() {
             println!(
                 "{castling_rights:?}: {}",
