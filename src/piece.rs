@@ -45,7 +45,7 @@ impl Piece {
         Self { owner, kind }
     }
     #[must_use]
-    pub const fn threat_directions(&self) -> (&[Offset], Range) {
+    pub(crate) const fn threat_directions(&self) -> (&[Offset], Range) {
         match (self.kind, self.owner) {
             (PieceKind::Pawn, PlayerKind::White) => (&Offset::PAWN_UP_DIAGONAL, Range::One),
             (PieceKind::Pawn, PlayerKind::Black) => (&Offset::PAWN_DOWN_DIAGONAL, Range::One),
@@ -110,7 +110,7 @@ impl core::fmt::Display for Piece {
     }
 }
 
-pub enum Range {
+pub(crate) enum Range {
     One,
     Unlimited,
 }

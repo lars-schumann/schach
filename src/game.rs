@@ -284,7 +284,7 @@ pub struct Position {
 }
 
 #[must_use]
-pub fn attacked_squares(
+pub(crate) fn attacked_squares(
     board: &Board,
     starting_square: Square,
     active_player: PlayerKind,

@@ -33,4 +33,6 @@ pub mod move_gen;
 pub mod notation;
 pub mod piece;
 pub mod player;
+
+#[cfg(test)]
 pub mod testing;

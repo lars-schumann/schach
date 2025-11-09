@@ -1,4 +1,3 @@
-use crate::alloc::borrow::ToOwned;
 use crate::coord::Square;
 use crate::game::CastlingSide;
 use crate::game::DrawKind;
@@ -77,6 +76,8 @@ impl GameState {
 
     #[cfg(feature = "rand")]
     pub fn random_walk(self, max_depth: u32, checker: impl Fn(&Self)) -> WalkStats {
+        use crate::alloc::borrow::ToOwned as _;
+
         let mut rng = rand::rng();
         let mut game = self;
 
@@ -485,7 +486,6 @@ mod tests {
     use crate::notation::algebraic::standard_algebraic_notation;
 
     use super::*;
-    use std::dbg;
     use std::io::Write;
     use std::print;
     use std::println;
@@ -518,12 +518,14 @@ mod tests {
 
         let max_depth = 1_000;
         let walk_count = 100;
-        let game = GameState::default();
+        let game = GameState::perft();
 
         for i in 0..walk_count {
-            let stats = game.clone().random_walk(max_depth, owl_checker_depth_1);
+            let stats = game.clone().random_walk(max_depth, |_| ());
             println!("{i}: {}", stats.final_depth);
-            if stats.final_depth > max_depth - 300 {
+            if
+            /* stats.final_depth > max_depth - 300*/
+            false {
                 for (i, mov) in stats.move_history.chunks(2).enumerate() {
                     print!("{}. ", i + 1);
                     for m in mov {

@@ -149,6 +149,8 @@ impl core::fmt::Debug for Board {
         Ok(())
     }
 }
+
+#[allow(unused)]
 pub(crate) struct DebugBoard {
     pub inner: Board,
     pub highlighted_squares: Vec<S>,
