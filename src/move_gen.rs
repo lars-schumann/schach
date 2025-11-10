@@ -314,7 +314,7 @@ impl GameStateCore {
                     .map(|promotion_option| Move {
                         kind: MoveKind::Pawn(PawnMove::Promotion {
                             is_capture: false,
-                            replacement: promotion_option.to_player_piece(self.active_player),
+                            replacement: promotion_option.to_piece(self.active_player),
                         }),
                         origin: square,
                         destination: one_in_front,
@@ -387,7 +387,7 @@ impl GameStateCore {
                         .map(|promotion_option| Move {
                             kind: MoveKind::Pawn(PawnMove::Promotion {
                                 is_capture: true,
-                                replacement: promotion_option.to_player_piece(self.active_player),
+                                replacement: promotion_option.to_piece(self.active_player),
                             }),
                             origin,
                             destination,
@@ -590,7 +590,7 @@ mod tests {
         let schach_all_legals = game.core.legal_moves().collect::<Vec<_>>();
         for mov in &schach_all_legals {
             let schach_move_san = standard_algebraic_notation(game.clone(), *mov);
-            let owl_board = owlchess::Board::from_fen(dbg!(game.core.to_fen().as_str())).unwrap();
+            let owl_board = owlchess::Board::from_fen(game.core.to_fen().as_str()).unwrap();
             let Ok(owl_move) = owlchess::Move::from_san(schach_move_san.as_str(), &owl_board)
             else {
                 for mov in &schach_all_legals {

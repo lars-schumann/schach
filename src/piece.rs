@@ -34,11 +34,8 @@ impl PieceKind {
     }
 
     #[must_use]
-    pub const fn to_player_piece(self, player: PlayerKind) -> Piece {
-        Piece {
-            kind: self,
-            owner: player,
-        }
+    pub const fn to_piece(self, owner: PlayerKind) -> Piece {
+        Piece { kind: self, owner }
     }
 }
 
