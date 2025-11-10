@@ -49,6 +49,17 @@ pub enum StepResult {
     Terminated(GameResult),
     Continued(GameState),
 }
+impl StepResult {
+    pub(crate) fn game_state(self) -> GameState {
+        match self {
+            Self::Terminated(GameResult {
+                final_game_state: game_state,
+                ..
+            })
+            | Self::Continued(game_state) => game_state,
+        }
+    }
+}
 
 #[derive_const(Default, Clone, PartialEq, Eq)]
 #[derive(Debug, Copy, Hash)]

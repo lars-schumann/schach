@@ -17,7 +17,6 @@ use crate::mov::Move;
 use crate::mov::MoveKind;
 use crate::mov::PawnMove;
 use crate::mov::Threat;
-use crate::piece::Piece;
 use crate::piece::PieceKind;
 use crate::player::PlayerKind;
 use alloc::vec;
@@ -71,50 +70,33 @@ impl GameState {
     }
 
     #[cfg(feature = "rand")]
-    pub fn random_walk(self, max_depth: u32, checker: impl Fn(&Self)) -> WalkStats {
+    pub fn random_walk(self, max_depth: u32, checker: impl Fn(&Self)) -> StepResult {
         use crate::alloc::borrow::ToOwned as _;
 
         let mut rng = rand::rng();
         let mut game = self;
 
-        let mut depth = 0;
-        let mut move_history = vec![];
-
-        while max_depth > depth {
-            use crate::notation::san::long_algebraic_notation;
+        for _ in 0..max_depth {
             use rand::seq::IndexedRandom;
-
-            depth += 1;
 
             checker(&game);
             let legal_moves: Vec<Move> = game.core.legal_moves().collect();
+
             let random_move = legal_moves
                 .choose(&mut rng)
                 .expect("If the game has no legal moves, it should've ended last turn")
                 .to_owned();
 
-            move_history.push(long_algebraic_notation(game.clone(), random_move));
-
             match game.clone().step(random_move, legal_moves.clone()) {
                 StepResult::Continued(game_state) => {
                     game = game_state;
                 }
-                StepResult::Terminated(GameResult {
-                    final_game_state, ..
-                }) => {
-                    return WalkStats {
-                        final_depth: depth,
-                        final_game_state,
-                        move_history,
-                    };
+                terminated @ StepResult::Terminated(_) => {
+                    return terminated;
                 }
             }
         }
-        WalkStats {
-            final_depth: depth,
-            final_game_state: game,
-            move_history,
-        }
+        StepResult::Continued(game)
     }
 
     #[must_use]
@@ -446,13 +428,6 @@ pub struct SearchStats {
     pub en_passant: usize,
 }
 
-#[derive(Debug, Default)]
-pub struct WalkStats {
-    pub final_depth: u32,
-    pub final_game_state: GameState,
-    pub move_history: Vec<Vec<AsciiChar>>,
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -505,11 +480,11 @@ mod tests {
 
         let max_depth = 1_000;
         let walk_count = 100;
-        let game = GameState::perft();
+        let game = GameState::new();
 
         for i in 0..walk_count {
-            let stats = game.clone().random_walk(max_depth, owl_checker_depth_1);
-            println!("{i}: {}", stats.final_depth);
+            let final_step = game.clone().random_walk(max_depth, owl_checker_depth_1);
+            println!("{i}: {}", final_step.game_state().core.full_move_count.0);
         }
     }
 
