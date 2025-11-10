@@ -263,10 +263,7 @@ impl GameStateCore {
             }
 
             MoveKind::Pawn(PawnMove::Promotion { replacement, .. }) => {
-                self.board[m.destination] = Some(Piece {
-                    kind: replacement,
-                    owner: self.active_player,
-                });
+                self.board[m.destination] = Some(replacement);
             }
 
             MoveKind::King(KingMove::Castle {
@@ -348,7 +345,7 @@ impl GameStateCore {
                     .map(|promotion_option| Move {
                         kind: MoveKind::Pawn(PawnMove::Promotion {
                             is_capture: false,
-                            replacement: *promotion_option,
+                            replacement: promotion_option.to_player_piece(self.active_player),
                         }),
                         origin: square,
                         destination: one_in_front,
@@ -421,7 +418,7 @@ impl GameStateCore {
                         .map(|promotion_option| Move {
                             kind: MoveKind::Pawn(PawnMove::Promotion {
                                 is_capture: true,
-                                replacement: *promotion_option,
+                                replacement: promotion_option.to_player_piece(self.active_player),
                             }),
                             origin,
                             destination,

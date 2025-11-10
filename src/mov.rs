@@ -60,7 +60,7 @@ pub enum PawnMove {
         affected: Square,
     },
     Promotion {
-        replacement: PieceKind,
+        replacement: Piece,
         is_capture: bool,
     },
 }

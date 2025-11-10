@@ -91,7 +91,7 @@ fn notation_creator(
 
             let promotion_replacement = match mov.kind {
                 MoveKind::Pawn(PawnMove::Promotion { replacement, .. }) => {
-                    Some([replacement.to_white_piece().to_fen_repr()])
+                    Some([replacement.kind.to_white_piece().to_fen_repr()])
                 }
                 _ => None,
             };

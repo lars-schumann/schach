@@ -32,6 +32,14 @@ impl PieceKind {
             owner: PlayerKind::White,
         }
     }
+
+    #[must_use]
+    pub const fn to_player_piece(self, player: PlayerKind) -> Piece {
+        Piece {
+            kind: self,
+            owner: player,
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
