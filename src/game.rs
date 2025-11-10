@@ -18,6 +18,9 @@ pub enum CastlingSide {
     Kingside,
     Queenside,
 }
+impl CastlingSide {
+    pub const ALL: [Self; 2] = [Self::Kingside, Self::Queenside];
+}
 
 #[derive_const(Clone)]
 #[derive(Debug, Copy, Hash, PartialEq, Eq)]

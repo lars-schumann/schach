@@ -246,31 +246,37 @@ impl GameStateCore {
             })
     }
 
-    fn castle_candidates(&self) -> impl Iterator<Item = Move> + Clone {
-        [CastlingSide::Kingside, CastlingSide::Queenside]
-            .into_iter()
-            .filter(|castling_side| self.is_castling_allowed(*castling_side))
-            .filter(|castling_side| {
-                let threatened_squares = self
-                    .board
-                    .threatened_squares_by(self.active_player.opponent())
-                    .collect::<Vec<_>>();
+    gen fn castle_candidates(&self) -> Move {
+        for castling_side in CastlingSide::ALL {
+            if self.is_castling_allowed(castling_side).not() {
+                continue;
+            }
+            let threatened_squares = self
+                .board
+                .threatened_squares_by(self.active_player.opponent())
+                .collect::<Vec<_>>();
 
-                self.active_player
-                    .castling_non_check_needed_squares(*castling_side)
-                    .iter()
-                    .all(|castle_square| {
-                        threatened_squares
-                            .iter()
-                            .all(|threatened_square| threatened_square != castle_square)
-                    })
-                    && self
-                        .active_player
-                        .castling_free_needed_squares(*castling_side)
+            //TODO: extract this into a function
+            if (self
+                .active_player
+                .castling_non_check_needed_squares(castling_side)
+                .iter()
+                .all(|castle_square| {
+                    threatened_squares
                         .iter()
-                        .all(|square| self.board[*square].is_none())
-            })
-            .map(|castling_side| Move {
+                        .all(|threatened_square| threatened_square != castle_square)
+                })
+                && self
+                    .active_player
+                    .castling_free_needed_squares(castling_side)
+                    .iter()
+                    .all(|square| self.board[*square].is_none()))
+            .not()
+            {
+                continue;
+            }
+
+            yield Move {
                 kind: MoveKind::King(KingMove::Castle {
                     rook_start: self.active_player.rook_start(castling_side),
                     rook_target: self.active_player.rook_castling_target(castling_side),
@@ -278,7 +284,8 @@ impl GameStateCore {
                 }),
                 origin: self.active_player.king_start(),
                 destination: self.active_player.king_castling_target(castling_side),
-            })
+            }
+        }
     }
 
     fn threatening_move_candidates(&self) -> impl Iterator<Item = Move> {
@@ -287,17 +294,9 @@ impl GameStateCore {
             .flat_map(|threat| self.threat_to_move_candidate(threat))
     }
 
-    #[must_use]
-    fn pawn_step_candidates(&self) -> Vec<Move> {
-        let mut candidates = vec![];
+    gen fn pawn_step_candidates(&self) -> Move {
         for square in Square::ALL {
-            let player = self.active_player;
-            if !(self.board[square]
-                == Some(Piece {
-                    kind: PieceKind::Pawn,
-                    owner: player,
-                }))
-            {
+            if self.board[square] != Some(PieceKind::Pawn.to_piece(self.active_player)) {
                 continue;
             }
 
@@ -309,23 +308,22 @@ impl GameStateCore {
             }
 
             if one_in_front.row == self.active_player.pawn_promotion_row() {
-                PieceKind::PROMOTION_OPTIONS
-                    .iter()
-                    .map(|promotion_option| Move {
+                for promotion_option in PieceKind::PROMOTION_OPTIONS {
+                    yield Move {
                         kind: MoveKind::Pawn(PawnMove::Promotion {
                             is_capture: false,
                             replacement: promotion_option.to_piece(self.active_player),
                         }),
                         origin: square,
                         destination: one_in_front,
-                    })
-                    .collect_into(&mut candidates);
+                    }
+                }
             } else {
-                candidates.push(Move {
+                yield Move {
                     kind: MoveKind::Pawn(PawnMove::SimpleStep),
                     origin: square,
                     destination: one_in_front,
-                });
+                }
             }
 
             let Ok(two_in_front) = square + self.active_player.forwards_one_row() * 2 else {
@@ -340,13 +338,12 @@ impl GameStateCore {
                 continue; // pawns cant capture moving forward!
             }
 
-            candidates.push(Move {
+            yield Move {
                 kind: MoveKind::Pawn(PawnMove::DoubleStep),
                 origin: square,
                 destination: two_in_front,
-            });
+            }
         }
-        candidates
     }
 
     #[must_use]
