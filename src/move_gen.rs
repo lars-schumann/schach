@@ -234,7 +234,7 @@ impl GameState {
 }
 
 impl GameStateCore {
-    pub fn legal_moves(&self) -> impl Iterator<Item = Move> + Clone + use<'_> {
+    pub fn legal_moves(&self) -> impl Iterator<Item = Move> {
         self.threatening_move_candidates()
             .chain(self.pawn_step_candidates())
             .chain(self.castle_candidates())
@@ -281,7 +281,7 @@ impl GameStateCore {
             })
     }
 
-    fn threatening_move_candidates(&self) -> impl Iterator<Item = Move> + Clone + use<'_> {
+    fn threatening_move_candidates(&self) -> impl Iterator<Item = Move> {
         self.board
             .threatening_moves_by(self.active_player)
             .flat_map(|threat| self.threat_to_move_candidate(threat))

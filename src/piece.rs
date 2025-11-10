@@ -50,7 +50,7 @@ impl Piece {
         Self { owner, kind }
     }
     #[must_use]
-    pub(crate) const fn threat_directions(&self) -> (&[Offset], Range) {
+    pub(crate) const fn threat_directions(self) -> (&'static [Offset], Range) {
         match (self.kind, self.owner) {
             (PieceKind::Pawn, PlayerKind::White) => (&Offset::PAWN_UP_DIAGONAL, Range::One),
             (PieceKind::Pawn, PlayerKind::Black) => (&Offset::PAWN_DOWN_DIAGONAL, Range::One),

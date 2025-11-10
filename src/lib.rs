@@ -17,7 +17,9 @@
     ascii_char,
     ascii_char_variants,
     result_option_map_or_default,
-    stmt_expr_attributes
+    stmt_expr_attributes,
+    coroutines,
+    gen_blocks
 )]
 #![no_std]
 extern crate alloc;

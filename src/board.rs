@@ -24,7 +24,7 @@ impl Board {
     pub(crate) fn threatening_moves_by(
         &self,
         threatened_by: PlayerKind,
-    ) -> impl Iterator<Item = Threat> + Clone + use<'_> {
+    ) -> impl Iterator<Item = Threat> {
         S::ALL
             .iter()
             .flat_map(move |square| crate::game::attacked_squares(self, *square, threatened_by))
@@ -32,9 +32,7 @@ impl Board {
 
     pub fn threatened_squares_by(&self, threatened_by: PlayerKind) -> impl Iterator<Item = S> {
         S::ALL.iter().flat_map(move |square| {
-            attacked_squares(self, *square, threatened_by)
-                .into_iter()
-                .map(|threat| threat.destination)
+            attacked_squares(self, *square, threatened_by).map(|threat| threat.destination)
         })
     }
 

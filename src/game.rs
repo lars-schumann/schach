@@ -296,18 +296,18 @@ pub struct Position {
     pub castling_rights: CastlingRights,
 }
 
-#[must_use]
-pub(crate) fn attacked_squares(
+pub(crate) gen fn attacked_squares(
     board: &Board,
     starting_square: Square,
     active_player: PlayerKind,
-) -> Vec<Threat> {
+) -> Threat {
     let Some(piece) = board[starting_square] else {
-        return vec![];
+        return;
     };
     if piece.owner != active_player {
-        return vec![];
+        return;
     }
+
     let (directions, range_upper_bound) = piece.threat_directions();
     let range_upper_bound = i32::from(range_upper_bound);
 
@@ -318,27 +318,29 @@ pub(crate) fn attacked_squares(
             .map(Result::unwrap)
     });
 
-    let mut out = vec![];
     for ray in rays {
         for target_square in ray {
             match board[target_square] {
-                None => out.push(target_square),
+                None => {
+                    yield Threat {
+                        piece,
+                        origin: starting_square,
+                        destination: target_square,
+                    }
+                }
                 Some(piece) if piece.owner == active_player => {
                     break;
                 }
                 Some(piece) if piece.owner != active_player => {
-                    out.push(target_square);
+                    yield Threat {
+                        piece,
+                        origin: starting_square,
+                        destination: target_square,
+                    };
                     break;
                 }
                 _ => unreachable!(),
             }
         }
     }
-    out.into_iter()
-        .map(|target_square| Threat {
-            piece,
-            origin: starting_square,
-            destination: target_square,
-        })
-        .collect()
 }
