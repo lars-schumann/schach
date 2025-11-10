@@ -1,3 +1,4 @@
+use crate::board::Board;
 use crate::coord::Square;
 use crate::game::CastlingSide;
 use crate::game::DrawKind;
@@ -119,7 +120,7 @@ impl GameState {
     #[must_use]
     #[allow(clippy::too_many_lines)]
     pub fn step(mut self, mov: Move, all_legal_moves: Vec<Move>) -> StepResult {
-        self.core = self.core.apply_move_to_board(mov);
+        self.core.board.apply_move(mov);
         let mut game = self;
 
         let current_position = Position {
@@ -238,43 +239,11 @@ impl GameStateCore {
             .chain(self.pawn_step_candidates())
             .chain(self.castle_candidates())
             .filter(move |mov| {
-                self.apply_move_to_board(*mov)
-                    .board
+                self.board
+                    .with_move_applied(*mov)
                     .is_king_checked(self.active_player)
                     .not()
             })
-    }
-
-    #[must_use]
-    pub const fn apply_move_to_board(mut self, m: Move) -> Self {
-        self.board.mov(m.origin, m.destination);
-        match m.kind {
-            | MoveKind::Pawn(
-                PawnMove::SimpleStep | PawnMove::DoubleStep | PawnMove::SimpleCapture,
-            )
-            | MoveKind::Knight { .. }
-            | MoveKind::Bishop { .. }
-            | MoveKind::Rook { .. }
-            | MoveKind::Queen { .. }
-            | MoveKind::King(KingMove::Normal { .. }) => { /*nothing */ }
-
-            MoveKind::Pawn(PawnMove::EnPassant { affected }) => {
-                self.board[affected] = None;
-            }
-
-            MoveKind::Pawn(PawnMove::Promotion { replacement, .. }) => {
-                self.board[m.destination] = Some(replacement);
-            }
-
-            MoveKind::King(KingMove::Castle {
-                rook_start,
-                rook_target,
-                ..
-            }) => {
-                self.board.mov(rook_start, rook_target);
-            }
-        }
-        self
     }
 
     fn castle_candidates(&self) -> impl Iterator<Item = Move> + Clone {
@@ -448,6 +417,44 @@ impl GameStateCore {
                 }
             }
         }
+    }
+}
+
+impl Board {
+    pub const fn apply_move(&mut self, m: Move) {
+        *self = self.with_move_applied(m);
+    }
+
+    #[must_use]
+    pub const fn with_move_applied(mut self, m: Move) -> Self {
+        self.mov(m.origin, m.destination);
+        match m.kind {
+            | MoveKind::Pawn(
+                PawnMove::SimpleStep | PawnMove::DoubleStep | PawnMove::SimpleCapture,
+            )
+            | MoveKind::Knight { .. }
+            | MoveKind::Bishop { .. }
+            | MoveKind::Rook { .. }
+            | MoveKind::Queen { .. }
+            | MoveKind::King(KingMove::Normal { .. }) => { /*nothing */ }
+
+            MoveKind::Pawn(PawnMove::EnPassant { affected }) => {
+                self[affected] = None;
+            }
+
+            MoveKind::Pawn(PawnMove::Promotion { replacement, .. }) => {
+                self[m.destination] = Some(replacement);
+            }
+
+            MoveKind::King(KingMove::Castle {
+                rook_start,
+                rook_target,
+                ..
+            }) => {
+                self.mov(rook_start, rook_target);
+            }
+        }
+        self
     }
 }
 
