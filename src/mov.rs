@@ -92,16 +92,4 @@ impl Move {
             | MoveKind::King(KingMove::Castle { .. }) => false,
         }
     }
-
-    #[must_use]
-    pub const fn capture_affected_square(&self) -> Option<Square> {
-        if let MoveKind::Pawn(PawnMove::EnPassant { affected }) = self.kind {
-            return Some(affected);
-        }
-        if self.is_capture() {
-            Some(self.destination)
-        } else {
-            None
-        }
-    }
 }

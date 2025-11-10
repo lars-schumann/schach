@@ -39,13 +39,7 @@ impl GameState {
                 let legal_moves: Vec<Move> = game.legal_moves().collect();
 
                 for mov in legal_moves.clone() {
-                    if matches!(
-                        mov,
-                        Move {
-                            kind: MoveKind::Pawn(PawnMove::EnPassant { .. }),
-                            ..
-                        }
-                    ) {
+                    if matches!(mov.kind, MoveKind::Pawn(PawnMove::EnPassant { .. }),) {
                         stats.en_passant += 1;
                     }
                     match game.clone().step(mov, legal_moves.clone()) {
@@ -85,9 +79,8 @@ impl GameState {
         let mut move_history = vec![];
 
         while max_depth > depth {
-            use rand::seq::IndexedRandom;
-
             use crate::notation::san::long_algebraic_notation;
+            use rand::seq::IndexedRandom;
 
             depth += 1;
 
@@ -145,21 +138,14 @@ impl GameState {
         }
 
         // handle our own castling rights
-        match mov {
-            Move {
-                kind: MoveKind::King(_),
-                ..
-            } => {
+        match mov.kind {
+            MoveKind::King(_) => {
                 game.deny_castling(game.active_player, CastlingSide::Kingside);
                 game.deny_castling(game.active_player, CastlingSide::Queenside);
             }
-            Move {
-                kind: MoveKind::Rook { .. },
-                origin,
-                ..
-            } => {
+            MoveKind::Rook { .. } => {
                 for castling_side in [CastlingSide::Kingside, CastlingSide::Queenside] {
-                    if origin == game.active_player.rook_start(castling_side) {
+                    if mov.origin == game.active_player.rook_start(castling_side) {
                         game.deny_castling(game.active_player, castling_side);
                     }
                 }
@@ -168,22 +154,18 @@ impl GameState {
         }
 
         // handle opponents castling rights
-        if let Some(affected) = mov.capture_affected_square() {
+        if mov.is_capture() && matches!(mov.kind, MoveKind::Pawn(PawnMove::EnPassant { .. })).not()
+        {
             for castling_side in [CastlingSide::Kingside, CastlingSide::Queenside] {
-                if affected == game.active_player.opponent().rook_start(castling_side) {
+                if mov.destination == game.active_player.opponent().rook_start(castling_side) {
                     game.deny_castling(game.active_player.opponent(), castling_side);
                 }
             }
         }
 
         // handle en passant target
-        if let Move {
-            kind: MoveKind::Pawn(PawnMove::DoubleStep),
-            destination,
-            ..
-        } = mov
-        {
-            let en_passant_target = (destination + game.active_player.backwards_one_row())
+        if mov.kind == MoveKind::Pawn(PawnMove::DoubleStep) {
+            let en_passant_target = (mov.destination + game.active_player.backwards_one_row())
                 .expect("this cannot be outside the board");
             game.en_passant_target = Some(en_passant_target);
         } else {
@@ -465,7 +447,7 @@ impl GameState {
     }
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct SearchStats {
     pub continued_games: usize,
     pub checkmated_games: usize,
@@ -473,7 +455,7 @@ pub struct SearchStats {
     pub en_passant: usize,
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct WalkStats {
     pub final_depth: u32,
     pub final_game_state: GameState,
@@ -486,8 +468,6 @@ mod tests {
     use crate::notation::san::long_algebraic_notation;
     use crate::notation::san::standard_algebraic_notation;
     use crate::testing::skip_if_no_expensive_test_opt_in;
-    use std::io::Write;
-    use std::print;
     use std::println;
 
     #[test]
@@ -503,10 +483,7 @@ mod tests {
 
         println!("---------------------------");
         println!("depth: {depth}");
-        println!("#checkmate: {}", stats.checkmated_games);
-        println!("#drawn games: {}", stats.drawn_games);
-        println!("#continued games: {}", stats.continued_games);
-        println!("#en passant: {}", stats.en_passant);
+        println!("{stats:?}");
         println!("elapsed: {:?}", before.elapsed());
         println!("---------------------------");
     }
@@ -524,10 +501,7 @@ mod tests {
 
         println!("---------------------------");
         println!("depth: {depth}");
-        println!("#checkmate: {}", stats.checkmated_games);
-        println!("#drawn games: {}", stats.drawn_games);
-        println!("#continued games: {}", stats.continued_games);
-        println!("#en passant: {}", stats.en_passant);
+        println!("{stats:?}");
         println!("elapsed: {:?}", before.elapsed());
         println!("---------------------------");
     }
@@ -544,18 +518,6 @@ mod tests {
         for i in 0..walk_count {
             let stats = game.clone().random_walk(max_depth, |_| ());
             println!("{i}: {}", stats.final_depth);
-            if
-            /* stats.final_depth > max_depth - 300*/
-            false {
-                for (i, mov) in stats.move_history.chunks(2).enumerate() {
-                    print!("{}. ", i + 1);
-                    for m in mov {
-                        print!("{} ", m.as_str());
-                    }
-                }
-                std::io::stdout().flush().unwrap();
-                panic!()
-            }
         }
     }
 
