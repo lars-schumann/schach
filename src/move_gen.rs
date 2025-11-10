@@ -479,6 +479,7 @@ mod tests {
     use crate::notation::san::long_algebraic_notation;
     use crate::notation::san::standard_algebraic_notation;
     use crate::testing::skip_if_no_expensive_test_opt_in;
+    use std::dbg;
     use std::println;
 
     #[test]
@@ -527,7 +528,7 @@ mod tests {
         let game = GameState::perft();
 
         for i in 0..walk_count {
-            let stats = game.clone().random_walk(max_depth, |_| ());
+            let stats = game.clone().random_walk(max_depth, owl_checker_depth_1);
             println!("{i}: {}", stats.final_depth);
         }
     }
@@ -588,7 +589,7 @@ mod tests {
         let schach_all_legals = game.legal_moves().collect::<Vec<_>>();
         for mov in &schach_all_legals {
             let schach_move_san = standard_algebraic_notation(game.clone(), *mov);
-            let owl_board = owlchess::Board::from_fen(game.core.to_fen().as_str()).unwrap();
+            let owl_board = owlchess::Board::from_fen(dbg!(game.core.to_fen().as_str())).unwrap();
             let Ok(owl_move) = owlchess::Move::from_san(schach_move_san.as_str(), &owl_board)
             else {
                 for mov in &schach_all_legals {
