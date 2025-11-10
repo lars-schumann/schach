@@ -238,8 +238,7 @@ impl GameStateCore {
             .chain(self.pawn_step_candidates())
             .chain(self.castle_candidates())
             .filter(move |mov| {
-                self.clone()
-                    .apply_move_to_board(*mov)
+                self.apply_move_to_board(*mov)
                     .board
                     .is_king_checked(self.active_player)
                     .not()
