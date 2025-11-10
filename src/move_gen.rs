@@ -480,7 +480,6 @@ mod tests {
     use crate::notation::san::long_algebraic_notation;
     use crate::notation::san::standard_algebraic_notation;
     use crate::testing::skip_if_no_expensive_test_opt_in;
-    use std::dbg;
     use std::println;
 
     #[test]
