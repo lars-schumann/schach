@@ -482,17 +482,17 @@ pub struct WalkStats {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::notation::san::long_algebraic_notation;
     use crate::notation::san::standard_algebraic_notation;
-
-    use super::*;
+    use crate::testing::skip_if_no_expensive_test_opt_in;
     use std::io::Write;
     use std::print;
     use std::println;
 
     #[test]
     fn search() {
-        crate::testing::skip_if_no_expensive_test_opt_in!();
+        skip_if_no_expensive_test_opt_in!();
 
         let depth = 3;
         let game = GameState::default();
@@ -513,7 +513,7 @@ mod tests {
 
     #[test]
     fn perft() {
-        crate::testing::skip_if_no_expensive_test_opt_in!();
+        skip_if_no_expensive_test_opt_in!();
 
         let depth = 3;
         let game = GameState::perft();
@@ -535,7 +535,7 @@ mod tests {
     #[cfg(feature = "rand")]
     #[test]
     fn many_random_walks() {
-        crate::testing::skip_if_no_expensive_test_opt_in!();
+        skip_if_no_expensive_test_opt_in!();
 
         let max_depth = 1_000;
         let walk_count = 100;
@@ -561,7 +561,7 @@ mod tests {
 
     #[test]
     fn test_mass_fens() {
-        crate::testing::skip_if_no_expensive_test_opt_in!();
+        skip_if_no_expensive_test_opt_in!();
 
         let fens = std::fs::read_to_string("./fens/fens.txt").unwrap();
 
@@ -574,7 +574,7 @@ mod tests {
 
     #[test]
     fn test_mass_against_owl() {
-        crate::testing::skip_if_no_expensive_test_opt_in!();
+        skip_if_no_expensive_test_opt_in!();
 
         let max_depth = 2;
         let max_fens = 10;
@@ -604,6 +604,7 @@ mod tests {
         assert_eq!(schach_move_count, owl_move_count);
     }
 
+    #[allow(dead_code)]
     fn owl_checker_depth_1(game: &GameState) {
         let schach_all_legals = game.legal_moves().collect::<Vec<_>>();
         for mov in &schach_all_legals {
