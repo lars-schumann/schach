@@ -51,7 +51,7 @@
           export PS1="\[\e[1;33m\][schach]\[\e[0m\] $PS1"
 
           ctest () {
-            SCHACH_EXPENSIVE_TESTS=1 cargo test -r --all-features "$@" -- --no-capture
+            SCHACH_EXPENSIVE_TEST_OPT_IN=1 cargo test -r --all-features "$@" -- --no-capture
           }
         '';
       };
