@@ -1,11 +1,10 @@
-pub(crate) const EXPENSIVE_TESTS_ENV_VAR: &str = "SCHACH_EXPENSIVE_TESTS";
-
 macro_rules! skip_if_no_expensive_test_opt_in {
     () => {
-        if option_env!("SCHACH_EXPENSIVE_TESTS").is_none() {
+        if option_env!("SCHACH_EXPENSIVE_TEST_OPT_IN").is_none()
+            && std::env::var("SCHACH_EXPENSIVE_TEST_OPT_IN").is_err()
+        {
             println!(
-                "skipped because this is expensive, set env var {} to run this",
-                crate::testing::EXPENSIVE_TESTS_ENV_VAR
+                "skipped because this is expensive, set env var SCHACH_EXPENSIVE_TEST_OPT_IN to run this"
             );
             return;
         }
