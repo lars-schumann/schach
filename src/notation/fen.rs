@@ -9,6 +9,7 @@ use crate::game::CastlingRights;
 use crate::game::FiftyMoveRuleClock;
 use crate::game::FullMoveCount;
 use crate::game::GameState;
+use crate::game::GameStateCore;
 use crate::game::RuleSet;
 use crate::piece::Piece;
 use crate::player::PlayerKind;
@@ -32,7 +33,7 @@ pub enum GameFromFenError {
     NotAscii,
     WrongFieldCount,
 }
-impl GameState {
+impl GameStateCore {
     pub fn try_from_fen(fen: &str) -> Result<Self, GameFromFenError> {
         let fen_parts: [Vec<AsciiChar>; 6] = fen
             .split_ascii_whitespace()
@@ -72,10 +73,8 @@ impl GameState {
             board,
             fifty_move_rule_clock,
             castling_rights,
-            position_history: vec![],
-            rule_set: RuleSet::Standard,
-            active_player,
             en_passant_target,
+            active_player,
             full_move_count,
         })
     }
@@ -86,10 +85,8 @@ impl GameState {
             board,
             fifty_move_rule_clock,
             castling_rights,
-            position_history: _, // not part of fen
             en_passant_target,
             active_player,
-            rule_set: _, // not part of fen
             full_move_count,
         } = self;
 

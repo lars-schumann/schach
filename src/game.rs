@@ -167,32 +167,16 @@ pub enum RuleSet {
     Perft,
 }
 
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub struct GameState {
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub struct GameStateCore {
     pub board: Board,
     pub fifty_move_rule_clock: FiftyMoveRuleClock,
     pub castling_rights: CastlingRights,
-    pub position_history: Vec<Position>,
     pub en_passant_target: Option<Square>,
     pub active_player: PlayerKind,
-    pub rule_set: RuleSet,
     pub full_move_count: FullMoveCount,
 }
-
-impl GameState {
-    #[must_use]
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    #[must_use]
-    pub fn perft() -> Self {
-        Self {
-            rule_set: RuleSet::Perft,
-            ..Default::default()
-        }
-    }
-
+impl GameStateCore {
     #[must_use]
     pub const fn is_castling_allowed(&self, castling_side: CastlingSide) -> bool {
         match (self.active_player, castling_side) {
@@ -219,10 +203,31 @@ impl GameState {
             }
         }
     }
+}
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct GameState {
+    pub core: GameStateCore,
+    pub position_history: Vec<Position>,
+    pub rule_set: RuleSet,
+}
+
+impl GameState {
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    #[must_use]
+    pub fn perft() -> Self {
+        Self {
+            rule_set: RuleSet::Perft,
+            ..Default::default()
+        }
+    }
 
     #[must_use]
     pub const fn with_opponent_active(mut self) -> Self {
-        self.active_player = self.active_player.opponent();
+        self.core.active_player = self.core.active_player.opponent();
         self
     }
 }
