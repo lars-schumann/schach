@@ -248,30 +248,13 @@ impl GameStateCore {
 
     gen fn castle_candidates(&self) -> Move {
         for castling_side in CastlingSide::ALL {
-            if self.is_castling_allowed(castling_side).not() {
+            if self.has_castling_right(castling_side).not() {
                 continue;
             }
-            let threatened_squares = self
-                .board
-                .threatened_squares_by(self.active_player.opponent())
-                .collect::<Vec<_>>();
 
-            //TODO: extract this into a function
-            if (self
-                .active_player
-                .castling_non_check_needed_squares(castling_side)
-                .iter()
-                .all(|castle_square| {
-                    threatened_squares
-                        .iter()
-                        .all(|threatened_square| threatened_square != castle_square)
-                })
-                && self
-                    .active_player
-                    .castling_free_needed_squares(castling_side)
-                    .iter()
-                    .all(|square| self.board[*square].is_none()))
-            .not()
+            if self
+                .are_castle_squares_free_from_checks_and_pieces(castling_side)
+                .not()
             {
                 continue;
             }

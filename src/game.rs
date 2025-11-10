@@ -181,7 +181,7 @@ pub struct GameStateCore {
 }
 impl GameStateCore {
     #[must_use]
-    pub const fn is_castling_allowed(&self, castling_side: CastlingSide) -> bool {
+    pub(crate) const fn has_castling_right(&self, castling_side: CastlingSide) -> bool {
         match (self.active_player, castling_side) {
             (PlayerKind::White, CastlingSide::Kingside) => self.castling_rights.white_kingside,
             (PlayerKind::White, CastlingSide::Queenside) => self.castling_rights.white_queenside,
@@ -190,7 +190,11 @@ impl GameStateCore {
         }
     }
 
-    pub const fn deny_castling(&mut self, for_player: PlayerKind, castling_side: CastlingSide) {
+    pub(crate) const fn deny_castling(
+        &mut self,
+        for_player: PlayerKind,
+        castling_side: CastlingSide,
+    ) {
         match (for_player, castling_side) {
             (PlayerKind::White, CastlingSide::Kingside) => {
                 self.castling_rights.white_kingside = false;
@@ -205,6 +209,35 @@ impl GameStateCore {
                 self.castling_rights.black_queenside = false;
             }
         }
+    }
+
+    //TODO: better name
+    pub(crate) fn are_castle_squares_free_from_checks_and_pieces(
+        &self,
+        castling_side: CastlingSide,
+    ) -> bool {
+        let threatened_squares = self
+            .board
+            .threatened_squares_by(self.active_player.opponent())
+            .collect::<Vec<_>>();
+
+        let are_castle_squares_free_from_checks = self
+            .active_player
+            .castling_non_check_needed_squares(castling_side)
+            .iter()
+            .all(|castle_square| {
+                threatened_squares
+                    .iter()
+                    .all(|threatened_square| threatened_square != castle_square)
+            });
+
+        let are_castle_squares_free_from_pieces = self
+            .active_player
+            .castling_free_needed_squares(castling_side)
+            .iter()
+            .all(|square| self.board[*square].is_none());
+
+        are_castle_squares_free_from_checks && are_castle_squares_free_from_pieces
     }
 }
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
