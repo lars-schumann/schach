@@ -117,14 +117,14 @@ impl Square {
 
     #[rustfmt::skip]
     pub const ALL: [Self; 64] = [
-        S::H1, S::H2, S::H3, S::H4, S::H5, S::H6, S::H7, S::H8,
-        S::G1, S::G2, S::G3, S::G4, S::G5, S::G6, S::G7, S::G8,
-        S::F1, S::F2, S::F3, S::F4, S::F5, S::F6, S::F7, S::F8,
-        S::E1, S::E2, S::E3, S::E4, S::E5, S::E6, S::E7, S::E8,
-        S::D1, S::D2, S::D3, S::D4, S::D5, S::D6, S::D7, S::D8,
-        S::C1, S::C2, S::C3, S::C4, S::C5, S::C6, S::C7, S::C8,
-        S::B1, S::B2, S::B3, S::B4, S::B5, S::B6, S::B7, S::B8,
-        S::A1, S::A2, S::A3, S::A4, S::A5, S::A6, S::A7, S::A8,
+        S::A8, S::B8, S::C8, S::D8, S::E8, S::F8, S::G8, S::H8,
+        S::A7, S::B7, S::C7, S::D7, S::E7, S::F7, S::G7, S::H7,
+        S::A6, S::B6, S::C6, S::D6, S::E6, S::F6, S::G6, S::H6,
+        S::A5, S::B5, S::C5, S::D5, S::E5, S::F5, S::G5, S::H5,
+        S::A4, S::B4, S::C4, S::D4, S::E4, S::F4, S::G4, S::H4,
+        S::A3, S::B3, S::C3, S::D3, S::E3, S::F3, S::G3, S::H3,
+        S::A2, S::B2, S::C2, S::D2, S::E2, S::F2, S::G2, S::H2,
+        S::A1, S::B1, S::C1, S::D1, S::E1, S::F1, S::G1, S::H1,
     ];
 }
 
