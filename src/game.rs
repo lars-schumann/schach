@@ -218,6 +218,14 @@ impl GameState {
     }
 
     #[must_use]
+    pub fn with_core(core: GameStateCore) -> Self {
+        Self {
+            core,
+            ..Default::default()
+        }
+    }
+
+    #[must_use]
     pub fn perft() -> Self {
         Self {
             rule_set: RuleSet::Perft,

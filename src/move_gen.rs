@@ -5,6 +5,7 @@ use crate::game::FIFTY_MOVE_RULE_COUNT;
 use crate::game::GameResult;
 use crate::game::GameResultKind;
 use crate::game::GameState;
+use crate::game::GameStateCore;
 use crate::game::PieceCounts;
 use crate::game::Position;
 use crate::game::REPETITIONS_TO_FORCED_DRAW_COUNT;
@@ -36,7 +37,7 @@ impl GameState {
         for _ in 0..=max_depth {
             continued_games.clone().into_iter().for_each(|game| {
                 checker(&game);
-                let legal_moves: Vec<Move> = game.legal_moves().collect();
+                let legal_moves: Vec<Move> = game.core.legal_moves().collect();
 
                 for mov in legal_moves.clone() {
                     if matches!(mov.kind, MoveKind::Pawn(PawnMove::EnPassant { .. }),) {
@@ -85,7 +86,7 @@ impl GameState {
             depth += 1;
 
             checker(&game);
-            let legal_moves: Vec<Move> = game.legal_moves().collect();
+            let legal_moves: Vec<Move> = game.core.legal_moves().collect();
             let random_move = legal_moves
                 .choose(&mut rng)
                 .expect("If the game has no legal moves, it should've ended last turn")
@@ -117,8 +118,9 @@ impl GameState {
 
     #[must_use]
     #[allow(clippy::too_many_lines)]
-    pub fn step(self, mov: Move, all_legal_moves: Vec<Move>) -> StepResult {
-        let mut game = self.apply_move_to_board(mov);
+    pub fn step(mut self, mov: Move, all_legal_moves: Vec<Move>) -> StepResult {
+        self.core = self.core.apply_move_to_board(mov);
+        let mut game = self;
 
         let current_position = Position {
             board: game.core.board,
@@ -177,7 +179,7 @@ impl GameState {
         }
 
         let future = game.clone().with_opponent_active();
-        if future.legal_moves().count() == 0 {
+        if future.core.legal_moves().count() == 0 {
             return if future.core.board.is_king_checked(future.core.active_player) {
                 StepResult::Terminated(GameResult {
                     kind: GameResultKind::Win,
@@ -228,10 +230,25 @@ impl GameState {
         game.core.active_player = game.core.active_player.opponent();
         StepResult::Continued(game)
     }
+}
+
+impl GameStateCore {
+    pub fn legal_moves(&self) -> impl Iterator<Item = Move> + Clone + use<'_> {
+        self.threatening_move_candidates()
+            .chain(self.pawn_step_candidates())
+            .chain(self.castle_candidates())
+            .filter(move |mov| {
+                self.clone()
+                    .apply_move_to_board(*mov)
+                    .board
+                    .is_king_checked(self.active_player)
+                    .not()
+            })
+    }
 
     #[must_use]
     pub const fn apply_move_to_board(mut self, m: Move) -> Self {
-        self.core.board.mov(m.origin, m.destination);
+        self.board.mov(m.origin, m.destination);
         match m.kind {
             | MoveKind::Pawn(
                 PawnMove::SimpleStep | PawnMove::DoubleStep | PawnMove::SimpleCapture,
@@ -243,13 +260,13 @@ impl GameState {
             | MoveKind::King(KingMove::Normal { .. }) => { /*nothing */ }
 
             MoveKind::Pawn(PawnMove::EnPassant { affected }) => {
-                self.core.board[affected] = None;
+                self.board[affected] = None;
             }
 
             MoveKind::Pawn(PawnMove::Promotion { replacement, .. }) => {
-                self.core.board[m.destination] = Some(Piece {
+                self.board[m.destination] = Some(Piece {
                     kind: replacement,
-                    owner: self.core.active_player,
+                    owner: self.active_player,
                 });
             }
 
@@ -258,39 +275,23 @@ impl GameState {
                 rook_target,
                 ..
             }) => {
-                self.core.board.mov(rook_start, rook_target);
+                self.board.mov(rook_start, rook_target);
             }
         }
         self
     }
 
-    pub fn legal_moves(&self) -> impl Iterator<Item = Move> + Clone + use<'_> {
-        self.threatening_move_candidates()
-            .chain(self.pawn_step_candidates())
-            .chain(self.castle_candidates())
-            .filter(move |mov| {
-                self.clone()
-                    .apply_move_to_board(*mov)
-                    .core
-                    .board
-                    .is_king_checked(self.core.active_player)
-                    .not()
-            })
-    }
-
     fn castle_candidates(&self) -> impl Iterator<Item = Move> + Clone {
         [CastlingSide::Kingside, CastlingSide::Queenside]
             .into_iter()
-            .filter(|castling_side| self.core.is_castling_allowed(*castling_side))
+            .filter(|castling_side| self.is_castling_allowed(*castling_side))
             .filter(|castling_side| {
                 let threatened_squares = self
-                    .core
                     .board
-                    .threatened_squares_by(self.core.active_player.opponent())
+                    .threatened_squares_by(self.active_player.opponent())
                     .collect::<Vec<_>>();
 
-                self.core
-                    .active_player
+                self.active_player
                     .castling_non_check_needed_squares(*castling_side)
                     .iter()
                     .all(|castle_square| {
@@ -299,33 +300,93 @@ impl GameState {
                             .all(|threatened_square| threatened_square != castle_square)
                     })
                     && self
-                        .core
                         .active_player
                         .castling_free_needed_squares(*castling_side)
                         .iter()
-                        .all(|square| self.core.board[*square].is_none())
+                        .all(|square| self.board[*square].is_none())
             })
             .map(|castling_side| Move {
                 kind: MoveKind::King(KingMove::Castle {
-                    rook_start: self.core.active_player.rook_start(castling_side),
-                    rook_target: self.core.active_player.rook_castling_target(castling_side),
+                    rook_start: self.active_player.rook_start(castling_side),
+                    rook_target: self.active_player.rook_castling_target(castling_side),
                     castling_side,
                 }),
-                origin: self.core.active_player.king_start(),
-                destination: self.core.active_player.king_castling_target(castling_side),
+                origin: self.active_player.king_start(),
+                destination: self.active_player.king_castling_target(castling_side),
             })
     }
 
     fn threatening_move_candidates(&self) -> impl Iterator<Item = Move> + Clone + use<'_> {
-        self.core
-            .board
-            .threatening_moves_by(self.core.active_player)
+        self.board
+            .threatening_moves_by(self.active_player)
             .flat_map(|threat| self.threat_to_move_candidate(threat))
     }
 
     #[must_use]
+    fn pawn_step_candidates(&self) -> Vec<Move> {
+        let mut candidates = vec![];
+        for square in Square::ALL {
+            let player = self.active_player;
+            if !(self.board[square]
+                == Some(Piece {
+                    kind: PieceKind::Pawn,
+                    owner: player,
+                }))
+            {
+                continue;
+            }
+
+            let one_in_front = (square + self.active_player.forwards_one_row())
+                .expect("a pawn cannot exist on the last row");
+
+            if self.board[one_in_front].is_some() {
+                continue; // pawns cant capture moving forward!
+            }
+
+            if one_in_front.row == self.active_player.pawn_promotion_row() {
+                PieceKind::PROMOTION_OPTIONS
+                    .iter()
+                    .map(|promotion_option| Move {
+                        kind: MoveKind::Pawn(PawnMove::Promotion {
+                            is_capture: false,
+                            replacement: *promotion_option,
+                        }),
+                        origin: square,
+                        destination: one_in_front,
+                    })
+                    .collect_into(&mut candidates);
+            } else {
+                candidates.push(Move {
+                    kind: MoveKind::Pawn(PawnMove::SimpleStep),
+                    origin: square,
+                    destination: one_in_front,
+                });
+            }
+
+            let Ok(two_in_front) = square + self.active_player.forwards_one_row() * 2 else {
+                continue; // this one can def be out of range.
+            };
+
+            if square.row != self.active_player.pawn_starting_row() {
+                continue; // pawns can only double-move when they haven't moved yet!
+            }
+
+            if self.board[two_in_front].is_some() {
+                continue; // pawns cant capture moving forward!
+            }
+
+            candidates.push(Move {
+                kind: MoveKind::Pawn(PawnMove::DoubleStep),
+                origin: square,
+                destination: two_in_front,
+            });
+        }
+        candidates
+    }
+
+    #[must_use]
     fn threat_to_move_candidate(&self, threat: Threat) -> Vec<Move> {
-        let is_capture = self.core.board[threat.destination].is_some();
+        let is_capture = self.board[threat.destination].is_some();
         let origin = threat.origin;
         let destination = threat.destination;
         match threat.piece.kind {
@@ -355,7 +416,7 @@ impl GameState {
                 destination,
             }],
             PieceKind::Pawn if is_capture => {
-                if threat.destination.row == self.core.active_player.pawn_promotion_row() {
+                if threat.destination.row == self.active_player.pawn_promotion_row() {
                     PieceKind::PROMOTION_OPTIONS
                         .iter()
                         .map(|promotion_option| Move {
@@ -377,12 +438,11 @@ impl GameState {
             }
             PieceKind::Pawn => {
                 //en passant case, this is never gonna lead to promotion
-                if Some(destination) == self.core.en_passant_target {
+                if Some(destination) == self.en_passant_target {
                     vec![Move {
                         kind: MoveKind::Pawn(PawnMove::EnPassant {
-                            affected: (threat.destination
-                                + self.core.active_player.backwards_one_row())
-                            .expect("how is this not on the board?"),
+                            affected: (threat.destination + self.active_player.backwards_one_row())
+                                .expect("how is this not on the board?"),
                         }),
                         origin,
                         destination,
@@ -392,68 +452,6 @@ impl GameState {
                 }
             }
         }
-    }
-
-    #[must_use]
-    fn pawn_step_candidates(&self) -> Vec<Move> {
-        let mut candidates = vec![];
-        for square in Square::ALL {
-            let player = self.core.active_player;
-            if !(self.core.board[square]
-                == Some(Piece {
-                    kind: PieceKind::Pawn,
-                    owner: player,
-                }))
-            {
-                continue;
-            }
-
-            let one_in_front = (square + self.core.active_player.forwards_one_row())
-                .expect("a pawn cannot exist on the last row");
-
-            if self.core.board[one_in_front].is_some() {
-                continue; // pawns cant capture moving forward!
-            }
-
-            if one_in_front.row == self.core.active_player.pawn_promotion_row() {
-                PieceKind::PROMOTION_OPTIONS
-                    .iter()
-                    .map(|promotion_option| Move {
-                        kind: MoveKind::Pawn(PawnMove::Promotion {
-                            is_capture: false,
-                            replacement: *promotion_option,
-                        }),
-                        origin: square,
-                        destination: one_in_front,
-                    })
-                    .collect_into(&mut candidates);
-            } else {
-                candidates.push(Move {
-                    kind: MoveKind::Pawn(PawnMove::SimpleStep),
-                    origin: square,
-                    destination: one_in_front,
-                });
-            }
-
-            let Ok(two_in_front) = square + self.core.active_player.forwards_one_row() * 2 else {
-                continue; // this one can def be out of range.
-            };
-
-            if square.row != self.core.active_player.pawn_starting_row() {
-                continue; // pawns can only double-move when they haven't moved yet!
-            }
-
-            if self.core.board[two_in_front].is_some() {
-                continue; // pawns cant capture moving forward!
-            }
-
-            candidates.push(Move {
-                kind: MoveKind::Pawn(PawnMove::DoubleStep),
-                origin: square,
-                destination: two_in_front,
-            });
-        }
-        candidates
     }
 }
 
@@ -576,7 +574,7 @@ mod tests {
     }
 
     fn owl_checker_move_count(game: &GameState) {
-        let schach_move_count = game.legal_moves().count();
+        let schach_move_count = game.core.legal_moves().count();
         let owl_move_count = owlchess::movegen::legal::gen_all(
             &owlchess::Board::from_fen(game.core.to_fen().as_str()).unwrap(),
         )
@@ -586,7 +584,7 @@ mod tests {
 
     #[allow(dead_code)]
     fn owl_checker_depth_1(game: &GameState) {
-        let schach_all_legals = game.legal_moves().collect::<Vec<_>>();
+        let schach_all_legals = game.core.legal_moves().collect::<Vec<_>>();
         for mov in &schach_all_legals {
             let schach_move_san = standard_algebraic_notation(game.clone(), *mov);
             let owl_board = owlchess::Board::from_fen(dbg!(game.core.to_fen().as_str())).unwrap();
@@ -612,7 +610,7 @@ mod tests {
                 .iter()
                 .count();
 
-            let new_schach_move_count = new_schach_board.legal_moves().count();
+            let new_schach_move_count = new_schach_board.core.legal_moves().count();
 
             assert_eq!(new_schach_move_count, new_owl_move_count);
         }

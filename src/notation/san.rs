@@ -48,7 +48,7 @@ fn notation_creator(
     ambiguation_level: AmbiguationLevel,
     capture_representation: CaptureRepresentation,
 ) -> Vec<AsciiChar> {
-    let legal_moves: Vec<Move> = game.legal_moves().collect();
+    let legal_moves: Vec<Move> = game.core.legal_moves().collect();
     assert!(legal_moves.iter().any(|m| m == &mov));
 
     let active_player = game.core.active_player;
@@ -151,7 +151,7 @@ pub fn standard_algebraic_notation(game: GameState, mov: Move) -> Vec<AsciiChar>
         capture: Some(AsciiChar::SmallX),
         no_capture: None,
     };
-    let mut legal_moves = game.legal_moves().collect::<Vec<_>>();
+    let mut legal_moves = game.core.legal_moves().collect::<Vec<_>>();
 
     let mov_index = legal_moves
         .iter()
@@ -211,7 +211,7 @@ mod tests {
     #[test]
     fn test_thingy() {
         let game = GameState::new();
-        let legal_moves = game.legal_moves();
+        let legal_moves = game.core.legal_moves();
         for mov in legal_moves {
             println!("{:?}", standard_algebraic_notation(game.clone(), mov));
         }
