@@ -3,7 +3,8 @@ use alloc::vec::Vec;
 
 use crate::coord::Offset;
 use crate::coord::Row;
-use crate::coord::Square as S;
+use crate::coord::Square;
+use crate::coord::square as S;
 use crate::game::CastlingSide as CS;
 
 #[derive_const(PartialEq, Eq)]
@@ -39,7 +40,7 @@ impl PlayerKind {
     }
 
     #[must_use]
-    pub const fn castling_non_check_needed_squares(self, castling_side: CS) -> [S; 3] {
+    pub const fn castling_non_check_needed_squares(self, castling_side: CS) -> [Square; 3] {
         match (self, castling_side) {
             (Self::White, CS::Kingside) => [S::E1, S::F1, S::G1],
             (Self::White, CS::Queenside) => [S::E1, S::D1, S::C1],
@@ -49,7 +50,7 @@ impl PlayerKind {
     }
 
     #[must_use]
-    pub fn castling_free_needed_squares(self, castling_side: CS) -> Vec<S> {
+    pub fn castling_free_needed_squares(self, castling_side: CS) -> Vec<Square> {
         match (self, castling_side) {
             (Self::White, CS::Kingside) => vec![S::F1, S::G1],
             (Self::White, CS::Queenside) => {
@@ -63,7 +64,7 @@ impl PlayerKind {
     }
 
     #[must_use]
-    pub const fn king_start(&self) -> S {
+    pub const fn king_start(&self) -> Square {
         match self {
             Self::White => S::E1,
             Self::Black => S::E8,
@@ -71,7 +72,7 @@ impl PlayerKind {
     }
 
     #[must_use]
-    pub const fn king_castling_target(&self, castling_side: CS) -> S {
+    pub const fn king_castling_target(&self, castling_side: CS) -> Square {
         match (self, castling_side) {
             (Self::White, CS::Kingside) => S::G1,
             (Self::White, CS::Queenside) => S::C1,
@@ -81,7 +82,7 @@ impl PlayerKind {
     }
 
     #[must_use]
-    pub const fn rook_start(&self, castling_side: CS) -> S {
+    pub const fn rook_start(&self, castling_side: CS) -> Square {
         match (self, castling_side) {
             (Self::White, CS::Kingside) => S::H1,
             (Self::White, CS::Queenside) => S::A1,
@@ -91,7 +92,7 @@ impl PlayerKind {
     }
 
     #[must_use]
-    pub const fn rook_castling_target(&self, castling_side: CS) -> S {
+    pub const fn rook_castling_target(&self, castling_side: CS) -> Square {
         match (self, castling_side) {
             (Self::White, CS::Kingside) => S::F1,
             (Self::White, CS::Queenside) => S::D1,
