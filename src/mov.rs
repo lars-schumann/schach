@@ -20,7 +20,8 @@ impl core::fmt::Debug for Threat {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive_const(PartialEq, Eq)]
+#[derive(Debug, Copy, Clone)]
 pub enum MoveKind {
     Pawn(PawnMove),
     Knight { is_capture: bool },
@@ -42,6 +43,16 @@ impl MoveKind {
             | Self::King(_) => PieceKind::King,
         }
     }
+
+    #[must_use]
+    pub const fn is_pawn_double_step(&self) -> bool {
+        self == &Self::Pawn(PawnMove::DoubleStep)
+    }
+
+    #[must_use]
+    pub const fn is_pawn_en_passant(&self) -> bool {
+        matches!(self, Self::Pawn(PawnMove::EnPassant { .. }))
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -50,33 +61,6 @@ pub struct Move {
     pub origin: Square,
     pub destination: Square,
 }
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum PawnMove {
-    SimpleStep,
-    DoubleStep,
-    SimpleCapture,
-    EnPassant {
-        affected: Square,
-    },
-    Promotion {
-        replacement: Piece,
-        is_capture: bool,
-    },
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum KingMove {
-    Normal {
-        is_capture: bool,
-    },
-    Castle {
-        rook_start: Square,
-        rook_target: Square,
-        castling_side: CastlingSide,
-    },
-}
-
 impl Move {
     #[must_use]
     pub const fn is_capture(&self) -> bool {
@@ -92,4 +76,37 @@ impl Move {
             | MoveKind::King(KingMove::Castle { .. }) => false,
         }
     }
+
+    #[must_use]
+    pub const fn is_pawn_or_capture(&self) -> bool {
+        self.kind.piece_kind() == PieceKind::Pawn || self.is_capture()
+    }
+}
+
+#[derive_const(PartialEq, Eq)]
+#[derive(Debug, Copy, Clone)]
+pub enum PawnMove {
+    SimpleStep,
+    DoubleStep,
+    SimpleCapture,
+    EnPassant {
+        affected: Square,
+    },
+    Promotion {
+        replacement: Piece,
+        is_capture: bool,
+    },
+}
+
+#[derive_const(PartialEq, Eq)]
+#[derive(Debug, Copy, Clone)]
+pub enum KingMove {
+    Normal {
+        is_capture: bool,
+    },
+    Castle {
+        rook_start: Square,
+        rook_target: Square,
+        castling_side: CastlingSide,
+    },
 }

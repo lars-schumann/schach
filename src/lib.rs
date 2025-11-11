@@ -19,7 +19,9 @@
     result_option_map_or_default,
     stmt_expr_attributes,
     coroutines,
-    gen_blocks
+    gen_blocks,
+    //maybe not my brightest idea
+    core_intrinsics
 )]
 #![no_std]
 extern crate alloc;

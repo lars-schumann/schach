@@ -14,7 +14,8 @@ use crate::player::PlayerKind;
 pub(crate) static REPETITIONS_TO_FORCED_DRAW_COUNT: usize = 5;
 pub(crate) static FIFTY_MOVE_RULE_COUNT: FiftyMoveRuleClock = FiftyMoveRuleClock(100);
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive_const(PartialEq, Eq)]
+#[derive(Debug, Copy, Clone)]
 pub enum CastlingSide {
     Kingside,
     Queenside,

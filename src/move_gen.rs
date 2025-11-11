@@ -114,13 +114,13 @@ impl GameState {
 
         if game.rule_set != RuleSet::Perft {
             game.position_history.push(current_position.clone());
-        }
 
-        // handle fifty move rule
-        if mov.kind.piece_kind() == PieceKind::Pawn || mov.is_capture() {
-            game.core.fifty_move_rule_clock.reset();
-        } else {
-            game.core.fifty_move_rule_clock.increase();
+            // handle fifty move rule counter
+            if mov.is_pawn_or_capture() {
+                game.core.fifty_move_rule_clock.reset();
+            } else {
+                game.core.fifty_move_rule_clock.increase();
+            }
         }
 
         // handle our own castling rights
@@ -143,8 +143,7 @@ impl GameState {
         }
 
         // handle opponents castling rights
-        if mov.is_capture() && matches!(mov.kind, MoveKind::Pawn(PawnMove::EnPassant { .. })).not()
-        {
+        if mov.is_capture() && mov.kind.is_pawn_en_passant().not() {
             for castling_side in [CastlingSide::Kingside, CastlingSide::Queenside] {
                 if mov.destination == game.core.active_player.opponent().rook_start(castling_side) {
                     game.core
@@ -154,13 +153,10 @@ impl GameState {
         }
 
         // handle en passant target
-        if mov.kind == MoveKind::Pawn(PawnMove::DoubleStep) {
-            let en_passant_target = (mov.destination + game.core.active_player.backwards_one_row())
-                .expect("this cannot be outside the board");
-            game.core.en_passant_target = Some(en_passant_target);
-        } else {
-            game.core.en_passant_target = None;
-        }
+        game.core.en_passant_target = mov.kind.is_pawn_double_step().then(|| {
+            (mov.destination + game.core.active_player.backwards_one_row())
+                .expect("this cannot be outside the board")
+        });
 
         let future = game.clone().with_opponent_active();
         if future.core.legal_moves().count() == 0 {
@@ -211,6 +207,7 @@ impl GameState {
         if game.core.active_player == PlayerKind::Black {
             game.core.full_move_count.increase();
         }
+
         game.core.active_player = game.core.active_player.opponent();
         StepResult::Continued(game)
     }

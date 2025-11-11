@@ -20,7 +20,8 @@ use self::Square as S;
 use crate::board::COL_COUNT;
 use crate::board::ROW_COUNT;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive_const(PartialEq, Eq)]
+#[derive(Debug, Copy, Clone)]
 pub struct Square {
     pub col: Col,
     pub row: Row,
@@ -129,7 +130,8 @@ impl Square {
     ];
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive_const(PartialEq, Eq)]
+#[derive(Debug, Copy, Clone)]
 pub enum Col {
     C1,
     C2,
@@ -153,7 +155,8 @@ impl Col {
     ];
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive_const(PartialEq, Eq)]
+#[derive(Debug, Copy, Clone)]
 pub enum Row {
     R1,
     R2,

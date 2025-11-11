@@ -6,7 +6,8 @@ use crate::coord::Row;
 use crate::coord::Square as S;
 use crate::game::CastlingSide as CS;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Default)]
+#[derive_const(PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Default)]
 pub enum PlayerKind {
     #[default]
     White,
