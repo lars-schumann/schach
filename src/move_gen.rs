@@ -1,3 +1,8 @@
+use alloc::vec;
+use alloc::vec::Vec;
+use core::ascii::Char as AsciiChar;
+use core::ops::Not;
+
 use crate::board::Board;
 use crate::coord::Square;
 use crate::game::CastlingSide;
@@ -19,10 +24,6 @@ use crate::mov::PawnMove;
 use crate::mov::Threat;
 use crate::piece::PieceKind;
 use crate::player::PlayerKind;
-use alloc::vec;
-use alloc::vec::Vec;
-use core::ascii::Char as AsciiChar;
-use core::ops::Not;
 
 impl GameState {
     #[must_use]
@@ -430,12 +431,13 @@ pub struct SearchStats {
 
 #[cfg(test)]
 mod tests {
+    use std::println;
+
     use super::*;
     use crate::game::GameStateCore;
     use crate::notation::san::long_algebraic_notation;
     use crate::notation::san::standard_algebraic_notation;
     use crate::testing::skip_if_no_expensive_test_opt_in;
-    use std::println;
 
     #[test]
     fn search() {

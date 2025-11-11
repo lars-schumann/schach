@@ -1,9 +1,10 @@
+use alloc::vec;
+use alloc::vec::Vec;
+
 use crate::coord::Offset;
 use crate::coord::Row;
 use crate::coord::Square as S;
 use crate::game::CastlingSide as CS;
-use alloc::vec;
-use alloc::vec::Vec;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Default)]
 pub enum PlayerKind {

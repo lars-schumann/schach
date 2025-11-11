@@ -1,3 +1,9 @@
+use alloc::borrow::ToOwned;
+use alloc::string::ToString;
+use alloc::vec;
+use alloc::vec::Vec;
+use core::ascii::Char as AsciiChar;
+
 use crate::board::Board;
 use crate::coord::Col;
 use crate::coord::ColIndexOutOfRange;
@@ -11,11 +17,6 @@ use crate::game::FullMoveCount;
 use crate::game::GameStateCore;
 use crate::piece::Piece;
 use crate::player::PlayerKind;
-use alloc::borrow::ToOwned;
-use alloc::string::ToString;
-use alloc::vec;
-use alloc::vec::Vec;
-use core::ascii::Char as AsciiChar;
 
 struct FenStrings {
     piece_placements: Vec<AsciiChar>,
@@ -407,8 +408,9 @@ impl Square {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::println;
+
+    use super::*;
 
     #[test]
     fn test_squares_fen_round_trip() {

@@ -1,3 +1,8 @@
+use alloc::vec;
+use alloc::vec::Vec;
+use core::ascii::Char as AsciiChar;
+use core::ops::Not;
+
 use crate::game::CastlingSide;
 use crate::game::GameResult;
 use crate::game::GameResultKind;
@@ -8,10 +13,6 @@ use crate::mov::Move;
 use crate::mov::MoveKind;
 use crate::mov::PawnMove;
 use crate::piece::PieceKind;
-use alloc::vec;
-use alloc::vec::Vec;
-use core::ascii::Char as AsciiChar;
-use core::ops::Not;
 
 const O_O: [AsciiChar; 3] = [
     AsciiChar::CapitalO,
@@ -205,8 +206,9 @@ pub fn standard_algebraic_notation(game: GameState, mov: Move) -> Vec<AsciiChar>
 }
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::println;
+
+    use super::*;
 
     #[test]
     fn test_thingy() {

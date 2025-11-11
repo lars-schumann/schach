@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 use crate::coord::Col;
 use crate::coord::Row;
 use crate::coord::Square;
@@ -8,7 +10,6 @@ use crate::mov::Threat;
 use crate::piece::Piece;
 use crate::piece::PieceKind;
 use crate::player::PlayerKind;
-use alloc::vec::Vec;
 
 pub static COL_COUNT: usize = 8;
 pub static ROW_COUNT: usize = 8;

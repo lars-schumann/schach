@@ -1,3 +1,5 @@
+use core::ops::Not;
+
 use self::Col::C1;
 use self::Col::C2;
 use self::Col::C3;
@@ -17,7 +19,6 @@ use self::Row::R8;
 use self::Square as S;
 use crate::board::COL_COUNT;
 use crate::board::ROW_COUNT;
-use core::ops::Not;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Square {

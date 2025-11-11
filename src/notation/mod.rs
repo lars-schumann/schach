@@ -1,2 +1,2 @@
-pub mod san;
 pub mod fen;
+pub mod san;
