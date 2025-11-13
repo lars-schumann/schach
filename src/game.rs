@@ -362,7 +362,7 @@ pub(crate) gen fn attacked_squares(
 
     let rays = directions.iter().map(move |direction| {
         (1..=range_upper_bound)
-            .map(move |i| starting_square + *direction * i)
+            .map(move |i| starting_square + (*direction * i))
             .take_while(Result::is_ok) // ugly but right, once this is Err(_) once, it'll _always_ be out of bounds!
             .map(Result::unwrap)
     });
