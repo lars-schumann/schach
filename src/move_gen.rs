@@ -1,21 +1,14 @@
 use alloc::vec;
 use alloc::vec::Vec;
-use core::ascii::Char as AsciiChar;
 use core::ops::Not;
 
 use crate::board::Board;
 use crate::coord::Square;
 use crate::game::CastlingSide;
-use crate::game::DrawKind;
-use crate::game::FIFTY_MOVE_RULE_COUNT;
 use crate::game::GameResult;
 use crate::game::GameResultKind;
 use crate::game::GameState;
 use crate::game::GameStateCore;
-use crate::game::PieceCounts;
-use crate::game::Position;
-use crate::game::REPETITIONS_TO_FORCED_DRAW_COUNT;
-use crate::game::RuleSet;
 use crate::game::StepResult;
 use crate::mv::KingMove;
 use crate::mv::Move;
@@ -23,7 +16,6 @@ use crate::mv::MoveKind;
 use crate::mv::PawnMove;
 use crate::mv::Threat;
 use crate::piece::PieceKind;
-use crate::player::PlayerKind;
 
 impl GameState {
     #[must_use]
@@ -93,118 +85,6 @@ impl GameState {
                 }
             }
         }
-        StepResult::Continued(game)
-    }
-
-    #[must_use]
-    #[allow(clippy::too_many_lines)]
-    pub fn step(mut self, mv: Move, all_legal_moves: Vec<Move>) -> StepResult {
-        self.core.board.apply_move(mv);
-        let mut game = self;
-
-        let current_position = Position {
-            board: game.core.board,
-            possible_moves: all_legal_moves,
-            castling_rights: game.core.castling_rights,
-        };
-
-        if game.rule_set != RuleSet::Perft {
-            game.position_history.push(current_position.clone());
-
-            // handle fifty move rule counter
-            if mv.is_pawn_or_capture() {
-                game.core.fifty_move_rule_clock.reset();
-            } else {
-                game.core.fifty_move_rule_clock.increase();
-            }
-        }
-
-        // handle our own castling rights
-        match mv.kind {
-            MoveKind::King(_) => {
-                game.core
-                    .deny_castling(game.core.active_player, CastlingSide::Kingside);
-                game.core
-                    .deny_castling(game.core.active_player, CastlingSide::Queenside);
-            }
-            MoveKind::Rook { .. } => {
-                for castling_side in [CastlingSide::Kingside, CastlingSide::Queenside] {
-                    if mv.origin == game.core.active_player.rook_start(castling_side) {
-                        game.core
-                            .deny_castling(game.core.active_player, castling_side);
-                    }
-                }
-            }
-            _ => { /*nothing */ }
-        }
-
-        // handle opponents castling rights
-        if mv.is_capture() && mv.kind.is_pawn_en_passant().not() {
-            for castling_side in [CastlingSide::Kingside, CastlingSide::Queenside] {
-                if mv.destination == game.core.active_player.opponent().rook_start(castling_side) {
-                    game.core
-                        .deny_castling(game.core.active_player.opponent(), castling_side);
-                }
-            }
-        }
-
-        // handle en passant target
-        game.core.en_passant_target = mv.kind.is_pawn_double_step().then(|| {
-            (mv.destination + game.core.active_player.backwards_one_row())
-                .expect("this cannot be outside the board")
-        });
-
-        let future = game.clone().with_opponent_active();
-        if future.core.legal_moves().count() == 0 {
-            return if future.core.board.is_king_checked(future.core.active_player) {
-                StepResult::Terminated(GameResult {
-                    kind: GameResultKind::Win,
-                    final_game_state: game,
-                })
-            } else {
-                StepResult::Terminated(GameResult {
-                    kind: GameResultKind::Draw(DrawKind::Stalemate),
-                    final_game_state: game,
-                })
-            };
-        }
-
-        if game.rule_set != RuleSet::Perft {
-            if game
-                .position_history
-                .iter()
-                .filter(|&position| *position == current_position)
-                .count()
-                == REPETITIONS_TO_FORCED_DRAW_COUNT
-            {
-                return StepResult::Terminated(GameResult {
-                    kind: GameResultKind::Draw(DrawKind::ThreefoldRepetition),
-                    final_game_state: game,
-                });
-            }
-
-            if game.core.fifty_move_rule_clock == FIFTY_MOVE_RULE_COUNT {
-                return StepResult::Terminated(GameResult {
-                    kind: GameResultKind::Draw(DrawKind::FiftyMove),
-                    final_game_state: game,
-                });
-            }
-        }
-
-        let piece_counts = game.core.board.piece_counts();
-
-        if piece_counts == PieceCounts::KINGS_ONLY {
-            return StepResult::Terminated(GameResult {
-                kind: GameResultKind::Draw(DrawKind::InsufficientMaterial),
-                final_game_state: game,
-            });
-        }
-
-        if game.core.active_player == PlayerKind::Black {
-            game.core.full_move_count.increase();
-        }
-
-        game.core.active_player = game.core.active_player.opponent();
         StepResult::Continued(game)
     }
 }
@@ -427,9 +307,11 @@ mod tests {
 
     use super::*;
     use crate::game::GameStateCore;
+    use crate::game::RuleSet;
     use crate::notation::san::long_algebraic_notation;
     use crate::notation::san::standard_algebraic_notation;
     use crate::piece::Piece;
+    use crate::player::PlayerKind;
     use crate::testing::skip_if_no_expensive_test_opt_in;
 
     #[test]
