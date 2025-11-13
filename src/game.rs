@@ -347,10 +347,10 @@ pub struct Position {
 
 pub(crate) gen fn attacked_squares(
     board: &Board,
-    starting_square: Square,
+    origin: Square,
     active_player: PlayerKind,
 ) -> Threat {
-    let Some(piece) = board[starting_square] else {
+    let Some(piece) = board[origin] else {
         return;
     };
     if piece.owner != active_player {
@@ -362,29 +362,29 @@ pub(crate) gen fn attacked_squares(
 
     let rays = directions.iter().map(move |direction| {
         (1..=range_upper_bound)
-            .map(move |i| starting_square + (*direction * i))
+            .map(move |range| origin + (*direction * range))
             .take_while(Result::is_ok) // ugly but right, once this is Err(_) once, it'll _always_ be out of bounds!
             .map(Result::unwrap)
     });
 
     for ray in rays {
-        for target_square in ray {
-            match board[target_square] {
+        for destination in ray {
+            match board[destination] {
                 None => {
                     yield Threat {
                         piece,
-                        origin: starting_square,
-                        destination: target_square,
+                        origin,
+                        destination,
                     }
                 }
-                Some(piece) if piece.owner == active_player => {
+                Some(attacked_piece) if attacked_piece.owner == active_player => {
                     break;
                 }
-                Some(piece) if piece.owner != active_player => {
+                Some(attacked_piece) if attacked_piece.owner != active_player => {
                     yield Threat {
                         piece,
-                        origin: starting_square,
-                        destination: target_square,
+                        origin,
+                        destination,
                     };
                     break;
                 }
