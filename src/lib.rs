@@ -32,7 +32,7 @@ extern crate std;
 pub mod board;
 pub mod coord;
 pub mod game;
-pub mod mov;
+pub mod mv;
 pub mod move_gen;
 pub mod notation;
 pub mod piece;

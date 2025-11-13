@@ -6,7 +6,7 @@ use crate::coord::Square;
 use crate::coord::square as S;
 use crate::game::PieceCounts;
 use crate::game::attacked_squares;
-use crate::mov::Threat;
+use crate::mv::Threat;
 use crate::piece::Piece;
 use crate::piece::PieceKind;
 use crate::player::PlayerKind;

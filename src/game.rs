@@ -6,8 +6,8 @@ use core::ops::IndexMut;
 
 use crate::board::Board;
 use crate::coord::Square;
-use crate::mov::Move;
-use crate::mov::Threat;
+use crate::mv::Move;
+use crate::mv::Threat;
 use crate::piece::Piece;
 use crate::player::PlayerKind;
 

@@ -17,11 +17,11 @@ use crate::game::Position;
 use crate::game::REPETITIONS_TO_FORCED_DRAW_COUNT;
 use crate::game::RuleSet;
 use crate::game::StepResult;
-use crate::mov::KingMove;
-use crate::mov::Move;
-use crate::mov::MoveKind;
-use crate::mov::PawnMove;
-use crate::mov::Threat;
+use crate::mv::KingMove;
+use crate::mv::Move;
+use crate::mv::MoveKind;
+use crate::mv::PawnMove;
+use crate::mv::Threat;
 use crate::piece::PieceKind;
 use crate::player::PlayerKind;
 
@@ -38,8 +38,8 @@ impl GameState {
                 checker(&game);
                 let legal_moves: Vec<Move> = game.core.legal_moves().collect();
 
-                for mov in legal_moves.clone() {
-                    match game.clone().step(mov, legal_moves.clone()) {
+                for mv in legal_moves.clone() {
+                    match game.clone().step(mv, legal_moves.clone()) {
                         StepResult::Terminated(GameResult {
                             kind: GameResultKind::Win,
                             final_game_state,
@@ -98,8 +98,8 @@ impl GameState {
 
     #[must_use]
     #[allow(clippy::too_many_lines)]
-    pub fn step(mut self, mov: Move, all_legal_moves: Vec<Move>) -> StepResult {
-        self.core.board.apply_move(mov);
+    pub fn step(mut self, mv: Move, all_legal_moves: Vec<Move>) -> StepResult {
+        self.core.board.apply_move(mv);
         let mut game = self;
 
         let current_position = Position {
@@ -112,7 +112,7 @@ impl GameState {
             game.position_history.push(current_position.clone());
 
             // handle fifty move rule counter
-            if mov.is_pawn_or_capture() {
+            if mv.is_pawn_or_capture() {
                 game.core.fifty_move_rule_clock.reset();
             } else {
                 game.core.fifty_move_rule_clock.increase();
@@ -120,7 +120,7 @@ impl GameState {
         }
 
         // handle our own castling rights
-        match mov.kind {
+        match mv.kind {
             MoveKind::King(_) => {
                 game.core
                     .deny_castling(game.core.active_player, CastlingSide::Kingside);
@@ -129,7 +129,7 @@ impl GameState {
             }
             MoveKind::Rook { .. } => {
                 for castling_side in [CastlingSide::Kingside, CastlingSide::Queenside] {
-                    if mov.origin == game.core.active_player.rook_start(castling_side) {
+                    if mv.origin == game.core.active_player.rook_start(castling_side) {
                         game.core
                             .deny_castling(game.core.active_player, castling_side);
                     }
@@ -139,9 +139,9 @@ impl GameState {
         }
 
         // handle opponents castling rights
-        if mov.is_capture() && mov.kind.is_pawn_en_passant().not() {
+        if mv.is_capture() && mv.kind.is_pawn_en_passant().not() {
             for castling_side in [CastlingSide::Kingside, CastlingSide::Queenside] {
-                if mov.destination == game.core.active_player.opponent().rook_start(castling_side) {
+                if mv.destination == game.core.active_player.opponent().rook_start(castling_side) {
                     game.core
                         .deny_castling(game.core.active_player.opponent(), castling_side);
                 }
@@ -149,8 +149,8 @@ impl GameState {
         }
 
         // handle en passant target
-        game.core.en_passant_target = mov.kind.is_pawn_double_step().then(|| {
-            (mov.destination + game.core.active_player.backwards_one_row())
+        game.core.en_passant_target = mv.kind.is_pawn_double_step().then(|| {
+            (mv.destination + game.core.active_player.backwards_one_row())
                 .expect("this cannot be outside the board")
         });
 
@@ -537,26 +537,14 @@ mod tests {
     #[allow(dead_code)]
     fn owl_checker_depth_1(game: &GameState) {
         let schach_all_legals = game.core.legal_moves().collect::<Vec<_>>();
-        for mov in &schach_all_legals {
-            let schach_move_san = standard_algebraic_notation(game.clone(), *mov);
+        for mv in &schach_all_legals {
+            let schach_move_san = standard_algebraic_notation(game.clone(), *mv);
             let owl_board = owlchess::Board::from_fen(game.core.to_fen().as_str()).unwrap();
-            let Ok(owl_move) = owlchess::Move::from_san(schach_move_san.as_str(), &owl_board)
-            else {
-                for mov in &schach_all_legals {
-                    println!(
-                        "lan: {}  san: {}",
-                        long_algebraic_notation(game.clone(), *mov).as_str(),
-                        standard_algebraic_notation(game.clone(), *mov).as_str()
-                    );
-                }
-                println!("schach_fen {}", game.core.to_fen().as_str());
-                println!("move: {mov:?}");
-                owlchess::Move::from_san(schach_move_san.as_str(), &owl_board).unwrap();
-                panic!()
-            };
+            let owl_move = owlchess::Move::from_san(schach_move_san.as_str(), &owl_board).unwrap();
+
             let new_owl_board = owl_board.make_move(owl_move).unwrap();
             let StepResult::Continued(new_schach_board) =
-                game.clone().step(*mov, schach_all_legals.clone())
+                game.clone().step(*mv, schach_all_legals.clone())
             else {
                 continue;
             };

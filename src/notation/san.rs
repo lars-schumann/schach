@@ -8,10 +8,10 @@ use crate::game::GameResult;
 use crate::game::GameResultKind;
 use crate::game::GameState;
 use crate::game::StepResult;
-use crate::mov::KingMove;
-use crate::mov::Move;
-use crate::mov::MoveKind;
-use crate::mov::PawnMove;
+use crate::mv::KingMove;
+use crate::mv::Move;
+use crate::mv::MoveKind;
+use crate::mv::PawnMove;
 use crate::piece::PieceKind;
 
 const O_O: [AsciiChar; 3] = [
@@ -212,8 +212,8 @@ mod tests {
     fn test_thingy() {
         let game = GameState::new();
         let legal_moves = game.core.legal_moves();
-        for mov in legal_moves {
-            println!("{:?}", standard_algebraic_notation(game.clone(), mov));
+        for mv in legal_moves {
+            println!("{:?}", standard_algebraic_notation(game.clone(), mv));
         }
     }
 }
