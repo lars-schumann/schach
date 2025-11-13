@@ -52,8 +52,6 @@ fn notation_creator(
     let legal_moves: Vec<Move> = game.core.legal_moves().collect();
     assert!(legal_moves.iter().any(|m| m == &mov));
 
-    let active_player = game.core.active_player;
-
     let core_move_notation = match mov.kind {
         MoveKind::King(KingMove::Castle {
             castling_side: CastlingSide::Kingside,
@@ -114,7 +112,7 @@ fn notation_creator(
     let mut append = vec![];
     match outcome {
         | StepResult::Continued(future) => {
-            if future.core.board.is_king_checked(active_player.opponent()) {
+            if future.core.board.is_king_checked(future.core.active_player) {
                 append.push(AsciiChar::PlusSign);
             }
         }

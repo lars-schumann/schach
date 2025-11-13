@@ -33,27 +33,22 @@ impl GameState {
         let mut continued_games: Vec<Self> = vec![self];
         let mut new_continued_games: Vec<Self> = vec![];
 
-        let mut stats: SearchStats = SearchStats::default();
-
         for _ in 0..=max_depth {
             continued_games.clone().into_iter().for_each(|game| {
                 checker(&game);
                 let legal_moves: Vec<Move> = game.core.legal_moves().collect();
 
                 for mov in legal_moves.clone() {
-                    if matches!(mov.kind, MoveKind::Pawn(PawnMove::EnPassant { .. }),) {
-                        stats.en_passant += 1;
-                    }
                     match game.clone().step(mov, legal_moves.clone()) {
-                        | StepResult::Terminated(GameResult {
+                        StepResult::Terminated(GameResult {
                             kind: GameResultKind::Win,
                             final_game_state,
                         }) => terminated_games_checkmate.push(final_game_state),
-                        | StepResult::Terminated(GameResult {
+                        StepResult::Terminated(GameResult {
                             kind: GameResultKind::Draw(_),
                             final_game_state,
                         }) => terminated_games_draw.push(final_game_state),
-                        | StepResult::Continued(game_state) => {
+                        StepResult::Continued(game_state) => {
                             new_continued_games.push(game_state);
                         }
                     }
@@ -64,10 +59,11 @@ impl GameState {
             new_continued_games.clear();
         }
 
-        stats.continued_games = continued_games.len();
-        stats.checkmated_games = terminated_games_checkmate.len();
-        stats.drawn_games = terminated_games_draw.len();
-        stats
+        SearchStats {
+            continued_games: continued_games.len(),
+            checkmated_games: terminated_games_checkmate.len(),
+            drawn_games: terminated_games_draw.len(),
+        }
     }
 
     #[cfg(feature = "rand")]
@@ -423,7 +419,6 @@ pub struct SearchStats {
     pub continued_games: usize,
     pub checkmated_games: usize,
     pub drawn_games: usize,
-    pub en_passant: usize,
 }
 
 #[cfg(test)]

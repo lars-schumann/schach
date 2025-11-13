@@ -20,23 +20,17 @@ impl PieceKind {
 
     #[must_use]
     pub const fn to_black_piece(self) -> Piece {
-        Piece {
-            kind: self,
-            owner: PlayerKind::Black,
-        }
+        Piece::new(PlayerKind::Black, self)
     }
 
     #[must_use]
     pub const fn to_white_piece(self) -> Piece {
-        Piece {
-            kind: self,
-            owner: PlayerKind::White,
-        }
+        Piece::new(PlayerKind::White, self)
     }
 
     #[must_use]
     pub const fn to_piece(self, owner: PlayerKind) -> Piece {
-        Piece { kind: self, owner }
+        Piece::new(owner, self)
     }
 }
 
