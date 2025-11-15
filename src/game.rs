@@ -196,6 +196,12 @@ pub struct GameStateCore {
 }
 impl GameStateCore {
     #[must_use]
+    pub const fn with_opponent_active(mut self) -> Self {
+        self.active_player = self.active_player.opponent();
+        self
+    }
+
+    #[must_use]
     pub(crate) const fn has_castling_right(&self, castling_side: CastlingSide) -> bool {
         match (self.active_player, castling_side) {
             (PlayerKind::White, CastlingSide::Kingside) => self.castling_rights.white_kingside,
@@ -285,12 +291,6 @@ impl GameState {
     }
 
     #[must_use]
-    pub const fn with_opponent_active(mut self) -> Self {
-        self.core.active_player = self.core.active_player.opponent();
-        self
-    }
-
-    #[must_use]
     #[allow(clippy::too_many_lines)]
     pub fn step(mut self, mv: Move, all_legal_moves: Vec<Move>) -> StepResult {
         self.core.board.apply_move(mv);
@@ -342,15 +342,26 @@ impl GameState {
             }
         }
 
-        // handle en passant target
-        game.core.en_passant_target = mv.kind.is_pawn_double_step().then(|| {
-            (mv.destination + game.core.active_player.backwards_one_row())
-                .expect("this cannot be outside the board")
-        });
+        // handle en passant target, and only set the square if taking will actually be an option!
+        game.core.en_passant_target = if mv.kind.is_pawn_double_step() {
+            let possible_en_passant_target = (mv.destination
+                + game.core.active_player.backwards_one_row())
+            .expect("this cannot be outside the board");
 
-        let future = game.clone().with_opponent_active();
-        if future.core.legal_moves().count() == 0 {
-            return if future.core.board.is_king_checked(future.core.active_player) {
+            let mut future = game.core.with_opponent_active();
+            future.en_passant_target = Some(possible_en_passant_target);
+
+            future
+                .legal_moves()
+                .any(|mv| mv.kind.is_pawn_en_passant())
+                .then_some(possible_en_passant_target)
+        } else {
+            None
+        };
+
+        let future = game.core.with_opponent_active();
+        if future.legal_moves().count() == 0 {
+            return if future.board.is_king_checked(future.active_player) {
                 StepResult::Terminated(GameResult {
                     kind: GameResultKind::Win,
                     final_game_state: game,
