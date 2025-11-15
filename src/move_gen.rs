@@ -306,9 +306,8 @@ mod tests {
     use std::println;
 
     use super::*;
+    use crate::coord::square::*;
     use crate::game::GameStateCore;
-    use crate::game::RuleSet;
-    use crate::notation::san::long_algebraic_notation;
     use crate::notation::san::standard_algebraic_notation;
     use crate::piece::Piece;
     use crate::player::PlayerKind;
@@ -402,19 +401,9 @@ mod tests {
 
     #[test]
     fn test_pawn_attacked_squares() {
-        use crate::coord::square::*;
+        let mut board = Board::empty();
 
-        let mut core_game = GameStateCore {
-            board: Board::empty(),
-            ..Default::default()
-        };
-
-        core_game.board[E2] = Some(Piece::WHITE_PAWN);
-
-        let attacked_squares = core_game
-            .board
-            .threatened_squares_by(PlayerKind::White)
-            .collect::<Vec<_>>();
+        board[E2] = Some(Piece::WHITE_PAWN);
 
         #[rustfmt::skip]
         let expected_attacked = [
@@ -428,26 +417,16 @@ mod tests {
         //  A1,  B1,  C1,  D1,  E1,  F1,  G1,  H1,
         ];
 
-        assert_eq!(attacked_squares, expected_attacked);
+        compare_expected_to_actual_attacked(&expected_attacked, board);
     }
 
     #[test]
     fn test_multiple_pawn_attacked_squares() {
-        use crate::coord::square::*;
+        let mut board = Board::empty();
 
-        let mut core_game = GameStateCore {
-            board: Board::empty(),
-            ..Default::default()
-        };
-
-        core_game.board[E2] = Some(Piece::WHITE_PAWN);
-        core_game.board[E3] = Some(Piece::WHITE_PAWN);
-        core_game.board[B7] = Some(Piece::WHITE_PAWN);
-
-        let attacked_squares = core_game
-            .board
-            .threatened_squares_by(PlayerKind::White)
-            .collect::<Vec<_>>();
+        board[E2] = Some(Piece::WHITE_PAWN);
+        board[E3] = Some(Piece::WHITE_PAWN);
+        board[B7] = Some(Piece::WHITE_PAWN);
 
         #[rustfmt::skip]
         let expected_attacked = [
@@ -461,7 +440,21 @@ mod tests {
         //  A1,  B1,  C1,  D1,  E1,  F1,  G1,  H1,
         ];
 
-        assert_eq!(attacked_squares, expected_attacked);
+        compare_expected_to_actual_attacked(&expected_attacked, board);
+    }
+
+    fn compare_expected_to_actual_attacked(expected_attacked: &[Square], board: Board) {
+        let core_game = GameStateCore {
+            board,
+            ..Default::default()
+        };
+
+        let attacked_squares = core_game
+            .board
+            .threatened_squares_by(PlayerKind::White)
+            .collect::<Vec<_>>();
+
+        assert_eq!(expected_attacked, attacked_squares);
     }
 }
 
