@@ -447,15 +447,28 @@ impl CastlingRights {
         Self::new(false, false, false, false)
     }
 
-    pub fn all() -> impl Iterator<Item = Self> + Clone {
-        [false, true]
-            .into_iter()
-            .flat_map(|a| [(a, false), (a, true)])
-            .flat_map(|a| [(a, false), (a, true)])
-            .flat_map(|a| [(a, false), (a, true)])
-            .map(|(((a, b), c), d)| Self::new(a, b, c, d))
-    }
+    pub const ALL: [Self; 16] = [
+        Self::new(O, O, O, O),
+        Self::new(O, O, O, X),
+        Self::new(O, O, X, O),
+        Self::new(O, O, X, X),
+        Self::new(O, X, O, O),
+        Self::new(O, X, O, X),
+        Self::new(O, X, X, O),
+        Self::new(O, X, X, X),
+        Self::new(X, O, O, O),
+        Self::new(X, O, O, X),
+        Self::new(X, O, X, O),
+        Self::new(X, O, X, X),
+        Self::new(X, X, O, O),
+        Self::new(X, X, O, X),
+        Self::new(X, X, X, O),
+        Self::new(X, X, X, X),
+    ];
 }
+const X: bool = true;
+const O: bool = false;
+
 impl Default for CastlingRights {
     fn default() -> Self {
         Self::all_available()

@@ -470,7 +470,7 @@ mod tests {
 
     #[test]
     fn test_castling_rights_fen_round_trip() {
-        for castling_rights in CastlingRights::all() {
+        for castling_rights in CastlingRights::ALL {
             println!(
                 "{castling_rights:?}: {}",
                 CastlingRights::to_fen_repr(castling_rights).as_str()
