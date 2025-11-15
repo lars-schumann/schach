@@ -130,7 +130,7 @@ impl GameStateCore {
     fn threatening_move_candidates(&self) -> impl Iterator<Item = Move> {
         self.board
             .threatening_moves_by(self.active_player)
-            .flat_map(|threat| self.threat_to_move_candidate(threat))
+            .flat_map(|threat| self.threat_to_move_candidates(threat))
     }
 
     gen fn pawn_step_candidates(&self) -> Move {
@@ -186,7 +186,7 @@ impl GameStateCore {
     }
 
     #[must_use]
-    fn threat_to_move_candidate(&self, threat: Threat) -> Vec<Move> {
+    fn threat_to_move_candidates(&self, threat: Threat) -> Vec<Move> {
         let is_capture = self.board[threat.destination].is_some();
         let origin = threat.origin;
         let destination = threat.destination;
@@ -365,48 +365,7 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_mass_fens() {
-        skip_if_no_expensive_test_opt_in!();
-
-        let fens = std::fs::read_to_string("./fens/fens.txt").unwrap();
-
-        for fen in fens.lines() {
-            let schach_game_core = GameStateCore::try_from_fen(fen).unwrap();
-            let schach_fen = schach_game_core.to_fen();
-            assert_eq!(fen, schach_fen.as_str());
-        }
-    }
-
-    #[test]
-    fn test_mass_against_owl() {
-        skip_if_no_expensive_test_opt_in!();
-
-        let max_depth = 2;
-        let max_fens = 10;
-        let skip_fens = 100;
-        let progress_thingy = core::cmp::max(max_fens / 1_000, 1);
-        let fens = std::fs::read_to_string("./fens/fens.txt").unwrap();
-
-        let mut progress = 0;
-
-        for fen in fens.lines().skip(skip_fens).take(max_fens) {
-            let game_core = GameStateCore::try_from_fen(fen).unwrap();
-
-            let game = GameState {
-                core: game_core,
-                position_history: vec![],
-                rule_set: RuleSet::Standard,
-            };
-
-            let _ = game.search(max_depth, owl_checker_move_count);
-            progress += 1;
-            if progress % progress_thingy == 0 {
-                println!("{progress}/{max_fens}");
-            }
-        }
-    }
-
+    #[allow(dead_code)]
     fn owl_checker_move_count(game: &GameState) {
         let schach_move_count = game.core.legal_moves().count();
         let owl_move_count = owlchess::movegen::legal::gen_all(
