@@ -291,7 +291,6 @@ impl GameState {
     }
 
     #[must_use]
-    #[allow(clippy::too_many_lines)]
     pub fn step(mut self, mv: Move, all_legal_moves: Vec<Move>) -> StepResult {
         self.core.board.apply_move(mv);
         let mut game = self;
@@ -451,9 +450,9 @@ impl CastlingRights {
     pub fn all() -> impl Iterator<Item = Self> + Clone {
         [false, true]
             .into_iter()
-            .flat_map(|a| vec![(a, false), (a, true)])
-            .flat_map(|a| vec![(a, false), (a, true)])
-            .flat_map(|a| vec![(a, false), (a, true)])
+            .flat_map(|a| [(a, false), (a, true)])
+            .flat_map(|a| [(a, false), (a, true)])
+            .flat_map(|a| [(a, false), (a, true)])
             .map(|(((a, b), c), d)| Self::new(a, b, c, d))
     }
 }
