@@ -53,6 +53,11 @@ impl MoveKind {
     pub const fn is_pawn_en_passant(&self) -> bool {
         matches!(self, Self::Pawn(PawnMove::EnPassant { .. }))
     }
+
+    #[must_use]
+    pub const fn is_promotion(&self) -> bool {
+        matches!(self, Self::Pawn(PawnMove::Promotion { .. }))
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]

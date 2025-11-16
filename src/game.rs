@@ -290,26 +290,9 @@ impl GameState {
     }
 
     #[must_use]
-    pub fn step(mut self, mv: Move, all_legal_moves: Vec<Move>) -> StepResult {
+    pub fn step(mut self, mv: Move) -> StepResult {
         self.core.board.apply_move(mv);
         let mut game = self;
-
-        let current_position = Position {
-            board: game.core.board,
-            possible_moves: all_legal_moves,
-            castling_rights: game.core.castling_rights,
-        };
-
-        if game.rule_set != RuleSet::Perft {
-            game.position_history.push(current_position.clone());
-
-            // handle fifty move rule counter
-            if mv.is_pawn_or_capture() {
-                game.core.fifty_move_rule_clock.reset();
-            } else {
-                game.core.fifty_move_rule_clock.increase();
-            }
-        }
 
         // handle our own castling rights
         match mv.kind {
@@ -356,6 +339,23 @@ impl GameState {
         } else {
             None
         };
+
+        let current_position = Position {
+            board: game.core.board,
+            castling_rights: game.core.castling_rights,
+            en_passant_target: game.core.en_passant_target,
+        };
+
+        if game.rule_set != RuleSet::Perft {
+            game.position_history.push(current_position.clone());
+
+            // handle fifty move rule counter
+            if mv.is_pawn_or_capture() {
+                game.core.fifty_move_rule_clock.reset();
+            } else {
+                game.core.fifty_move_rule_clock.increase();
+            }
+        }
 
         let future = game.core.with_opponent_active();
         if future.legal_moves().count() == 0 {
@@ -477,8 +477,8 @@ impl Default for CastlingRights {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Position {
     pub board: Board,
-    pub possible_moves: Vec<Move>,
     pub castling_rights: CastlingRights,
+    pub en_passant_target: Option<Square>,
 }
 
 pub(crate) gen fn attacked_squares(

@@ -30,8 +30,8 @@ impl GameState {
                 checker(&game);
                 let legal_moves: Vec<Move> = game.core.legal_moves().collect();
 
-                for mv in legal_moves.clone() {
-                    match game.clone().step(mv, legal_moves.clone()) {
+                for mv in legal_moves {
+                    match game.clone().step(mv) {
                         StepResult::Terminated(GameResult {
                             kind: GameResultKind::Win,
                             final_game_state,
@@ -76,7 +76,7 @@ impl GameState {
                 .expect("If the game has no legal moves, it should've ended last turn")
                 .to_owned();
 
-            match game.clone().step(random_move, legal_moves.clone()) {
+            match game.clone().step(random_move) {
                 StepResult::Continued(game_state) => {
                     game = game_state;
                 }
@@ -387,9 +387,7 @@ mod tests {
             let owl_move = owlchess::Move::from_san(schach_move_san.as_str(), &owl_board).unwrap();
 
             let new_owl_board = owl_board.make_move(owl_move).unwrap();
-            let StepResult::Continued(new_schach_board) =
-                game.clone().step(*mv, schach_all_legals.clone())
-            else {
+            let StepResult::Continued(new_schach_board) = game.clone().step(*mv) else {
                 continue;
             };
 

@@ -45,14 +45,11 @@ pub struct CaptureRepresentation {
 #[must_use]
 fn notation_creator(
     game: GameState,
-    mov: Move,
+    mv: Move,
     ambiguation_level: AmbiguationLevel,
     capture_representation: CaptureRepresentation,
 ) -> Vec<AsciiChar> {
-    let legal_moves: Vec<Move> = game.core.legal_moves().collect();
-    assert!(legal_moves.iter().any(|m| m == &mov));
-
-    let core_move_notation = match mov.kind {
+    let core_move_notation = match mv.kind {
         MoveKind::King(KingMove::Castle {
             castling_side: CastlingSide::Kingside,
             ..
@@ -67,7 +64,7 @@ fn notation_creator(
         | MoveKind::Rook { .. }
         | MoveKind::Queen { .. }
         | MoveKind::King(KingMove::Normal { .. }) => {
-            let piece_repr = (matches!(mov.kind, MoveKind::Pawn(_))).not().then_some([mov
+            let piece_repr = (matches!(mv.kind, MoveKind::Pawn(_))).not().then_some([mv
                 .kind
                 .piece_kind()
                 .to_white_piece()
@@ -75,20 +72,20 @@ fn notation_creator(
 
             let start_square_repr = match ambiguation_level {
                 AmbiguationLevel::OriginEmpty => [].to_vec(),
-                AmbiguationLevel::OriginFileOnly => [mov.origin.col.to_fen_repr()].to_vec(),
-                AmbiguationLevel::OriginRankOnly => [mov.origin.row.to_fen_repr()].to_vec(),
-                AmbiguationLevel::OriginFull => mov.origin.to_fen_repr().to_vec(),
+                AmbiguationLevel::OriginFileOnly => [mv.origin.col.to_fen_repr()].to_vec(),
+                AmbiguationLevel::OriginRankOnly => [mv.origin.row.to_fen_repr()].to_vec(),
+                AmbiguationLevel::OriginFull => mv.origin.to_fen_repr().to_vec(),
             };
 
-            let capture_symbol = if mov.is_capture() {
+            let capture_symbol = if mv.is_capture() {
                 capture_representation.capture.map(|c| [c])
             } else {
                 capture_representation.no_capture.map(|c| [c])
             };
 
-            let target = mov.destination.to_fen_repr();
+            let target = mv.destination.to_fen_repr();
 
-            let promotion_replacement = match mov.kind {
+            let promotion_replacement = match mv.kind {
                 MoveKind::Pawn(PawnMove::Promotion { replacement, .. }) => {
                     Some([replacement.kind.to_white_piece().to_fen_repr()])
                 }
@@ -107,7 +104,7 @@ fn notation_creator(
         }
     };
 
-    let outcome = game.step(mov, legal_moves);
+    let outcome = game.step(mv);
 
     let mut append = vec![];
     match outcome {
@@ -165,16 +162,15 @@ pub fn standard_algebraic_notation(game: GameState, mov: Move) -> Vec<AsciiChar>
         .filter(|legal| legal.destination == mov.destination)
         .filter(|legal| {
             // for the Promotion case, remove Duplicate Promotions to just different pieces.
-            if matches!(mov.kind, MoveKind::Pawn(PawnMove::Promotion { .. }))
+            if mov.kind.is_promotion()
                 && legal.origin == mov.origin
                 && legal.destination == mov.destination
             {
                 return false;
             }
             true
-        });
-
-    let interfering_moves = interfering_moves.collect::<Vec<_>>();
+        })
+        .collect::<Vec<_>>();
 
     if interfering_moves.is_empty() {
         if mov.kind.piece_kind() == PieceKind::Pawn && mov.is_capture() {
