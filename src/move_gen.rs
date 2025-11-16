@@ -303,6 +303,7 @@ pub struct SearchStats {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashSet;
     use std::println;
 
     use super::*;
@@ -395,7 +396,12 @@ mod tests {
 
             let new_schach_move_count = new_schach_board.core.legal_moves().count();
 
-            assert_eq!(new_schach_move_count, new_owl_move_count);
+            assert_eq!(
+                new_schach_move_count,
+                new_owl_move_count,
+                "schach_fen: {}",
+                new_schach_board.core.to_fen().as_str()
+            );
         }
     }
 
@@ -417,7 +423,7 @@ mod tests {
         //  A1,  B1,  C1,  D1,  E1,  F1,  G1,  H1,
         ];
 
-        compare_expected_to_actual_attacked(&expected_attacked, board, PlayerKind::White);
+        compare_expected_to_calculated_attacked(&expected_attacked, board, PlayerKind::White);
     }
 
     #[test]
@@ -440,7 +446,7 @@ mod tests {
         //  A1,  B1,  C1,  D1,  E1,  F1,  G1,  H1,
         ];
 
-        compare_expected_to_actual_attacked(&expected_attacked, board, PlayerKind::White);
+        compare_expected_to_calculated_attacked(&expected_attacked, board, PlayerKind::White);
     }
 
     #[test]
@@ -463,11 +469,11 @@ mod tests {
         //  A1,  B1,  C1,  D1,  E1,  F1,  G1,  H1,
         ];
 
-        compare_expected_to_actual_attacked(&expected_attacked, board, PlayerKind::White);
+        compare_expected_to_calculated_attacked(expected_attacked, board, PlayerKind::White);
     }
 
-    fn compare_expected_to_actual_attacked(
-        expected_attacked: &[Square],
+    fn compare_expected_to_calculated_attacked(
+        expected_attacked: impl Into<Vec<Square>>,
         board: Board,
         player: PlayerKind,
     ) {
@@ -476,12 +482,14 @@ mod tests {
             ..Default::default()
         };
 
-        let attacked_squares = core_game
+        let expected_attacked = HashSet::from_iter(expected_attacked.into());
+
+        let calculated_attacked = core_game
             .board
             .threatened_squares_by(player)
-            .collect::<Vec<_>>();
+            .collect::<HashSet<_>>();
 
-        assert_eq!(expected_attacked, attacked_squares);
+        assert_eq!(expected_attacked, calculated_attacked);
     }
 }
 

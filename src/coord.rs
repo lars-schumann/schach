@@ -7,7 +7,7 @@ use crate::board::COL_COUNT;
 use crate::board::ROW_COUNT;
 
 #[derive_const(PartialEq, Eq)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash)]
 pub struct Square {
     pub col: Col,
     pub row: Row,
@@ -127,8 +127,8 @@ pub mod square {
     pub const H8: S = S::new(Col::C8, R8);
 }
 
-#[derive_const(PartialEq, Eq)]
-#[derive(Debug, Copy, Clone)]
+#[derive_const(PartialEq, Eq, PartialOrd, Ord, Clone)]
+#[derive(Debug, Copy, Hash)]
 pub enum Col {
     C1,
     C2,
@@ -152,8 +152,8 @@ impl Col {
     ];
 }
 
-#[derive_const(PartialEq, Eq)]
-#[derive(Debug, Copy, Clone)]
+#[derive_const(PartialEq, Eq, PartialOrd, Ord, Clone)]
+#[derive(Debug, Copy, Hash)]
 pub enum Row {
     R1,
     R2,
