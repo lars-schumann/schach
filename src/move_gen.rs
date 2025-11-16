@@ -351,18 +351,21 @@ mod tests {
     }
 
     #[cfg(feature = "rand")]
+    #[cfg(feature = "rayon")]
     #[test]
     fn many_random_walks() {
+        use rayon::prelude::*;
         skip_if_no_expensive_test_opt_in!();
 
         let max_depth = 1_000;
-        let walk_count = 100;
+        let walk_count = 100_000;
         let game = GameState::new();
 
-        for i in 0..walk_count {
+        (0..walk_count).into_par_iter().for_each(|i| {
             let final_step = game.clone().random_walk(max_depth, owl_checker_depth_1);
+
             println!("{i}: {}", final_step.game_state().core.full_move_count.0);
-        }
+        });
     }
 
     #[allow(dead_code)]
