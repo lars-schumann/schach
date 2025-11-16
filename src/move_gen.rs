@@ -433,27 +433,6 @@ mod tests {
     }
 
     #[test]
-    fn test_owl() {
-        use owlchess::Board;
-        use owlchess::Move;
-        use owlchess::movegen::legal::gen_all;
-
-        let b =
-            Board::from_fen("1nbqkbnr/2pppppp/1p6/pr3P1K/8/8/PPPPP1PP/RNBQ1BNR b k - 1 6").unwrap();
-
-        let mv = Move::from_uci_legal("e7e5", &b).unwrap();
-
-        let b = b.make_move(mv).unwrap();
-
-        let m = gen_all(&b);
-
-        println!("{}", b.raw().side);
-        println!("{}", m.len());
-        for mv in &m {
-            println!("{mv:?}");
-        }
-    }
-    #[test]
     fn test_pawn_attacked_squares() {
         let mut board = Board::empty();
 
@@ -471,7 +450,7 @@ mod tests {
         //  A1,  B1,  C1,  D1,  E1,  F1,  G1,  H1,
         ];
 
-        compare_expected_to_calculated_attacked(&expected_attacked, board, PlayerKind::White);
+        compare_expected_to_calculated_attacked(expected_attacked, board, PlayerKind::White);
     }
 
     #[test]
@@ -494,7 +473,7 @@ mod tests {
         //  A1,  B1,  C1,  D1,  E1,  F1,  G1,  H1,
         ];
 
-        compare_expected_to_calculated_attacked(&expected_attacked, board, PlayerKind::White);
+        compare_expected_to_calculated_attacked(expected_attacked, board, PlayerKind::White);
     }
 
     #[test]
