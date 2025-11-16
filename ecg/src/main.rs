@@ -1,6 +1,7 @@
+mod app;
+
+use app::App;
+
 fn main() {
-    let game = schach::game::GameState::new();
-    for mv in game.core.legal_moves() {
-        println!("{mv:?}");
-    }
+    yew::Renderer::<App>::new().render();
 }
