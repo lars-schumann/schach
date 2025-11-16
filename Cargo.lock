@@ -84,9 +84,9 @@ checksum = "2874a2af47a2325c2001a6e6fad9b16a53b802102b528163885171cf92b15976"
 
 [[package]]
 name = "owlchess"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e745414bb91abe6d6aa371db0860c8a2c0fb85512809a749bed8232b49dc254"
+checksum = "93177753fc3a64a509a7598b5a8e75fd8a30d0540d8cc5d919665877a6b4aa0c"
 dependencies = [
  "arrayvec",
  "owlchess_base",
@@ -97,9 +97,9 @@ dependencies = [
 
 [[package]]
 name = "owlchess_base"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "738480432e2b5f9b451613e218a657d832a908c1bb9875dee1f282f0767fb6f4"
+checksum = "451956409fe482aba822e556c4489be977c6ea88a21d23af789da24bae48b4e9"
 dependencies = [
  "derive_more",
  "thiserror",
@@ -125,9 +125,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.41"
+version = "1.0.42"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ce25767e7b499d1b604768e7cde645d14cc8584231ea6b295e9c9eb22c02e1d1"
+checksum = "a338cc41d27e6cc6dce6cefc13a0729dfbb81c262b1f519331575dd80ef3067f"
 dependencies = [
  "proc-macro2",
 ]
@@ -228,9 +228,9 @@ checksum = "d767eb0aabc880b29956c35734170f26ed551a859dbd361d140cdbeca61ab1e2"
 
 [[package]]
 name = "syn"
-version = "2.0.108"
+version = "2.0.110"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da58917d35242480a05c2897064da0a80589a2a0476c9a3f2fdc83b53502e917"
+checksum = "a99801b5bd34ede4cf3fc688c5919368fea4e4814a4664359503e6015b280aea"
 dependencies = [
  "proc-macro2",
  "quote",
