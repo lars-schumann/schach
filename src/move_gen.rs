@@ -361,7 +361,7 @@ mod tests {
         let walk_count = 100_000;
         let game = GameState::new();
 
-        (0..walk_count).into_par_iter().for_each(|i| {
+        (0..walk_count).into_par_iter().panic_fuse().for_each(|i| {
             let final_step = game.clone().random_walk(max_depth, owl_checker_depth_1);
 
             println!("{i}: {}", final_step.game_state().core.full_move_count.0);
@@ -393,12 +393,36 @@ mod tests {
                 continue;
             };
 
-            let new_owl_move_count = owlchess::movegen::legal::gen_all(&new_owl_board)
-                .iter()
-                .count();
+            let new_owl_moves = owlchess::movegen::legal::gen_all(&new_owl_board);
+            let new_owl_move_count = new_owl_moves.iter().count();
 
-            let new_schach_move_count = new_schach_board.core.legal_moves().count();
+            let new_schach_moves = new_schach_board.core.legal_moves().collect::<Vec<_>>();
+            let new_schach_move_count = new_schach_moves.len();
 
+            if new_schach_move_count != new_owl_move_count {
+                println!("old schach: {}", game.core.to_fen().as_str());
+                println!("made move {}", schach_move_san.as_str());
+                println!();
+                println!(
+                    "resulted in (schach opinion): {}",
+                    new_schach_board.core.to_fen().as_str()
+                );
+                println!("resulted in (owlchs opinion): {}", new_owl_board.as_fen());
+                println!();
+                println!("schach moves: {new_schach_move_count}");
+                for mv in new_schach_moves {
+                    println!(
+                        "{}",
+                        standard_algebraic_notation(new_schach_board.clone(), mv).as_str()
+                    );
+                }
+                println!("owlchs moves: {new_owl_move_count}");
+                for mv in &new_owl_moves {
+                    println!("{mv}");
+                }
+                assert_eq!(1, 0);
+                panic!();
+            }
             assert_eq!(
                 new_schach_move_count,
                 new_owl_move_count,
@@ -408,6 +432,27 @@ mod tests {
         }
     }
 
+    #[test]
+    fn test_owl() {
+        use owlchess::Board;
+        use owlchess::Move;
+        use owlchess::movegen::legal::gen_all;
+
+        let b =
+            Board::from_fen("1nbqkbnr/2pppppp/1p6/pr3P1K/8/8/PPPPP1PP/RNBQ1BNR b k - 1 6").unwrap();
+
+        let mv = Move::from_uci_legal("e7e5", &b).unwrap();
+
+        let b = b.make_move(mv).unwrap();
+
+        let m = gen_all(&b);
+
+        println!("{}", b.raw().side);
+        println!("{}", m.len());
+        for mv in &m {
+            println!("{mv:?}");
+        }
+    }
     #[test]
     fn test_pawn_attacked_squares() {
         let mut board = Board::empty();
