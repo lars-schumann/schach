@@ -4,4 +4,5 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+schach = { path = "../schach" }
 yew = { version = "0.21", features = ["csr"] }

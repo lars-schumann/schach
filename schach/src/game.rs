@@ -53,7 +53,8 @@ pub enum StepResult {
     Continued(GameState),
 }
 impl StepResult {
-    pub(crate) fn game_state(self) -> GameState {
+    #[must_use]
+    pub fn game_state(self) -> GameState {
         match self {
             Self::Terminated(GameResult {
                 final_game_state: game_state,
