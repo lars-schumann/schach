@@ -1,20 +1,35 @@
 use schach::board::Board;
 use schach::coord::Square;
-use schach::piece::Piece;
 use yew::prelude::*;
 
 #[function_component(App)]
 pub fn app() -> Html {
-    let board = Board::new();
+    let game = use_state(schach::game::GameState::new);
 
-    let game = schach::game::GameState::new();
-    let legals = game.core.legal_moves().collect::<Vec<_>>();
+    let legals = {
+        let game = game.clone();
+        game.core.legal_moves().collect::<Vec<_>>()
+    };
 
     html! {
         <main class="board-root">
             <h1>{ "Every Chess Game" }</h1>
             <div class="boards">
-            {for legals.iter().map(|mv| html!{<BoardDisplay board={game.core.board} from_to={FromTo { from: mv.origin, to: mv.destination }}/>})}
+                { for legals.iter().map(|mv| {
+                    let game = game.clone();
+                    let mv = *mv;
+
+                    html!{
+                        <BoardDisplay
+                            board={game.core.board}
+                            from_to={FromTo { from: mv.origin, to: mv.destination }}
+                            on_click={Callback::from(move |_| {
+                                let new_game = (*game).clone().step(mv).game_state();
+                                game.set(new_game);
+                            })}
+                        />
+                    }
+                })}
             </div>
         </main>
     }
@@ -25,10 +40,12 @@ pub struct FromTo {
     from: Square,
     to: Square,
 }
+
 #[derive(PartialEq, Properties)]
 pub struct BoardProps {
     pub board: Board,
     pub from_to: FromTo,
+    pub on_click: Callback<()>,
 }
 
 #[function_component]
@@ -36,10 +53,14 @@ pub fn BoardDisplay(props: &BoardProps) -> Html {
     let board = &props.board;
     let from_to = &props.from_to;
 
+    let onclick = {
+        let cb = props.on_click.clone();
+        Callback::from(move |_| cb.emit(()))
+    };
+
     html! {
-        <div class="chessboard">
-            {
-                for Square::ALL.into_iter().map(|sq| {
+        <div class="chessboard" {onclick}>
+            { for Square::ALL.into_iter().map(|sq| {
                     let piece_opt = board[sq];
                     let piece_char = piece_opt.map(|p|p.to_string()).unwrap_or_default();
 
@@ -58,8 +79,7 @@ pub fn BoardDisplay(props: &BoardProps) -> Html {
                             { piece_char }
                         </div>
                     }
-                })
-            }
+                }) }
         </div>
     }
 }

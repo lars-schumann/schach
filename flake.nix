@@ -28,6 +28,7 @@
           })
           rust-analyzer
           rustfmt
+          yew-fmt # rustfmt replacement which also formats in the html! macro
 
           clippy
           bacon
