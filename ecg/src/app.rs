@@ -1,3 +1,5 @@
+use std::ops::Not;
+
 use schach::board::Board;
 use schach::coord::Square;
 use schach::game::GameResult;
@@ -7,21 +9,34 @@ use yew::prelude::*;
 
 #[function_component(App)]
 pub fn app() -> Html {
-    let state = use_state(|| StepResult::Continued(GameState::new()));
+    let state = use_state(|| vec![StepResult::Continued(GameState::new())]);
 
     let state_n = (*state).clone();
 
-    match state_n {
-        StepResult::Continued(game) => {
+    match state_n.last() {
+        Some(StepResult::Continued(game)) => {
             let legals = {
                 let game = game.clone();
                 game.core.legal_moves().collect::<Vec<_>>()
+            };
+
+            let handle = state.clone();
+
+            let undo_on_click = {
+                let mut state_copy = (*state).clone();
+                state_copy.pop();
+                move |_| {
+                    if state_copy.is_empty().not() {
+                        handle.set(state_copy.clone());
+                    }
+                }
             };
 
             html! {
                 <main class="board-root">
                     <h1>{ "Every Chess Game" }</h1>
                     <div class="boards">
+                    <UndoButton on_click={undo_on_click}/>
                         { for legals.iter().map(|mv| {
                             let game = game.clone();
                             let mv = *mv;
@@ -31,31 +46,34 @@ pub fn app() -> Html {
                                 <BoardDisplay
                                     board={game.core.board}
                                     from_to={FromTo { from: mv.origin, to: mv.destination }}
-                                    on_click={Callback::from(move |_| {
+                                    on_click={move |_| {
                                         let new_game = game.clone().step(mv);
-                                        state.set(new_game);
-                                    })}
+                                        let mut state_copy = (*state).clone();
+                                        state_copy.push(new_game);
+                                        state.set(state_copy);
+                                    }}
                                 />
                             }
-                        })}
+                        }) }
                     </div>
                 </main>
             }
         }
-        StepResult::Terminated(GameResult { kind, .. }) => {
+        Some(StepResult::Terminated(GameResult { kind, .. })) => {
             html! {
                 <main class="board-root">
                     <h1>{ "Every Chess Game" }</h1>
                     <div class="boards">
-                        {if kind.is_win(){
+                        { if kind.is_win(){
                             "WIN"
                         } else {
                             "DRAW"
-                        }}
+                        } }
                     </div>
                 </main>
             }
         }
+        None => panic!(),
     }
 }
 
@@ -97,7 +115,6 @@ pub fn BoardDisplay(props: &BoardProps) -> Html {
                         class.push_str(" light")
                     }
 
-
                     html! {
                         <div class={class}>
                             { piece_char }
@@ -106,4 +123,19 @@ pub fn BoardDisplay(props: &BoardProps) -> Html {
                 }) }
         </div>
     }
+}
+
+#[derive(PartialEq, Properties)]
+pub struct UndoButtonProps {
+    pub on_click: Callback<()>,
+}
+
+#[function_component]
+pub fn UndoButton(props: &UndoButtonProps) -> Html {
+    let onclick = {
+        let cb = props.on_click.clone();
+        Callback::from(move |_| cb.emit(()))
+    };
+
+    html! { <button {onclick}>{ "UNDO" }</button> }
 }
