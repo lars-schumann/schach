@@ -5,4 +5,9 @@ edition = "2024"
 
 [dependencies]
 schach = { path = "../schach" }
+web-sys = { version = "0.3.82", features = [
+    "HtmlAudioElement",
+    "HtmlMediaElement",
+    "MediaError",
+] }
 yew = { version = "0.21", features = ["csr"] }

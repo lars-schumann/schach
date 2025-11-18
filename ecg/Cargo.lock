@@ -92,6 +92,7 @@ name = "ecg"
 version = "0.1.0"
 dependencies = [
  "schach",
+ "web-sys",
  "yew",
 ]
 

@@ -36,7 +36,7 @@ pub fn app() -> Html {
                 <main class="board-root">
                     <h1>{ "Every Chess Game" }</h1>
                     <div class="boards">
-                    <UndoButton on_click={undo_on_click}/>
+                        <UndoButton on_click={undo_on_click} />
                         { for legals.iter().map(|mv| {
                             let game = game.clone();
                             let mv = *mv;
@@ -132,10 +132,29 @@ pub struct UndoButtonProps {
 
 #[function_component]
 pub fn UndoButton(props: &UndoButtonProps) -> Html {
+    let audio_ref = use_node_ref();
+
     let onclick = {
         let cb = props.on_click.clone();
-        Callback::from(move |_| cb.emit(()))
+        let audio_ref = audio_ref.clone();
+
+        Callback::from(move |_| {
+            cb.emit(());
+            if let Some(audio) = audio_ref.cast::<web_sys::HtmlAudioElement>() {
+                let _ = audio.play();
+            }
+        })
     };
 
-    html! { <button {onclick}>{ "UNDO" }</button> }
+    html! {
+        <>
+            <button {onclick}>{ "UNDO" }</button>
+
+            <audio
+                ref={audio_ref}
+                src="static/undo.mp3"
+                preload="auto"
+            />
+        </>
+    }
 }
