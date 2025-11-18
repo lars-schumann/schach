@@ -25,8 +25,8 @@ impl CastlingSide {
     pub const ALL: [Self; 2] = [Self::Kingside, Self::Queenside];
 }
 
-#[derive_const(Clone)]
-#[derive(Debug, Copy, Hash, PartialEq, Eq)]
+#[derive_const(Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Hash)]
 pub enum DrawKind {
     Stalemate,
     ThreefoldRepetition,
@@ -34,11 +34,17 @@ pub enum DrawKind {
     InsufficientMaterial,
 }
 
-#[derive_const(Clone)]
-#[derive(Debug, Copy, Hash, PartialEq, Eq)]
+#[derive_const(Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Hash)]
 pub enum GameResultKind {
     Draw(DrawKind),
     Win,
+}
+impl GameResultKind {
+    #[must_use]
+    pub const fn is_win(&self) -> bool {
+        self == &Self::Win
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]

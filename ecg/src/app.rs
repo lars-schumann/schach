@@ -1,37 +1,61 @@
 use schach::board::Board;
 use schach::coord::Square;
+use schach::game::GameResult;
+use schach::game::GameState;
+use schach::game::StepResult;
 use yew::prelude::*;
 
 #[function_component(App)]
 pub fn app() -> Html {
-    let game = use_state(schach::game::GameState::new);
+    let state = use_state(|| StepResult::Continued(GameState::new()));
 
-    let legals = {
-        let game = game.clone();
-        game.core.legal_moves().collect::<Vec<_>>()
-    };
+    let state_n = (*state).clone();
 
-    html! {
-        <main class="board-root">
-            <h1>{ "Every Chess Game" }</h1>
-            <div class="boards">
-                { for legals.iter().map(|mv| {
-                    let game = game.clone();
-                    let mv = *mv;
+    match state_n {
+        StepResult::Continued(game) => {
+            let legals = {
+                let game = game.clone();
+                game.core.legal_moves().collect::<Vec<_>>()
+            };
 
-                    html!{
-                        <BoardDisplay
-                            board={game.core.board}
-                            from_to={FromTo { from: mv.origin, to: mv.destination }}
-                            on_click={Callback::from(move |_| {
-                                let new_game = (*game).clone().step(mv).game_state();
-                                game.set(new_game);
-                            })}
-                        />
-                    }
-                })}
-            </div>
-        </main>
+            html! {
+                <main class="board-root">
+                    <h1>{ "Every Chess Game" }</h1>
+                    <div class="boards">
+                        { for legals.iter().map(|mv| {
+                            let game = game.clone();
+                            let mv = *mv;
+                            let state = state.clone();
+
+                            html!{
+                                <BoardDisplay
+                                    board={game.core.board}
+                                    from_to={FromTo { from: mv.origin, to: mv.destination }}
+                                    on_click={Callback::from(move |_| {
+                                        let new_game = game.clone().step(mv);
+                                        state.set(new_game);
+                                    })}
+                                />
+                            }
+                        })}
+                    </div>
+                </main>
+            }
+        }
+        StepResult::Terminated(GameResult { kind, .. }) => {
+            html! {
+                <main class="board-root">
+                    <h1>{ "Every Chess Game" }</h1>
+                    <div class="boards">
+                        {if kind.is_win(){
+                            "WIN"
+                        } else {
+                            "DRAW"
+                        }}
+                    </div>
+                </main>
+            }
+        }
     }
 }
 
