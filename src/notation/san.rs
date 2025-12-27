@@ -86,9 +86,14 @@ fn notation_creator(
             let target = mv.destination.to_fen_repr();
 
             let promotion_replacement = match mv.kind {
-                MoveKind::Pawn(PawnMove::Promotion { replacement, .. }) => {
-                    Some([replacement.kind.to_white_piece().to_fen_repr()])
-                }
+                MoveKind::Pawn(
+                    PawnMove::SingleStep {
+                        promotion_replacement: Some(replacement),
+                    }
+                    | PawnMove::Capture {
+                        promotion_replacement: Some(replacement),
+                    },
+                ) => Some([replacement.kind.to_white_piece().to_fen_repr()]),
                 _ => None,
             };
 

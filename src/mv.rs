@@ -56,7 +56,16 @@ impl MoveKind {
 
     #[must_use]
     pub const fn is_promotion(&self) -> bool {
-        matches!(self, Self::Pawn(PawnMove::Promotion { .. }))
+        matches!(
+            self,
+            Self::Pawn(
+                PawnMove::SingleStep {
+                    promotion_replacement: Some(_)
+                } | PawnMove::Capture {
+                    promotion_replacement: Some(_)
+                }
+            )
+        )
     }
 }
 
@@ -74,10 +83,9 @@ impl Move {
             | MoveKind::Bishop { is_capture, .. }
             | MoveKind::Rook { is_capture, .. }
             | MoveKind::Queen { is_capture, .. }
-            | MoveKind::King(KingMove::Normal { is_capture, .. })
-            | MoveKind::Pawn(PawnMove::Promotion { is_capture, .. }) => is_capture,
-            | MoveKind::Pawn(PawnMove::SimpleCapture | PawnMove::EnPassant { .. }) => true,
-            | MoveKind::Pawn(PawnMove::SimpleStep | PawnMove::DoubleStep)
+            | MoveKind::King(KingMove::Normal { is_capture, .. }) => is_capture,
+            | MoveKind::Pawn(PawnMove::Capture { .. } | PawnMove::EnPassant { .. }) => true,
+            | MoveKind::Pawn(PawnMove::SingleStep { .. } | PawnMove::DoubleStep)
             | MoveKind::King(KingMove::Castle { .. }) => false,
         }
     }
@@ -91,15 +99,15 @@ impl Move {
 #[derive_const(PartialEq, Eq)]
 #[derive(Debug, Copy, Clone)]
 pub enum PawnMove {
-    SimpleStep,
+    SingleStep {
+        promotion_replacement: Option<Piece>,
+    },
     DoubleStep,
-    SimpleCapture,
+    Capture {
+        promotion_replacement: Option<Piece>,
+    },
     EnPassant {
         affected: Square,
-    },
-    Promotion {
-        replacement: Piece,
-        is_capture: bool,
     },
 }
 

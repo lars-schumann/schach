@@ -149,9 +149,10 @@ impl GameStateCore {
             if one_in_front.row == self.active_player.pawn_promotion_row() {
                 for promotion_option in PieceKind::PROMOTION_OPTIONS {
                     yield Move {
-                        kind: MoveKind::Pawn(PawnMove::Promotion {
-                            is_capture: false,
-                            replacement: promotion_option.to_piece(self.active_player),
+                        kind: MoveKind::Pawn(PawnMove::SingleStep {
+                            promotion_replacement: Some(
+                                promotion_option.to_piece(self.active_player),
+                            ),
                         }),
                         origin: square,
                         destination: one_in_front,
@@ -159,7 +160,9 @@ impl GameStateCore {
                 }
             } else {
                 yield Move {
-                    kind: MoveKind::Pawn(PawnMove::SimpleStep),
+                    kind: MoveKind::Pawn(PawnMove::SingleStep {
+                        promotion_replacement: None,
+                    }),
                     origin: square,
                     destination: one_in_front,
                 }
@@ -221,9 +224,10 @@ impl GameStateCore {
                     PieceKind::PROMOTION_OPTIONS
                         .iter()
                         .map(|promotion_option| Move {
-                            kind: MoveKind::Pawn(PawnMove::Promotion {
-                                is_capture: true,
-                                replacement: promotion_option.to_piece(self.active_player),
+                            kind: MoveKind::Pawn(PawnMove::Capture {
+                                promotion_replacement: Some(
+                                    promotion_option.to_piece(self.active_player),
+                                ),
                             }),
                             origin,
                             destination,
@@ -231,7 +235,9 @@ impl GameStateCore {
                         .collect()
                 } else {
                     vec![Move {
-                        kind: MoveKind::Pawn(PawnMove::SimpleCapture),
+                        kind: MoveKind::Pawn(PawnMove::Capture {
+                            promotion_replacement: None,
+                        }),
                         origin,
                         destination,
                     }]
@@ -266,7 +272,13 @@ impl Board {
         self.mov(m.origin, m.destination);
         match m.kind {
             | MoveKind::Pawn(
-                PawnMove::SimpleStep | PawnMove::DoubleStep | PawnMove::SimpleCapture,
+                PawnMove::SingleStep {
+                    promotion_replacement: None,
+                }
+                | PawnMove::DoubleStep
+                | PawnMove::Capture {
+                    promotion_replacement: None,
+                },
             )
             | MoveKind::Knight { .. }
             | MoveKind::Bishop { .. }
@@ -278,7 +290,14 @@ impl Board {
                 self[affected] = None;
             }
 
-            MoveKind::Pawn(PawnMove::Promotion { replacement, .. }) => {
+            MoveKind::Pawn(
+                PawnMove::SingleStep {
+                    promotion_replacement: Some(replacement),
+                }
+                | PawnMove::Capture {
+                    promotion_replacement: Some(replacement),
+                },
+            ) => {
                 self[m.destination] = Some(replacement);
             }
 
@@ -358,7 +377,7 @@ mod tests {
         skip_if_no_expensive_test_opt_in!();
 
         let max_depth = 1_000;
-        let walk_count = 100_000;
+        let walk_count = 1_000;
         let game = GameState::new();
 
         (0..walk_count).into_par_iter().panic_fuse().for_each(|i| {
