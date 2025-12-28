@@ -22,24 +22,17 @@
     {
       devShells.${system}.default = pkgs.mkShell {
         packages = with pkgs; [
-          # Rust toolchain with the wasm32-unknown-unknown target
-          (rust-bin.nightly.latest.default.override {
-            targets = [ "wasm32-unknown-unknown" ];
-          })
+          rust-bin.nightly.latest.default
           rust-analyzer
           rustfmt
-          yew-fmt # rustfmt replacement which also formats in the html! macro
 
           clippy
           bacon
           cargo-hack
-
-          trunk
+          cargo-semver-checks
 
           nixfmt
           nixd
-
-          nodejs
 
           samply
         ];
