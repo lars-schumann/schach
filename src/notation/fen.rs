@@ -17,6 +17,7 @@ use crate::game::FiftyMoveRuleClock;
 use crate::game::FullMoveCount;
 use crate::game::GameStateCore;
 use crate::piece::Piece;
+use crate::piece::PieceKind;
 use crate::player::PlayerKind;
 
 struct FenStrings {
@@ -174,6 +175,32 @@ impl FiftyMoveRuleClock {
         self.0.to_string().as_ascii().unwrap().to_owned()
     }
 }
+
+impl PieceKind {
+    #[must_use]
+    pub const fn to_ascii_lower(self) -> AsciiChar {
+        match self {
+            Self::Pawn => AsciiChar::SmallP,
+            Self::Knight => AsciiChar::SmallN,
+            Self::Bishop => AsciiChar::SmallB,
+            Self::Rook => AsciiChar::SmallR,
+            Self::Queen => AsciiChar::SmallQ,
+            Self::King => AsciiChar::SmallK,
+        }
+    }
+
+    #[must_use]
+    pub const fn to_ascii_upper(self) -> AsciiChar {
+        match self {
+            Self::Pawn => AsciiChar::CapitalP,
+            Self::Knight => AsciiChar::CapitalN,
+            Self::Bishop => AsciiChar::CapitalB,
+            Self::Rook => AsciiChar::CapitalR,
+            Self::Queen => AsciiChar::CapitalQ,
+            Self::King => AsciiChar::CapitalK,
+        }
+    }
+}
 #[derive(Debug)]
 pub struct MalformedPieceError;
 
@@ -200,21 +227,9 @@ impl Piece {
 
     #[must_use]
     pub(super) const fn to_fen_repr(self) -> AsciiChar {
-        use AsciiChar as AC;
-        match self {
-            Self::WHITE_PAWN => AC::CapitalP,   // `P`
-            Self::WHITE_KNIGHT => AC::CapitalN, // `N`
-            Self::WHITE_BISHOP => AC::CapitalB, // `B`
-            Self::WHITE_ROOK => AC::CapitalR,   // `R`
-            Self::WHITE_QUEEN => AC::CapitalQ,  // `Q`
-            Self::WHITE_KING => AC::CapitalK,   // `K`
-
-            Self::BLACK_PAWN => AC::SmallP,   // `p`
-            Self::BLACK_KNIGHT => AC::SmallN, // `n`
-            Self::BLACK_BISHOP => AC::SmallB, // `b`
-            Self::BLACK_ROOK => AC::SmallR,   // `r`
-            Self::BLACK_QUEEN => AC::SmallQ,  // `q`
-            Self::BLACK_KING => AC::SmallK,   // `k`
+        match self.owner {
+            PlayerKind::White => self.kind.to_ascii_upper(),
+            PlayerKind::Black => self.kind.to_ascii_lower(),
         }
     }
 }

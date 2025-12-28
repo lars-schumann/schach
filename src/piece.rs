@@ -16,6 +16,15 @@ pub enum PieceKind {
     King,
 }
 impl PieceKind {
+    pub const ALL: [Self; 6] = [
+        Self::Pawn,
+        Self::Knight,
+        Self::Bishop,
+        Self::Rook,
+        Self::Queen,
+        Self::King,
+    ];
+
     pub const PROMOTION_OPTIONS: [Self; 4] = [Self::Knight, Self::Bishop, Self::Rook, Self::Queen];
 
     #[must_use]
@@ -44,18 +53,6 @@ impl Piece {
     #[must_use]
     pub const fn new(owner: PlayerKind, kind: PieceKind) -> Self {
         Self { owner, kind }
-    }
-    #[must_use]
-    pub(crate) const fn threat_directions(self) -> (&'static [Offset], Range) {
-        match (self.kind, self.owner) {
-            (PieceKind::Pawn, PlayerKind::White) => (&Offset::PAWN_UP_DIAGONAL, Range::One),
-            (PieceKind::Pawn, PlayerKind::Black) => (&Offset::PAWN_DOWN_DIAGONAL, Range::One),
-            (PieceKind::Knight, _) => (&Offset::KNIGHT, Range::One),
-            (PieceKind::Bishop, _) => (&Offset::BISHOP, Range::Unlimited),
-            (PieceKind::Rook, _) => (&Offset::ROOK, Range::Unlimited),
-            (PieceKind::Queen, _) => (&Offset::QUEEN, Range::Unlimited),
-            (PieceKind::King, _) => (&Offset::KING_DIRECT, Range::One),
-        }
     }
 
     no_fmt! {
@@ -88,6 +85,19 @@ impl Piece {
         Self::BLACK_QUEEN,
         Self::BLACK_KING,
     ];
+
+    #[must_use]
+    pub(crate) const fn threat_directions(self) -> (&'static [Offset], Range) {
+        match (self.kind, self.owner) {
+            (PieceKind::Pawn, PlayerKind::White) => (&Offset::PAWN_UP_DIAGONAL, Range::One),
+            (PieceKind::Pawn, PlayerKind::Black) => (&Offset::PAWN_DOWN_DIAGONAL, Range::One),
+            (PieceKind::Knight, _) => (&Offset::KNIGHT, Range::One),
+            (PieceKind::Bishop, _) => (&Offset::BISHOP, Range::Unlimited),
+            (PieceKind::Rook, _) => (&Offset::ROOK, Range::Unlimited),
+            (PieceKind::Queen, _) => (&Offset::QUEEN, Range::Unlimited),
+            (PieceKind::King, _) => (&Offset::KING_DIRECT, Range::One),
+        }
+    }
 }
 
 impl core::fmt::Display for Piece {

@@ -322,7 +322,7 @@ impl GameState {
 
         // handle opponents castling rights
         if mv.is_capture() && mv.kind.is_pawn_en_passant().not() {
-            for castling_side in [CastlingSide::Kingside, CastlingSide::Queenside] {
+            for castling_side in CastlingSide::ALL {
                 if mv.destination == game.core.active_player.opponent().rook_start(castling_side) {
                     game.core
                         .deny_castling(game.core.active_player.opponent(), castling_side);
