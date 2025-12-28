@@ -73,35 +73,35 @@ impl StepResult {
 
 #[derive_const(Default, Clone, PartialEq, Eq)]
 #[derive(Debug, Copy, Hash)]
-pub struct PieceCounts {
-    pub white_pawn: u8,
-    pub white_knight: u8,
-    pub white_bishop: u8,
-    pub white_rook: u8,
-    pub white_queen: u8,
-    pub white_king: u8,
-    pub black_pawn: u8,
-    pub black_knight: u8,
-    pub black_bishop: u8,
-    pub black_rook: u8,
-    pub black_queen: u8,
-    pub black_king: u8,
+pub(crate) struct PieceCounts {
+    pub(crate) white_pawn: u8,
+    pub(crate) white_knight: u8,
+    pub(crate) white_bishop: u8,
+    pub(crate) white_rook: u8,
+    pub(crate) white_queen: u8,
+    pub(crate) white_king: u8,
+    pub(crate) black_pawn: u8,
+    pub(crate) black_knight: u8,
+    pub(crate) black_bishop: u8,
+    pub(crate) black_rook: u8,
+    pub(crate) black_queen: u8,
+    pub(crate) black_king: u8,
 }
 impl PieceCounts {
-    pub const KINGS_ONLY: Self = Self {
+    const KINGS_ONLY: Self = Self {
         white_king: 1,
         black_king: 1,
         ..Default::default()
     };
 
-    pub const WHITE_KING_AND_TWO_KNIGHTS: Self = Self {
+    const WHITE_KING_AND_TWO_KNIGHTS: Self = Self {
         white_king: 1,
         white_knight: 2,
         black_king: 1,
         ..Default::default()
     };
 
-    pub const BLACK_KING_AND_TWO_KNIGHTS: Self = Self {
+    const BLACK_KING_AND_TWO_KNIGHTS: Self = Self {
         black_king: 1,
         black_knight: 2,
         white_king: 1,
@@ -153,7 +153,7 @@ impl IndexMut<Piece> for PieceCounts {
 
 #[derive_const(PartialEq, Eq)]
 #[derive(Debug, Clone, Copy, Hash)]
-pub struct FullMoveCount(pub NonZeroU64); // non-zero & unsized because this always starts at 1 and cant decrease 
+pub struct FullMoveCount(pub NonZeroU64); // non-zero & unsigned because this always starts at 1 and cant decrease 
 impl const Default for FullMoveCount {
     fn default() -> Self {
         Self::new()
