@@ -38,7 +38,5 @@ pub mod notation;
 pub mod piece;
 pub mod player;
 
-mod matching;
-
 #[cfg(test)]
 mod testing;

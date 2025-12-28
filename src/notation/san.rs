@@ -29,15 +29,15 @@ const O_O_O: [AsciiChar; 5] = [
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum AmbiguationLevel {
-    OriginEmpty,
-    OriginFileOnly,
-    OriginRankOnly,
-    OriginFull,
+enum OriginAmbiguationLevel {
+    Empty,
+    FileOnly,
+    RankOnly,
+    Full,
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct CaptureRepresentation {
+struct CaptureRepresentation {
     capture: Option<AsciiChar>,
     no_capture: Option<AsciiChar>,
 }
@@ -46,7 +46,7 @@ pub struct CaptureRepresentation {
 fn notation_creator(
     game: GameState,
     mv: Move,
-    ambiguation_level: AmbiguationLevel,
+    ambiguation_level: OriginAmbiguationLevel,
     capture_representation: CaptureRepresentation,
 ) -> Vec<AsciiChar> {
     let core_move_notation = match mv.kind {
@@ -71,10 +71,10 @@ fn notation_creator(
                 .to_fen_repr()]);
 
             let start_square_repr = match ambiguation_level {
-                AmbiguationLevel::OriginEmpty => [].to_vec(),
-                AmbiguationLevel::OriginFileOnly => [mv.origin.col.to_fen_repr()].to_vec(),
-                AmbiguationLevel::OriginRankOnly => [mv.origin.row.to_fen_repr()].to_vec(),
-                AmbiguationLevel::OriginFull => mv.origin.to_fen_repr().to_vec(),
+                OriginAmbiguationLevel::Empty => [].to_vec(),
+                OriginAmbiguationLevel::FileOnly => [mv.origin.col.to_fen_repr()].to_vec(),
+                OriginAmbiguationLevel::RankOnly => [mv.origin.row.to_fen_repr()].to_vec(),
+                OriginAmbiguationLevel::Full => mv.origin.to_fen_repr().to_vec(),
             };
 
             let capture_symbol = if mv.is_capture() {
@@ -138,7 +138,7 @@ pub fn long_algebraic_notation(game: GameState, mov: Move) -> Vec<AsciiChar> {
     notation_creator(
         game,
         mov,
-        AmbiguationLevel::OriginFull,
+        OriginAmbiguationLevel::Full,
         CaptureRepresentation {
             capture: Some(AsciiChar::SmallX),
             no_capture: Some(AsciiChar::HyphenMinus),
@@ -180,9 +180,9 @@ pub fn standard_algebraic_notation(game: GameState, mov: Move) -> Vec<AsciiChar>
     if interfering_moves.is_empty() {
         if mov.kind.piece_kind() == PieceKind::Pawn && mov.is_capture() {
             //Pawns always have the File when capturing!
-            return notation_creator(game, mov, AmbiguationLevel::OriginFileOnly, capture_repr);
+            return notation_creator(game, mov, OriginAmbiguationLevel::FileOnly, capture_repr);
         }
-        return notation_creator(game, mov, AmbiguationLevel::OriginEmpty, capture_repr);
+        return notation_creator(game, mov, OriginAmbiguationLevel::Empty, capture_repr);
     }
 
     if interfering_moves
@@ -190,7 +190,7 @@ pub fn standard_algebraic_notation(game: GameState, mov: Move) -> Vec<AsciiChar>
         .any(|inter| inter.origin.row == mov.origin.row)
         .not()
     {
-        return notation_creator(game, mov, AmbiguationLevel::OriginRankOnly, capture_repr);
+        return notation_creator(game, mov, OriginAmbiguationLevel::RankOnly, capture_repr);
     }
 
     if interfering_moves
@@ -198,10 +198,10 @@ pub fn standard_algebraic_notation(game: GameState, mov: Move) -> Vec<AsciiChar>
         .any(|inter| inter.origin.col == mov.origin.col)
         .not()
     {
-        return notation_creator(game, mov, AmbiguationLevel::OriginFileOnly, capture_repr);
+        return notation_creator(game, mov, OriginAmbiguationLevel::FileOnly, capture_repr);
     }
 
-    notation_creator(game, mov, AmbiguationLevel::OriginFull, capture_repr)
+    notation_creator(game, mov, OriginAmbiguationLevel::Full, capture_repr)
 }
 #[cfg(test)]
 mod tests {
