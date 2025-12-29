@@ -3,8 +3,8 @@ use alloc::vec::Vec;
 
 use crate::coord::Offset;
 use crate::coord::Row;
+use crate::coord::Square as S;
 use crate::coord::Square;
-use crate::coord::square as S;
 use crate::game::CastlingSide as CS;
 
 #[derive_const(PartialEq, Eq)]

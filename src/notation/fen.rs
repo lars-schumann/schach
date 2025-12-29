@@ -11,7 +11,6 @@ use crate::coord::Row;
 use crate::coord::RowIndexOutOfRange;
 use crate::coord::Square;
 use crate::coord::SquareOutOfRange;
-use crate::coord::square;
 use crate::game::CastlingRights;
 use crate::game::FiftyMoveRuleClock;
 use crate::game::FullMoveCount;
@@ -352,7 +351,7 @@ impl Board {
                     ); //as the running count should never exceed 8, this should always be a single digit
                 }
                 running_square_count = 0;
-                if square != square::H1 {
+                if square != Square::H1 {
                     out.push(AsciiChar::Solidus);
                 }
             }

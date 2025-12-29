@@ -1,10 +1,10 @@
 use core::ops::Not;
 
-#[allow(clippy::wildcard_imports)]
-use square::*;
-
 use crate::board::COL_COUNT;
 use crate::board::ROW_COUNT;
+use self::Square as S;
+use self::Col as C;
+use self::Row as R;
 
 #[derive_const(PartialEq, Eq)]
 #[derive(Debug, Copy, Clone, Hash)]
@@ -27,104 +27,90 @@ impl Square {
     pub const fn is_white(self) -> bool {
         self.is_black().not()
     }
+
+    pub const A1: S = S::new(C::C1, R::R1);
+    pub const A2: S = S::new(C::C1, R::R2);
+    pub const A3: S = S::new(C::C1, R::R3);
+    pub const A4: S = S::new(C::C1, R::R4);
+    pub const A5: S = S::new(C::C1, R::R5);
+    pub const A6: S = S::new(C::C1, R::R6);
+    pub const A7: S = S::new(C::C1, R::R7);
+    pub const A8: S = S::new(C::C1, R::R8);
+
+    pub const B1: S = S::new(C::C2, R::R1);
+    pub const B2: S = S::new(C::C2, R::R2);
+    pub const B3: S = S::new(C::C2, R::R3);
+    pub const B4: S = S::new(C::C2, R::R4);
+    pub const B5: S = S::new(C::C2, R::R5);
+    pub const B6: S = S::new(C::C2, R::R6);
+    pub const B7: S = S::new(C::C2, R::R7);
+    pub const B8: S = S::new(C::C2, R::R8);
+
+    pub const C1: S = S::new(C::C3, R::R1);
+    pub const C2: S = S::new(C::C3, R::R2);
+    pub const C3: S = S::new(C::C3, R::R3);
+    pub const C4: S = S::new(C::C3, R::R4);
+    pub const C5: S = S::new(C::C3, R::R5);
+    pub const C6: S = S::new(C::C3, R::R6);
+    pub const C7: S = S::new(C::C3, R::R7);
+    pub const C8: S = S::new(C::C3, R::R8);
+
+    pub const D1: S = S::new(C::C4, R::R1);
+    pub const D2: S = S::new(C::C4, R::R2);
+    pub const D3: S = S::new(C::C4, R::R3);
+    pub const D4: S = S::new(C::C4, R::R4);
+    pub const D5: S = S::new(C::C4, R::R5);
+    pub const D6: S = S::new(C::C4, R::R6);
+    pub const D7: S = S::new(C::C4, R::R7);
+    pub const D8: S = S::new(C::C4, R::R8);
+
+    pub const E1: S = S::new(C::C5, R::R1);
+    pub const E2: S = S::new(C::C5, R::R2);
+    pub const E3: S = S::new(C::C5, R::R3);
+    pub const E4: S = S::new(C::C5, R::R4);
+    pub const E5: S = S::new(C::C5, R::R5);
+    pub const E6: S = S::new(C::C5, R::R6);
+    pub const E7: S = S::new(C::C5, R::R7);
+    pub const E8: S = S::new(C::C5, R::R8);
+
+    pub const F1: S = S::new(C::C6, R::R1);
+    pub const F2: S = S::new(C::C6, R::R2);
+    pub const F3: S = S::new(C::C6, R::R3);
+    pub const F4: S = S::new(C::C6, R::R4);
+    pub const F5: S = S::new(C::C6, R::R5);
+    pub const F6: S = S::new(C::C6, R::R6);
+    pub const F7: S = S::new(C::C6, R::R7);
+    pub const F8: S = S::new(C::C6, R::R8);
+
+    pub const G1: S = S::new(C::C7, R::R1);
+    pub const G2: S = S::new(C::C7, R::R2);
+    pub const G3: S = S::new(C::C7, R::R3);
+    pub const G4: S = S::new(C::C7, R::R4);
+    pub const G5: S = S::new(C::C7, R::R5);
+    pub const G6: S = S::new(C::C7, R::R6);
+    pub const G7: S = S::new(C::C7, R::R7);
+    pub const G8: S = S::new(C::C7, R::R8);
+
+    pub const H1: S = S::new(C::C8, R::R1);
+    pub const H2: S = S::new(C::C8, R::R2);
+    pub const H3: S = S::new(C::C8, R::R3);
+    pub const H4: S = S::new(C::C8, R::R4);
+    pub const H5: S = S::new(C::C8, R::R5);
+    pub const H6: S = S::new(C::C8, R::R6);
+    pub const H7: S = S::new(C::C8, R::R7);
+    pub const H8: S = S::new(C::C8, R::R8);
     
     #[rustfmt::skip]
     pub const ALL: [Self; 64] = [
-        A8, B8, C8, D8, E8, F8, G8, H8,
-        A7, B7, C7, D7, E7, F7, G7, H7,
-        A6, B6, C6, D6, E6, F6, G6, H6,
-        A5, B5, C5, D5, E5, F5, G5, H5,
-        A4, B4, C4, D4, E4, F4, G4, H4,
-        A3, B3, C3, D3, E3, F3, G3, H3,
-        A2, B2, C2, D2, E2, F2, G2, H2,
-        A1, B1, C1, D1, E1, F1, G1, H1,
+        S::A8, S::B8, S::C8, S::D8, S::E8, S::F8, S::G8, S::H8,
+        S::A7, S::B7, S::C7, S::D7, S::E7, S::F7, S::G7, S::H7,
+        S::A6, S::B6, S::C6, S::D6, S::E6, S::F6, S::G6, S::H6,
+        S::A5, S::B5, S::C5, S::D5, S::E5, S::F5, S::G5, S::H5,
+        S::A4, S::B4, S::C4, S::D4, S::E4, S::F4, S::G4, S::H4,
+        S::A3, S::B3, S::C3, S::D3, S::E3, S::F3, S::G3, S::H3,
+        S::A2, S::B2, S::C2, S::D2, S::E2, S::F2, S::G2, S::H2,
+        S::A1, S::B1, S::C1, S::D1, S::E1, S::F1, S::G1, S::H1,
     ];
-}
-
-pub mod square {
-    use super::Col;
-    
-    use super::Row::R1;
-    use super::Row::R2;
-    use super::Row::R3;
-    use super::Row::R4;
-    use super::Row::R5;
-    use super::Row::R6;
-    use super::Row::R7;
-    use super::Row::R8;
-    use super::Square as S;
-
-    pub const A1: S = S::new(Col::C1, R1);
-    pub const A2: S = S::new(Col::C1, R2);
-    pub const A3: S = S::new(Col::C1, R3);
-    pub const A4: S = S::new(Col::C1, R4);
-    pub const A5: S = S::new(Col::C1, R5);
-    pub const A6: S = S::new(Col::C1, R6);
-    pub const A7: S = S::new(Col::C1, R7);
-    pub const A8: S = S::new(Col::C1, R8);
-
-    pub const B1: S = S::new(Col::C2, R1);
-    pub const B2: S = S::new(Col::C2, R2);
-    pub const B3: S = S::new(Col::C2, R3);
-    pub const B4: S = S::new(Col::C2, R4);
-    pub const B5: S = S::new(Col::C2, R5);
-    pub const B6: S = S::new(Col::C2, R6);
-    pub const B7: S = S::new(Col::C2, R7);
-    pub const B8: S = S::new(Col::C2, R8);
-
-    pub const C1: S = S::new(Col::C3, R1);
-    pub const C2: S = S::new(Col::C3, R2);
-    pub const C3: S = S::new(Col::C3, R3);
-    pub const C4: S = S::new(Col::C3, R4);
-    pub const C5: S = S::new(Col::C3, R5);
-    pub const C6: S = S::new(Col::C3, R6);
-    pub const C7: S = S::new(Col::C3, R7);
-    pub const C8: S = S::new(Col::C3, R8);
-
-    pub const D1: S = S::new(Col::C4, R1);
-    pub const D2: S = S::new(Col::C4, R2);
-    pub const D3: S = S::new(Col::C4, R3);
-    pub const D4: S = S::new(Col::C4, R4);
-    pub const D5: S = S::new(Col::C4, R5);
-    pub const D6: S = S::new(Col::C4, R6);
-    pub const D7: S = S::new(Col::C4, R7);
-    pub const D8: S = S::new(Col::C4, R8);
-
-    pub const E1: S = S::new(Col::C5, R1);
-    pub const E2: S = S::new(Col::C5, R2);
-    pub const E3: S = S::new(Col::C5, R3);
-    pub const E4: S = S::new(Col::C5, R4);
-    pub const E5: S = S::new(Col::C5, R5);
-    pub const E6: S = S::new(Col::C5, R6);
-    pub const E7: S = S::new(Col::C5, R7);
-    pub const E8: S = S::new(Col::C5, R8);
-
-    pub const F1: S = S::new(Col::C6, R1);
-    pub const F2: S = S::new(Col::C6, R2);
-    pub const F3: S = S::new(Col::C6, R3);
-    pub const F4: S = S::new(Col::C6, R4);
-    pub const F5: S = S::new(Col::C6, R5);
-    pub const F6: S = S::new(Col::C6, R6);
-    pub const F7: S = S::new(Col::C6, R7);
-    pub const F8: S = S::new(Col::C6, R8);
-
-    pub const G1: S = S::new(Col::C7, R1);
-    pub const G2: S = S::new(Col::C7, R2);
-    pub const G3: S = S::new(Col::C7, R3);
-    pub const G4: S = S::new(Col::C7, R4);
-    pub const G5: S = S::new(Col::C7, R5);
-    pub const G6: S = S::new(Col::C7, R6);
-    pub const G7: S = S::new(Col::C7, R7);
-    pub const G8: S = S::new(Col::C7, R8);
-
-    pub const H1: S = S::new(Col::C8, R1);
-    pub const H2: S = S::new(Col::C8, R2);
-    pub const H3: S = S::new(Col::C8, R3);
-    pub const H4: S = S::new(Col::C8, R4);
-    pub const H5: S = S::new(Col::C8, R5);
-    pub const H6: S = S::new(Col::C8, R6);
-    pub const H7: S = S::new(Col::C8, R7);
-    pub const H8: S = S::new(Col::C8, R8);
 }
 
 #[derive_const(PartialEq, Eq, PartialOrd, Ord, Clone)]

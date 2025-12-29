@@ -64,28 +64,28 @@ impl Board {
     #[must_use]
     pub fn new() -> Self {
         #[allow(clippy::wildcard_imports)]
-        use crate::coord::square::*;
+        use crate::coord::Square as S;
         use crate::piece::Piece as P;
 
         let mut board = Self::empty();
 
-        board[A1] = Some(P::WHITE_ROOK);
-        board[B1] = Some(P::WHITE_KNIGHT);
-        board[C1] = Some(P::WHITE_BISHOP);
-        board[D1] = Some(P::WHITE_QUEEN);
-        board[E1] = Some(P::WHITE_KING);
-        board[F1] = Some(P::WHITE_BISHOP);
-        board[G1] = Some(P::WHITE_KNIGHT);
-        board[H1] = Some(P::WHITE_ROOK);
+        board[S::A1] = Some(P::WHITE_ROOK);
+        board[S::B1] = Some(P::WHITE_KNIGHT);
+        board[S::C1] = Some(P::WHITE_BISHOP);
+        board[S::D1] = Some(P::WHITE_QUEEN);
+        board[S::E1] = Some(P::WHITE_KING);
+        board[S::F1] = Some(P::WHITE_BISHOP);
+        board[S::G1] = Some(P::WHITE_KNIGHT);
+        board[S::H1] = Some(P::WHITE_ROOK);
 
-        board[A8] = Some(P::BLACK_ROOK);
-        board[B8] = Some(P::BLACK_KNIGHT);
-        board[C8] = Some(P::BLACK_BISHOP);
-        board[D8] = Some(P::BLACK_QUEEN);
-        board[E8] = Some(P::BLACK_KING);
-        board[F8] = Some(P::BLACK_BISHOP);
-        board[G8] = Some(P::BLACK_KNIGHT);
-        board[H8] = Some(P::BLACK_ROOK);
+        board[S::A8] = Some(P::BLACK_ROOK);
+        board[S::B8] = Some(P::BLACK_KNIGHT);
+        board[S::C8] = Some(P::BLACK_BISHOP);
+        board[S::D8] = Some(P::BLACK_QUEEN);
+        board[S::E8] = Some(P::BLACK_KING);
+        board[S::F8] = Some(P::BLACK_BISHOP);
+        board[S::G8] = Some(P::BLACK_KNIGHT);
+        board[S::H8] = Some(P::BLACK_ROOK);
 
         for col in Col::ALL {
             board[Square { col, row: Row::R2 }] = Some(P::WHITE_PAWN);

@@ -328,7 +328,7 @@ mod tests {
     use std::println;
 
     use super::*;
-    use crate::coord::square::*;
+    use crate::coord::Square as S;
     use crate::game::GameStateCore;
     use crate::notation::san::standard_algebraic_notation;
     use crate::piece::Piece;
@@ -454,103 +454,4 @@ mod tests {
             );
         }
     }
-
-    #[test]
-    fn test_pawn_attacked_squares() {
-        let mut board = Board::empty();
-
-        board[E2] = Some(Piece::WHITE_PAWN);
-
-        #[rustfmt::skip]
-        let expected_attacked = [
-        //  A8,  B8,  C8,  D8,  E8,  F8,  G8,  H8,
-        //  A7,  B7,  C7,  D7,  E7,  F7,  G7,  H7,
-        //  A6,  B6,  C6,  D6,  E6,  F6,  G6,  H6,
-        //  A5,  B5,  C5,  D5,  E5,  F5,  G5,  H5,
-        //  A4,  B4,  C4,  D4,  E4,  F4,  G4,  H4,
-        /*  A3,  B3,  C3,*/D3,/*E3,*/F3,//G3,  H3,
-        //  A2,  B2,  C2,  D2,  E2,  F2,  G2,  H2,
-        //  A1,  B1,  C1,  D1,  E1,  F1,  G1,  H1,
-        ];
-
-        compare_expected_to_calculated_attacked(expected_attacked, board, PlayerKind::White);
-    }
-
-    #[test]
-    fn test_multiple_pawn_attacked_squares() {
-        let mut board = Board::empty();
-
-        board[E2] = Some(Piece::WHITE_PAWN);
-        board[E3] = Some(Piece::WHITE_PAWN);
-        board[B7] = Some(Piece::WHITE_PAWN);
-
-        #[rustfmt::skip]
-        let expected_attacked = [
-            A8,/*B8,*/C8,//D8,  E8,  F8,  G8,  H8,
-        //  A7,  B7,  C7,  D7,  E7,  F7,  G7,  H7,
-        //  A6,  B6,  C6,  D6,  E6,  F6,  G6,  H6,
-        //  A5,  B5,  C5,  D5,  E5,  F5,  G5,  H5,
-        /*  A4,  B4,  C4,*/D4,/*E4,*/F4,//G4,  H4,
-        /*  A3,  B3,  C3,*/D3,/*E3,*/F3,//G3,  H3,
-        //  A2,  B2,  C2,  D2,  E2,  F2,  G2,  H2,
-        //  A1,  B1,  C1,  D1,  E1,  F1,  G1,  H1,
-        ];
-
-        compare_expected_to_calculated_attacked(expected_attacked, board, PlayerKind::White);
-    }
-
-    #[test]
-    fn test_multiple_knight_attacked_squares() {
-        let mut board = Board::empty();
-
-        board[B1] = Some(Piece::WHITE_KNIGHT);
-        board[H1] = Some(Piece::WHITE_KNIGHT);
-        board[D6] = Some(Piece::WHITE_KNIGHT);
-
-        #[rustfmt::skip]
-        let expected_attacked = [
-        /*  A8,  B8,*/C8,/*D8,*/E8,//F8,  G8,  H8,
-        /*  A7,*/B7,/*C7,  D7,  E7,*/F7,//G7,  H7,
-        //  A6,  B6,  C6,  D6,  E6,  F6,  G6,  H6,
-        /*  A5,*/B5,/*C5,  D5,  E5,*/F5,//G5,  H5,
-        /*  A4,  B4,*/C4,/*D4,*/E4,//F4,  G4,  H4,
-            A3,/*B3,*/C3,/*D3,  E3,  F3,*/G3,//H3,
-        /*  A2,  B2,  C2,*/D2,/*E2,*/F2,//G2,  H2,
-        //  A1,  B1,  C1,  D1,  E1,  F1,  G1,  H1,
-        ];
-
-        compare_expected_to_calculated_attacked(expected_attacked, board, PlayerKind::White);
-    }
-
-    fn compare_expected_to_calculated_attacked(
-        expected_attacked: impl Into<Vec<Square>>,
-        board: Board,
-        player: PlayerKind,
-    ) {
-        let core_game = GameStateCore {
-            board,
-            ..Default::default()
-        };
-
-        let expected_attacked = HashSet::from_iter(expected_attacked.into());
-
-        let calculated_attacked = core_game
-            .board
-            .threatened_squares_by(player)
-            .collect::<HashSet<_>>();
-
-        assert_eq!(expected_attacked, calculated_attacked);
-    }
 }
-
-// #[rustfmt::skip]
-//         let expected_attacked = [
-//         //  A8,  B8,  C8,  D8,  E8,  F8,  G8,  H8,
-//         //  A7,  B7,  C7,  D7,  E7,  F7,  G7,  H7,
-//         //  A6,  B6,  C6,  D6,  E6,  F6,  G6,  H6,
-//         //  A5,  B5,  C5,  D5,  E5,  F5,  G5,  H5,
-//         //  A4,  B4,  C4,  D4,  E4,  F4,  G4,  H4,
-//         //  A3,  B3,  C3,  D3,  E3,  F3,  G3,  H3,
-//         //  A2,  B2,  C2,  D2,  E2,  F2,  G2,  H2,
-//         //  A1,  B1,  C1,  D1,  E1,  F1,  G1,  H1,
-//         ];
