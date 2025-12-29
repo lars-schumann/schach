@@ -22,9 +22,7 @@
     {
       devShells.${system}.default = pkgs.mkShell {
         packages = with pkgs; [
-          rust-bin.nightly.latest.default
-          rust-analyzer
-          rustfmt
+          (rust-bin.selectLatestNightlyWith (toolchain: toolchain.default))
 
           clippy
           bacon
