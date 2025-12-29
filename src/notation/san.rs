@@ -7,6 +7,7 @@ use crate::game::CastlingSide;
 use crate::game::GameResult;
 use crate::game::GameResultKind;
 use crate::game::GameState;
+use crate::game::Ongoing;
 use crate::game::StepResult;
 use crate::mv::KingMove;
 use crate::mv::Move;
@@ -44,7 +45,7 @@ struct CaptureRepresentation {
 
 #[must_use]
 fn notation_creator(
-    game: GameState,
+    game: GameState<Ongoing>,
     mv: Move,
     ambiguation_level: OriginAmbiguationLevel,
     capture_representation: CaptureRepresentation,
@@ -113,7 +114,7 @@ fn notation_creator(
 
     let mut append = vec![];
     match outcome {
-        | StepResult::Continued(future) => {
+        | StepResult::Ongoing(future) => {
             if future.core.board.is_king_checked(future.core.active_player) {
                 append.push(AsciiChar::PlusSign);
             }
@@ -134,7 +135,7 @@ fn notation_creator(
 }
 
 #[must_use]
-pub fn long_algebraic_notation(game: GameState, mov: Move) -> Vec<AsciiChar> {
+pub fn long_algebraic_notation(game: GameState<Ongoing>, mov: Move) -> Vec<AsciiChar> {
     notation_creator(
         game,
         mov,
@@ -147,7 +148,7 @@ pub fn long_algebraic_notation(game: GameState, mov: Move) -> Vec<AsciiChar> {
 }
 
 #[must_use]
-pub fn standard_algebraic_notation(game: GameState, mov: Move) -> Vec<AsciiChar> {
+pub fn standard_algebraic_notation(game: GameState<Ongoing>, mov: Move) -> Vec<AsciiChar> {
     let capture_repr = CaptureRepresentation {
         capture: Some(AsciiChar::SmallX),
         no_capture: None,

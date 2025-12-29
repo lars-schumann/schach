@@ -9,7 +9,9 @@ use crate::game::GameResult;
 use crate::game::GameResultKind;
 use crate::game::GameState;
 use crate::game::GameStateCore;
+use crate::game::Ongoing;
 use crate::game::StepResult;
+use crate::game::Terminated;
 use crate::mv::KingMove;
 use crate::mv::Move;
 use crate::mv::MoveKind;
@@ -17,11 +19,11 @@ use crate::mv::PawnMove;
 use crate::mv::Threat;
 use crate::piece::PieceKind;
 
-impl GameState {
+impl GameState<Ongoing> {
     #[must_use]
     pub fn search(self, max_depth: u32, checker: impl Fn(&Self)) -> SearchStats {
-        let mut terminated_games_checkmate: Vec<Self> = vec![];
-        let mut terminated_games_draw: Vec<Self> = vec![];
+        let mut terminated_games_checkmate: Vec<GameState<Terminated>> = vec![];
+        let mut terminated_games_draw: Vec<GameState<Terminated>> = vec![];
         let mut continued_games: Vec<Self> = vec![self];
         let mut new_continued_games: Vec<Self> = vec![];
 
@@ -40,7 +42,7 @@ impl GameState {
                             kind: GameResultKind::Draw(_),
                             final_game_state,
                         }) => terminated_games_draw.push(final_game_state),
-                        StepResult::Continued(game_state) => {
+                        StepResult::Ongoing(game_state) => {
                             new_continued_games.push(game_state);
                         }
                     }
@@ -77,7 +79,7 @@ impl GameState {
                 .to_owned();
 
             match game.clone().step(random_move) {
-                StepResult::Continued(game_state) => {
+                StepResult::Ongoing(game_state) => {
                     game = game_state;
                 }
                 terminated @ StepResult::Terminated(_) => {
@@ -85,7 +87,7 @@ impl GameState {
                 }
             }
         }
-        StepResult::Continued(game)
+        StepResult::Ongoing(game)
     }
 }
 
@@ -381,14 +383,18 @@ mod tests {
         let game = GameState::new();
 
         (0..walk_count).into_par_iter().panic_fuse().for_each(|i| {
-            let final_step = game.clone().random_walk(max_depth, owl_checker_depth_1);
-
-            println!("{i}: {}", final_step.game_state().core.full_move_count.0);
+            match game.clone().random_walk(max_depth, owl_checker_depth_1) {
+                StepResult::Ongoing(GameState { core, .. })
+                | StepResult::Terminated(GameResult {
+                    final_game_state: GameState { core, .. },
+                    ..
+                }) => println!("{i}: {:?}", core.full_move_count),
+            }
         });
     }
 
     #[allow(dead_code)]
-    fn owl_checker_move_count(game: &GameState) {
+    fn owl_checker_move_count(game: &GameState<Ongoing>) {
         let schach_move_count = game.core.legal_moves().count();
         let owl_move_count = owlchess::movegen::legal::gen_all(
             &owlchess::Board::from_fen(game.core.to_fen().as_str()).unwrap(),
@@ -398,7 +404,7 @@ mod tests {
     }
 
     #[allow(dead_code)]
-    fn owl_checker_depth_1(game: &GameState) {
+    fn owl_checker_depth_1(game: &GameState<Ongoing>) {
         let schach_all_legals = game.core.legal_moves().collect::<Vec<_>>();
         for mv in &schach_all_legals {
             let schach_move_san = standard_algebraic_notation(game.clone(), *mv);
@@ -406,7 +412,7 @@ mod tests {
             let owl_move = owlchess::Move::from_san(schach_move_san.as_str(), &owl_board).unwrap();
 
             let new_owl_board = owl_board.make_move(owl_move).unwrap();
-            let StepResult::Continued(new_schach_board) = game.clone().step(*mv) else {
+            let StepResult::Ongoing(new_schach_board) = game.clone().step(*mv) else {
                 continue;
             };
 

@@ -50,25 +50,13 @@ impl GameResultKind {
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct GameResult {
     pub kind: GameResultKind,
-    pub final_game_state: GameState,
+    pub final_game_state: GameState<Terminated>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum StepResult {
+    Ongoing(GameState<Ongoing>),
     Terminated(GameResult),
-    Continued(GameState),
-}
-impl StepResult {
-    #[must_use]
-    pub fn game_state(self) -> GameState {
-        match self {
-            Self::Terminated(GameResult {
-                final_game_state: game_state,
-                ..
-            })
-            | Self::Continued(game_state) => game_state,
-        }
-    }
 }
 
 #[derive_const(Default, Clone, PartialEq, Eq)]
@@ -267,17 +255,38 @@ impl GameStateCore {
         are_castle_squares_free_from_checks && are_castle_squares_free_from_pieces
     }
 }
+
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub struct GameState {
+pub struct Ongoing;
+
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct Terminated;
+pub trait Phase {}
+
+impl Phase for Ongoing {}
+impl Phase for Terminated {}
+
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct GameState<P: Phase> {
     pub core: GameStateCore,
     pub position_history: Vec<Position>,
     pub rule_set: RuleSet,
+    phase: core::marker::PhantomData<P>,
 }
 
-impl GameState {
+impl GameState<Ongoing> {
     #[must_use]
     pub fn new() -> Self {
         Self::default()
+    }
+
+    fn terminated(self) -> GameState<Terminated> {
+        GameState::<Terminated> {
+            core: self.core,
+            position_history: self.position_history,
+            rule_set: self.rule_set,
+            phase: core::marker::PhantomData::<Terminated>,
+        }
     }
 
     #[must_use]
@@ -369,12 +378,12 @@ impl GameState {
             return if future.board.is_king_checked(future.active_player) {
                 StepResult::Terminated(GameResult {
                     kind: GameResultKind::Win,
-                    final_game_state: game,
+                    final_game_state: game.terminated(),
                 })
             } else {
                 StepResult::Terminated(GameResult {
                     kind: GameResultKind::Draw(DrawKind::Stalemate),
-                    final_game_state: game,
+                    final_game_state: game.terminated(),
                 })
             };
         }
@@ -389,14 +398,14 @@ impl GameState {
             {
                 return StepResult::Terminated(GameResult {
                     kind: GameResultKind::Draw(DrawKind::ThreefoldRepetition),
-                    final_game_state: game,
+                    final_game_state: game.terminated(),
                 });
             }
 
             if game.core.fifty_move_rule_clock == FIFTY_MOVE_RULE_COUNT {
                 return StepResult::Terminated(GameResult {
                     kind: GameResultKind::Draw(DrawKind::FiftyMove),
-                    final_game_state: game,
+                    final_game_state: game.terminated(),
                 });
             }
         }
@@ -406,7 +415,7 @@ impl GameState {
         if piece_counts == PieceCounts::KINGS_ONLY {
             return StepResult::Terminated(GameResult {
                 kind: GameResultKind::Draw(DrawKind::InsufficientMaterial),
-                final_game_state: game,
+                final_game_state: game.terminated(),
             });
         }
 
@@ -415,7 +424,7 @@ impl GameState {
         }
 
         game.core.active_player = game.core.active_player.opponent();
-        StepResult::Continued(game)
+        StepResult::Ongoing(game)
     }
 }
 
