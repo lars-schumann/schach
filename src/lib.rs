@@ -20,7 +20,7 @@
     coroutines,
     gen_blocks,
     //maybe not my brightest idea
-    core_intrinsics
+    core_intrinsics,
 )]
 #![forbid(unsafe_code)]
 #![no_std]
@@ -37,6 +37,8 @@ pub mod mv;
 pub mod notation;
 pub mod piece;
 pub mod player;
+
+pub(crate) mod all;
 
 #[cfg(test)]
 mod testing;

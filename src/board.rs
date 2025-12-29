@@ -10,8 +10,8 @@ use crate::piece::Piece;
 use crate::piece::PieceKind;
 use crate::player::PlayerKind;
 
-pub static COL_COUNT: usize = 8;
-pub static ROW_COUNT: usize = 8;
+pub const COL_COUNT: usize = 8;
+pub const ROW_COUNT: usize = 8;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Board(pub [[Option<Piece>; ROW_COUNT]; COL_COUNT]);
