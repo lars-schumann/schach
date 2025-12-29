@@ -32,6 +32,11 @@ struct FenStrings {
 pub enum GameFromFenError {
     NotAscii,
     WrongFieldCount,
+    MalformedBoard(BoardFromFenError),
+    MalformedPlayer(InvalidPlayer),
+    MalformedEnPassantTarget(SquareFromFenError),
+    MalformedFiftyRuleClock(core::num::ParseIntError),
+    MalformedMoveCount(core::num::ParseIntError),
 }
 impl GameStateCore {
     pub fn try_from_fen(fen: &str) -> Result<Self, GameFromFenError> {
@@ -56,18 +61,23 @@ impl GameStateCore {
             full_move_number: fen_parts[5].clone(),
         };
 
-        let board = Board::try_from_fen_repr(fen.piece_placements.as_slice()).unwrap();
+        let board = Board::try_from_fen_repr(fen.piece_placements.as_slice())
+            .map_err(GameFromFenError::MalformedBoard)?;
 
         let fifty_move_rule_clock =
-            FiftyMoveRuleClock::try_from_fen_repr(fen.half_move_clock.as_slice()).unwrap();
+            FiftyMoveRuleClock::try_from_fen_repr(fen.half_move_clock.as_slice())
+                .map_err(GameFromFenError::MalformedFiftyRuleClock)?;
 
         let castling_rights = CastlingRights::from_fen_repr(&fen.castling_availability);
 
-        let active_player = PlayerKind::try_from_fen_repr(fen.active_player.as_slice()).unwrap();
-        let en_passant_target =
-            Square::try_from_fen_repr(fen.en_passant_target_square.as_slice()).unwrap();
-        let full_move_count =
-            FullMoveCount::try_from_fen_repr(fen.full_move_number.as_slice()).unwrap();
+        let active_player = PlayerKind::try_from_fen_repr(fen.active_player.as_slice())
+            .map_err(GameFromFenError::MalformedPlayer)?;
+
+        let en_passant_target = Square::try_from_fen_repr(fen.en_passant_target_square.as_slice())
+            .map_err(GameFromFenError::MalformedEnPassantTarget)?;
+
+        let full_move_count = FullMoveCount::try_from_fen_repr(fen.full_move_number.as_slice())
+            .map_err(GameFromFenError::MalformedMoveCount)?;
 
         Ok(Self {
             board,
@@ -161,7 +171,11 @@ impl FullMoveCount {
     }
 
     fn to_fen_repr(self) -> Vec<AsciiChar> {
-        self.0.to_string().as_ascii().unwrap().to_owned()
+        self.0
+            .to_string()
+            .as_ascii()
+            .expect("digits are ascii")
+            .to_owned()
     }
 }
 
@@ -171,7 +185,11 @@ impl FiftyMoveRuleClock {
     }
 
     fn to_fen_repr(self) -> Vec<AsciiChar> {
-        self.0.to_string().as_ascii().unwrap().to_owned()
+        self.0
+            .to_string()
+            .as_ascii()
+            .expect("digits are ascii")
+            .to_owned()
     }
 }
 
@@ -269,13 +287,6 @@ pub enum BoardFromFenError {
 
 impl Board {
     fn try_from_fen_repr(value: &[AsciiChar]) -> Result<Self, BoardFromFenError> {
-        fn ascii_char_digit_to_int(char: AsciiChar) -> usize {
-            match char as u8 {
-                ..=b'0' => panic!("{char} is an unexpectedly low digit / ascii char"),
-                b'1'..=b'8' => usize::from(u8::from(char) - b'0'),
-                b'9'.. => panic!("{char} is an unexpectedly high digit / ascii char"),
-            }
-        }
         fn fen_row_to_board_row(
             row: &[AsciiChar],
         ) -> Result<[Option<Piece>; 8], BoardFromFenError> {
@@ -283,10 +294,13 @@ impl Board {
 
             for c in row {
                 match *c as u8 {
-                    b'1'..=b'8' => out_row.extend(vec![None; ascii_char_digit_to_int(*c)]),
+                    b'1'..=b'8' => out_row.extend(vec![None; usize::from(u8::from(*c) - b'0')]),
                     b'P' | b'N' | b'B' | b'R' | b'Q' | b'K' | b'p' | b'n' | b'b' | b'r' | b'q'
                     | b'k' => {
-                        out_row.push(Some(Piece::try_from_fen_repr(*c).unwrap()));
+                        out_row.push(Some(
+                            Piece::try_from_fen_repr(*c)
+                                .expect("these chars are valid Piece reprs"),
+                        ));
                     }
 
                     _ => return Err(BoardFromFenError::IllegalCharacter(*c)),
@@ -311,8 +325,9 @@ impl Board {
         //TODO: un-fuck this
         for square in Square::ALL {
             new_board[Square {
-                col: Col::try_from(u8::from(square.row)).unwrap(),
-                row: Row::try_from(9 - u8::from(square.col)).unwrap(),
+                col: Col::try_from(u8::from(square.row))
+                    .expect("valid row numbers are valid col numbers"),
+                row: Row::try_from(9 - u8::from(square.col)).expect("9 - 1..=8 is in range 1..=8"),
             }] = piece_placements_chunked[square];
         }
 
@@ -332,7 +347,7 @@ impl Board {
                             running_square_count
                                 .to_string()
                                 .as_ascii()
-                                .unwrap()
+                                .expect("digits are ascii")
                                 .to_owned(),
                         ); //as the running count should never exceed 8, this should always be a single digit
                     }
@@ -346,7 +361,7 @@ impl Board {
                         running_square_count
                             .to_string()
                             .as_ascii()
-                            .unwrap()
+                            .expect("digits are ascii")
                             .to_owned(),
                     ); //as the running count should never exceed 8, this should always be a single digit
                 }
@@ -366,7 +381,7 @@ impl Col {
     }
     #[must_use]
     pub(crate) const fn to_fen_repr(self) -> AsciiChar {
-        AsciiChar::from_u8(u8::from(self) + b'a' - 1).unwrap()
+        AsciiChar::from_u8(u8::from(self) + b'a' - 1).expect("a..=h are ascii")
     }
 }
 impl Row {
@@ -375,7 +390,7 @@ impl Row {
     }
     #[must_use]
     pub(crate) const fn to_fen_repr(self) -> AsciiChar {
-        AsciiChar::from_u8(u8::from(self) + b'0').unwrap()
+        AsciiChar::from_u8(u8::from(self) + b'0').expect("0..=8 are ascii")
     }
 }
 
@@ -467,7 +482,7 @@ mod tests {
 
     #[test]
     fn test_player_kind_fens_round_trip() {
-        for player_kind in [PlayerKind::White, PlayerKind::Black] {
+        for player_kind in PlayerKind::ALL {
             println!(
                 "{player_kind:?}: {}",
                 PlayerKind::to_fen_repr(player_kind).as_str()

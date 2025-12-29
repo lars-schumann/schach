@@ -15,6 +15,8 @@ pub enum PlayerKind {
     Black,
 }
 impl PlayerKind {
+    pub const ALL: [Self; 2] = [Self::White, Self::Black];
+
     #[must_use]
     pub const fn opponent(self) -> Self {
         match self {
@@ -24,7 +26,7 @@ impl PlayerKind {
     }
 
     #[must_use]
-    pub const fn pawn_starting_row(self) -> Row {
+    pub(crate) const fn pawn_starting_row(self) -> Row {
         match self {
             Self::White => Row::_2,
             Self::Black => Row::_7,
@@ -32,7 +34,7 @@ impl PlayerKind {
     }
 
     #[must_use]
-    pub const fn pawn_promotion_row(self) -> Row {
+    pub(crate) const fn pawn_promotion_row(self) -> Row {
         match self {
             Self::White => Row::_8,
             Self::Black => Row::_1,
@@ -40,7 +42,7 @@ impl PlayerKind {
     }
 
     #[must_use]
-    pub const fn castling_non_check_needed_squares(self, castling_side: CS) -> [Square; 3] {
+    pub(crate) const fn castling_non_check_needed_squares(self, castling_side: CS) -> [Square; 3] {
         match (self, castling_side) {
             (Self::White, CS::Kingside) => [S::E1, S::F1, S::G1],
             (Self::White, CS::Queenside) => [S::E1, S::D1, S::C1],
@@ -50,7 +52,7 @@ impl PlayerKind {
     }
 
     #[must_use]
-    pub fn castling_free_needed_squares(self, castling_side: CS) -> Vec<Square> {
+    pub(crate) fn castling_free_needed_squares(self, castling_side: CS) -> Vec<Square> {
         match (self, castling_side) {
             (Self::White, CS::Kingside) => vec![S::F1, S::G1],
             (Self::White, CS::Queenside) => {
@@ -64,7 +66,7 @@ impl PlayerKind {
     }
 
     #[must_use]
-    pub const fn king_start(&self) -> Square {
+    pub(crate) const fn king_start(self) -> Square {
         match self {
             Self::White => S::E1,
             Self::Black => S::E8,
@@ -72,7 +74,7 @@ impl PlayerKind {
     }
 
     #[must_use]
-    pub const fn king_castling_target(&self, castling_side: CS) -> Square {
+    pub(crate) const fn king_castling_target(self, castling_side: CS) -> Square {
         match (self, castling_side) {
             (Self::White, CS::Kingside) => S::G1,
             (Self::White, CS::Queenside) => S::C1,
@@ -82,7 +84,7 @@ impl PlayerKind {
     }
 
     #[must_use]
-    pub const fn rook_start(&self, castling_side: CS) -> Square {
+    pub(crate) const fn rook_start(self, castling_side: CS) -> Square {
         match (self, castling_side) {
             (Self::White, CS::Kingside) => S::H1,
             (Self::White, CS::Queenside) => S::A1,
@@ -92,7 +94,7 @@ impl PlayerKind {
     }
 
     #[must_use]
-    pub const fn rook_castling_target(&self, castling_side: CS) -> Square {
+    pub const fn rook_castling_target(self, castling_side: CS) -> Square {
         match (self, castling_side) {
             (Self::White, CS::Kingside) => S::F1,
             (Self::White, CS::Queenside) => S::D1,
@@ -102,7 +104,7 @@ impl PlayerKind {
     }
 
     #[must_use]
-    pub const fn forwards_one_row(&self) -> Offset {
+    pub(crate) const fn forwards_one_row(self) -> Offset {
         match self {
             Self::White => Offset::U,
             Self::Black => Offset::D,
@@ -110,7 +112,7 @@ impl PlayerKind {
     }
 
     #[must_use]
-    pub const fn backwards_one_row(&self) -> Offset {
+    pub(crate) const fn backwards_one_row(self) -> Offset {
         self.forwards_one_row() * -1
     }
 }
