@@ -291,9 +291,9 @@ col_try_from_int_impl!(u8 u16 u32 u64 u128 usize i8 i16 i32 i64 i128 isize);
 row_try_from_int_impl!(u8 u16 u32 u64 u128 usize i8 i16 i32 i64 i128 isize);
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct Offset {
-    pub col: i32,
-    pub row: i32,
+pub(crate) struct Offset {
+    pub(crate) col: i32,
+    pub(crate) row: i32,
 }
 #[allow(clippy::upper_case_acronyms)]
 impl Offset {
@@ -326,16 +326,7 @@ impl Offset {
         Self::DL,
         Self::DR,
     ];
-    pub(crate) const KING_DIRECT: [Self; 8] = [
-        Self::U,
-        Self::D,
-        Self::L,
-        Self::R,
-        Self::UL,
-        Self::UR,
-        Self::DL,
-        Self::DR,
-    ];
+    pub(crate) const KING_DIRECT: [Self; 8] = Self::QUEEN;
 
     pub(crate) const PAWN_UP_DIAGONAL: [Self; 2] = [Self::UL, Self::UR];
     pub(crate) const PAWN_DOWN_DIAGONAL: [Self; 2] = [Self::DL, Self::DR];
