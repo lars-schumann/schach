@@ -88,8 +88,8 @@ impl Board {
         board[S::H8] = Some(P::BLACK_ROOK);
 
         for col in Col::ALL {
-            board[Square { col, row: Row::R2 }] = Some(P::WHITE_PAWN);
-            board[Square { col, row: Row::R7 }] = Some(P::BLACK_PAWN);
+            board[Square { col, row: Row::_2 }] = Some(P::WHITE_PAWN);
+            board[Square { col, row: Row::_7 }] = Some(P::BLACK_PAWN);
         }
 
         board
@@ -130,7 +130,7 @@ impl core::fmt::Debug for Board {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         writeln!(f)?;
         for square in Square::ALL {
-            if square.col == Col::C1 {
+            if square.col == Col::_1 {
                 write!(f, "{}", i8::from(square.row))?;
             }
             match self[square] {
@@ -143,7 +143,7 @@ impl core::fmt::Debug for Board {
                     }
                 }
             }
-            if square.col == Col::C8 {
+            if square.col == Col::_8 {
                 writeln!(f)?;
             }
         }
@@ -164,7 +164,7 @@ impl core::fmt::Debug for DebugBoard {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         writeln!(f)?;
         for square in Square::ALL {
-            if square.col == Col::C1 {
+            if square.col == Col::_1 {
                 write!(f, "{}", i8::from(square.row))?;
             }
             if self.highlighted_squares.contains(&square) {
@@ -183,7 +183,7 @@ impl core::fmt::Debug for DebugBoard {
             if self.highlighted_squares.contains(&square) {
                 write!(f, "\x1B[0m",)?;
             }
-            if square.col == Col::C8 {
+            if square.col == Col::_8 {
                 writeln!(f)?;
             }
         }

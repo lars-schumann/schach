@@ -13,6 +13,10 @@ pub struct Square {
     pub row: Row,
 }
 
+const fn s(col: Col, row: Row) -> Square{
+    Square::new(col, row)
+}
+
 #[allow(clippy::use_self)]
 impl Square {
     #[must_use]
@@ -28,77 +32,77 @@ impl Square {
         self.is_black().not()
     }
 
-    pub const A1: S = S::new(C::C1, R::R1);
-    pub const A2: S = S::new(C::C1, R::R2);
-    pub const A3: S = S::new(C::C1, R::R3);
-    pub const A4: S = S::new(C::C1, R::R4);
-    pub const A5: S = S::new(C::C1, R::R5);
-    pub const A6: S = S::new(C::C1, R::R6);
-    pub const A7: S = S::new(C::C1, R::R7);
-    pub const A8: S = S::new(C::C1, R::R8);
+    pub const A1: S = s(C::_1, R::_1);
+    pub const A2: S = s(C::_1, R::_2);
+    pub const A3: S = s(C::_1, R::_3);
+    pub const A4: S = s(C::_1, R::_4);
+    pub const A5: S = s(C::_1, R::_5);
+    pub const A6: S = s(C::_1, R::_6);
+    pub const A7: S = s(C::_1, R::_7);
+    pub const A8: S = s(C::_1, R::_8);
 
-    pub const B1: S = S::new(C::C2, R::R1);
-    pub const B2: S = S::new(C::C2, R::R2);
-    pub const B3: S = S::new(C::C2, R::R3);
-    pub const B4: S = S::new(C::C2, R::R4);
-    pub const B5: S = S::new(C::C2, R::R5);
-    pub const B6: S = S::new(C::C2, R::R6);
-    pub const B7: S = S::new(C::C2, R::R7);
-    pub const B8: S = S::new(C::C2, R::R8);
+    pub const B1: S = s(C::_2, R::_1);
+    pub const B2: S = s(C::_2, R::_2);
+    pub const B3: S = s(C::_2, R::_3);
+    pub const B4: S = s(C::_2, R::_4);
+    pub const B5: S = s(C::_2, R::_5);
+    pub const B6: S = s(C::_2, R::_6);
+    pub const B7: S = s(C::_2, R::_7);
+    pub const B8: S = s(C::_2, R::_8);
 
-    pub const C1: S = S::new(C::C3, R::R1);
-    pub const C2: S = S::new(C::C3, R::R2);
-    pub const C3: S = S::new(C::C3, R::R3);
-    pub const C4: S = S::new(C::C3, R::R4);
-    pub const C5: S = S::new(C::C3, R::R5);
-    pub const C6: S = S::new(C::C3, R::R6);
-    pub const C7: S = S::new(C::C3, R::R7);
-    pub const C8: S = S::new(C::C3, R::R8);
+    pub const C1: S = s(C::_3, R::_1);
+    pub const C2: S = s(C::_3, R::_2);
+    pub const C3: S = s(C::_3, R::_3);
+    pub const C4: S = s(C::_3, R::_4);
+    pub const C5: S = s(C::_3, R::_5);
+    pub const C6: S = s(C::_3, R::_6);
+    pub const C7: S = s(C::_3, R::_7);
+    pub const C8: S = s(C::_3, R::_8);
 
-    pub const D1: S = S::new(C::C4, R::R1);
-    pub const D2: S = S::new(C::C4, R::R2);
-    pub const D3: S = S::new(C::C4, R::R3);
-    pub const D4: S = S::new(C::C4, R::R4);
-    pub const D5: S = S::new(C::C4, R::R5);
-    pub const D6: S = S::new(C::C4, R::R6);
-    pub const D7: S = S::new(C::C4, R::R7);
-    pub const D8: S = S::new(C::C4, R::R8);
+    pub const D1: S = s(C::_4, R::_1);
+    pub const D2: S = s(C::_4, R::_2);
+    pub const D3: S = s(C::_4, R::_3);
+    pub const D4: S = s(C::_4, R::_4);
+    pub const D5: S = s(C::_4, R::_5);
+    pub const D6: S = s(C::_4, R::_6);
+    pub const D7: S = s(C::_4, R::_7);
+    pub const D8: S = s(C::_4, R::_8);
 
-    pub const E1: S = S::new(C::C5, R::R1);
-    pub const E2: S = S::new(C::C5, R::R2);
-    pub const E3: S = S::new(C::C5, R::R3);
-    pub const E4: S = S::new(C::C5, R::R4);
-    pub const E5: S = S::new(C::C5, R::R5);
-    pub const E6: S = S::new(C::C5, R::R6);
-    pub const E7: S = S::new(C::C5, R::R7);
-    pub const E8: S = S::new(C::C5, R::R8);
+    pub const E1: S = s(C::_5, R::_1);
+    pub const E2: S = s(C::_5, R::_2);
+    pub const E3: S = s(C::_5, R::_3);
+    pub const E4: S = s(C::_5, R::_4);
+    pub const E5: S = s(C::_5, R::_5);
+    pub const E6: S = s(C::_5, R::_6);
+    pub const E7: S = s(C::_5, R::_7);
+    pub const E8: S = s(C::_5, R::_8);
 
-    pub const F1: S = S::new(C::C6, R::R1);
-    pub const F2: S = S::new(C::C6, R::R2);
-    pub const F3: S = S::new(C::C6, R::R3);
-    pub const F4: S = S::new(C::C6, R::R4);
-    pub const F5: S = S::new(C::C6, R::R5);
-    pub const F6: S = S::new(C::C6, R::R6);
-    pub const F7: S = S::new(C::C6, R::R7);
-    pub const F8: S = S::new(C::C6, R::R8);
+    pub const F1: S = s(C::_6, R::_1);
+    pub const F2: S = s(C::_6, R::_2);
+    pub const F3: S = s(C::_6, R::_3);
+    pub const F4: S = s(C::_6, R::_4);
+    pub const F5: S = s(C::_6, R::_5);
+    pub const F6: S = s(C::_6, R::_6);
+    pub const F7: S = s(C::_6, R::_7);
+    pub const F8: S = s(C::_6, R::_8);
 
-    pub const G1: S = S::new(C::C7, R::R1);
-    pub const G2: S = S::new(C::C7, R::R2);
-    pub const G3: S = S::new(C::C7, R::R3);
-    pub const G4: S = S::new(C::C7, R::R4);
-    pub const G5: S = S::new(C::C7, R::R5);
-    pub const G6: S = S::new(C::C7, R::R6);
-    pub const G7: S = S::new(C::C7, R::R7);
-    pub const G8: S = S::new(C::C7, R::R8);
+    pub const G1: S = s(C::_7, R::_1);
+    pub const G2: S = s(C::_7, R::_2);
+    pub const G3: S = s(C::_7, R::_3);
+    pub const G4: S = s(C::_7, R::_4);
+    pub const G5: S = s(C::_7, R::_5);
+    pub const G6: S = s(C::_7, R::_6);
+    pub const G7: S = s(C::_7, R::_7);
+    pub const G8: S = s(C::_7, R::_8);
 
-    pub const H1: S = S::new(C::C8, R::R1);
-    pub const H2: S = S::new(C::C8, R::R2);
-    pub const H3: S = S::new(C::C8, R::R3);
-    pub const H4: S = S::new(C::C8, R::R4);
-    pub const H5: S = S::new(C::C8, R::R5);
-    pub const H6: S = S::new(C::C8, R::R6);
-    pub const H7: S = S::new(C::C8, R::R7);
-    pub const H8: S = S::new(C::C8, R::R8);
+    pub const H1: S = s(C::_8, R::_1);
+    pub const H2: S = s(C::_8, R::_2);
+    pub const H3: S = s(C::_8, R::_3);
+    pub const H4: S = s(C::_8, R::_4);
+    pub const H5: S = s(C::_8, R::_5);
+    pub const H6: S = s(C::_8, R::_6);
+    pub const H7: S = s(C::_8, R::_7);
+    pub const H8: S = s(C::_8, R::_8);
     
     #[rustfmt::skip]
     pub const ALL: [Self; 64] = [
@@ -116,50 +120,50 @@ impl Square {
 #[derive_const(PartialEq, Eq, PartialOrd, Ord, Clone)]
 #[derive(Debug, Copy, Hash)]
 pub enum Col {
-    C1,
-    C2,
-    C3,
-    C4,
-    C5,
-    C6,
-    C7,
-    C8,
+    _1,
+    _2,
+    _3,
+    _4,
+    _5,
+    _6,
+    _7,
+    _8,
 }
 impl Col {
     pub const ALL: [Self; COL_COUNT] = [
-        Self::C1,
-        Self::C2,
-        Self::C3,
-        Self::C4,
-        Self::C5,
-        Self::C6,
-        Self::C7,
-        Self::C8,
+        Self::_1,
+        Self::_2,
+        Self::_3,
+        Self::_4,
+        Self::_5,
+        Self::_6,
+        Self::_7,
+        Self::_8,
     ];
 }
 
 #[derive_const(PartialEq, Eq, PartialOrd, Ord, Clone)]
 #[derive(Debug, Copy, Hash)]
 pub enum Row {
-    R1,
-    R2,
-    R3,
-    R4,
-    R5,
-    R6,
-    R7,
-    R8,
+    _1,
+    _2,
+    _3,
+    _4,
+    _5,
+    _6,
+    _7,
+    _8,
 }
 impl Row {
     pub const ALL: [Self; ROW_COUNT] = [
-        Self::R1,
-        Self::R2,
-        Self::R3,
-        Self::R4,
-        Self::R5,
-        Self::R6,
-        Self::R7,
-        Self::R8,
+        Self::_1,
+        Self::_2,
+        Self::_3,
+        Self::_4,
+        Self::_5,
+        Self::_6,
+        Self::_7,
+        Self::_8,
     ];
 }
 impl const core::ops::Add<i32> for Row {
@@ -183,14 +187,14 @@ macro_rules! col_into_int_impl {
             impl const From<Col> for $ty {
                 fn from(value: Col) -> $ty {
                     match value {
-                        Col::C1 => 1,
-                        Col::C2 => 2,
-                        Col::C3 => 3,
-                        Col::C4 => 4,
-                        Col::C5 => 5,
-                        Col::C6 => 6,
-                        Col::C7 => 7,
-                        Col::C8 => 8,
+                        Col::_1 => 1,
+                        Col::_2 => 2,
+                        Col::_3 => 3,
+                        Col::_4 => 4,
+                        Col::_5 => 5,
+                        Col::_6 => 6,
+                        Col::_7 => 7,
+                        Col::_8 => 8,
                     }
                 }
             }
@@ -204,14 +208,14 @@ macro_rules! row_into_int_impl {
             impl const From<Row> for $ty {
                 fn from(value: Row) -> $ty {
                     match value {
-                        Row::R1 => 1,
-                        Row::R2 => 2,
-                        Row::R3 => 3,
-                        Row::R4 => 4,
-                        Row::R5 => 5,
-                        Row::R6 => 6,
-                        Row::R7 => 7,
-                        Row::R8 => 8,
+                        Row::_1 => 1,
+                        Row::_2 => 2,
+                        Row::_3 => 3,
+                        Row::_4 => 4,
+                        Row::_5 => 5,
+                        Row::_6 => 6,
+                        Row::_7 => 7,
+                        Row::_8 => 8,
                     }
                 }
             }
@@ -239,14 +243,14 @@ macro_rules! col_try_from_int_impl {
                 fn try_from(value: $ty) -> Result<Self, Self::Error> {
                     match value {
                         ..=0 => Err(ColIndexOutOfRange::TooLow),
-                         1 => Ok(Self::C1),
-                         2 => Ok(Self::C2),
-                         3 => Ok(Self::C3),
-                         4 => Ok(Self::C4),
-                         5 => Ok(Self::C5),
-                         6 => Ok(Self::C6),
-                         7 => Ok(Self::C7),
-                         8 => Ok(Self::C8),
+                         1 => Ok(Self::_1),
+                         2 => Ok(Self::_2),
+                         3 => Ok(Self::_3),
+                         4 => Ok(Self::_4),
+                         5 => Ok(Self::_5),
+                         6 => Ok(Self::_6),
+                         7 => Ok(Self::_7),
+                         8 => Ok(Self::_8),
                          9.. =>  Err(ColIndexOutOfRange::TooHigh),
 
                     }
@@ -264,14 +268,14 @@ macro_rules! row_try_from_int_impl {
                 fn try_from(value: $ty) -> Result<Self, Self::Error> {
                     match value {
                         ..=0 =>  Err(RowIndexOutOfRange::TooLow),
-                         1 => Ok(Self::R1),
-                         2 => Ok(Self::R2),
-                         3 => Ok(Self::R3),
-                         4 => Ok(Self::R4),
-                         5 => Ok(Self::R5),
-                         6 => Ok(Self::R6),
-                         7 => Ok(Self::R7),
-                         8 => Ok(Self::R8),
+                         1 => Ok(Self::_1),
+                         2 => Ok(Self::_2),
+                         3 => Ok(Self::_3),
+                         4 => Ok(Self::_4),
+                         5 => Ok(Self::_5),
+                         6 => Ok(Self::_6),
+                         7 => Ok(Self::_7),
+                         8 => Ok(Self::_8),
                          9.. =>  Err(RowIndexOutOfRange::TooHigh),
                     }
                 }

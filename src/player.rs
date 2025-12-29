@@ -26,16 +26,16 @@ impl PlayerKind {
     #[must_use]
     pub const fn pawn_starting_row(self) -> Row {
         match self {
-            Self::White => Row::R2,
-            Self::Black => Row::R7,
+            Self::White => Row::_2,
+            Self::Black => Row::_7,
         }
     }
 
     #[must_use]
     pub const fn pawn_promotion_row(self) -> Row {
         match self {
-            Self::White => Row::R8,
-            Self::Black => Row::R1,
+            Self::White => Row::_8,
+            Self::Black => Row::_1,
         }
     }
 

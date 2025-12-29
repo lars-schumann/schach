@@ -340,7 +340,7 @@ impl Board {
                     out.push(Piece::to_fen_repr(piece));
                 }
             }
-            if square.col == Col::C8 {
+            if square.col == Col::_8 {
                 if running_square_count != 0 {
                     out.extend(
                         running_square_count
