@@ -38,7 +38,5 @@ pub mod notation;
 pub mod piece;
 pub mod player;
 
-pub(crate) mod all;
-
 #[cfg(test)]
 mod testing;
