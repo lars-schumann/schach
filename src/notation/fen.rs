@@ -174,7 +174,7 @@ impl FullMoveCount {
         self.0
             .to_string()
             .as_ascii()
-            .expect("digits are ascii")
+            .expect("digits to be ascii")
             .to_owned()
     }
 }
@@ -188,7 +188,7 @@ impl FiftyMoveRuleClock {
         self.0
             .to_string()
             .as_ascii()
-            .expect("digits are ascii")
+            .expect("digits to be ascii")
             .to_owned()
     }
 }
@@ -299,7 +299,7 @@ impl Board {
                     | b'k' => {
                         out_row.push(Some(
                             Piece::try_from_fen_repr(*c)
-                                .expect("these chars are valid Piece reprs"),
+                                .expect("these chars to be valid Piece reprs"),
                         ));
                     }
 
@@ -326,8 +326,9 @@ impl Board {
         for square in Square::ALL {
             new_board[Square {
                 col: Col::try_from(u8::from(square.row))
-                    .expect("valid row numbers are valid col numbers"),
-                row: Row::try_from(9 - u8::from(square.col)).expect("9 - 1..=8 is in range 1..=8"),
+                    .expect("valid row numbers to be valid col numbers"),
+                row: Row::try_from(9 - u8::from(square.col))
+                    .expect("9 - 1..=8 to be in range 1..=8"),
             }] = piece_placements_chunked[square];
         }
 
@@ -347,7 +348,7 @@ impl Board {
                             running_square_count
                                 .to_string()
                                 .as_ascii()
-                                .expect("digits are ascii")
+                                .expect("digits to be ascii")
                                 .to_owned(),
                         ); //as the running count should never exceed 8, this should always be a single digit
                     }
@@ -361,7 +362,7 @@ impl Board {
                         running_square_count
                             .to_string()
                             .as_ascii()
-                            .expect("digits are ascii")
+                            .expect("digits to be ascii")
                             .to_owned(),
                     ); //as the running count should never exceed 8, this should always be a single digit
                 }
@@ -381,7 +382,7 @@ impl Col {
     }
     #[must_use]
     pub(crate) const fn to_fen_repr(self) -> AsciiChar {
-        AsciiChar::from_u8(u8::from(self) + b'a' - 1).expect("a..=h are ascii")
+        AsciiChar::from_u8(u8::from(self) + b'a' - 1).expect("a..=h to be ascii")
     }
 }
 impl Row {
@@ -390,7 +391,7 @@ impl Row {
     }
     #[must_use]
     pub(crate) const fn to_fen_repr(self) -> AsciiChar {
-        AsciiChar::from_u8(u8::from(self) + b'0').expect("0..=8 are ascii")
+        AsciiChar::from_u8(u8::from(self) + b'0').expect("0..=8 to be ascii")
     }
 }
 

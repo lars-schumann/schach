@@ -75,7 +75,7 @@ impl GameState<Ongoing> {
 
             let random_move = legal_moves
                 .choose(&mut rng)
-                .expect("If the game has no legal moves, it should've ended last turn")
+                .expect("a GameState<Ongoing> to always have legal moves")
                 .to_owned();
 
             match game.clone().step(random_move) {
@@ -142,7 +142,7 @@ impl GameStateCore {
             }
 
             let one_in_front = (square + self.active_player.forwards_one_row())
-                .expect("a pawn cannot exist on the last row");
+                .expect("a pawn to never be on the last row");
 
             if self.board[one_in_front].is_some() {
                 continue; // pawns cant capture moving forward!
@@ -251,7 +251,7 @@ impl GameStateCore {
                     vec![Move {
                         kind: MoveKind::Pawn(PawnMove::EnPassant {
                             affected: (threat.destination + self.active_player.backwards_one_row())
-                                .expect("how is this not on the board?"),
+                                .expect("this to be on the board"),
                         }),
                         origin,
                         destination,
@@ -324,15 +324,10 @@ pub struct SearchStats {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashSet;
     use std::println;
 
     use super::*;
-    use crate::coord::Square as S;
-    use crate::game::GameStateCore;
     use crate::notation::san::standard_algebraic_notation;
-    use crate::piece::Piece;
-    use crate::player::PlayerKind;
     use crate::testing::skip_if_no_expensive_test_opt_in;
 
     #[test]

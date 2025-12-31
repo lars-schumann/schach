@@ -150,10 +150,13 @@ impl const Default for FullMoveCount {
 impl FullMoveCount {
     #[must_use]
     pub const fn new() -> Self {
-        Self(NonZeroU64::new(1).unwrap())
+        const { Self(NonZeroU64::new(1).expect("1 to not be 0")) }
     }
     pub const fn increase(&mut self) {
-        self.0 = self.0.checked_add(1).expect("how did you overflow this");
+        self.0 = self
+            .0
+            .checked_add(1)
+            .expect("a game to not take more than u64::MAX turns");
     }
 }
 
@@ -343,7 +346,7 @@ impl GameState<Ongoing> {
         game.core.en_passant_target = if mv.kind.is_pawn_double_step() {
             let possible_en_passant_target = (mv.destination
                 + game.core.active_player.backwards_one_row())
-            .expect("this cannot be outside the board");
+            .expect("this to always be on the board");
 
             let mut future = game.core.with_opponent_active();
             future.en_passant_target = Some(possible_en_passant_target);

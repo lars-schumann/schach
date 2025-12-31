@@ -62,7 +62,7 @@ impl Board {
     }
 
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         #[allow(clippy::wildcard_imports)]
         use crate::coord::Square as S;
         use crate::piece::Piece as P;
@@ -87,10 +87,23 @@ impl Board {
         board[S::G8] = Some(P::BLACK_KNIGHT);
         board[S::H8] = Some(P::BLACK_ROOK);
 
-        for col in Col::ALL {
-            board[Square { col, row: Row::_2 }] = Some(P::WHITE_PAWN);
-            board[Square { col, row: Row::_7 }] = Some(P::BLACK_PAWN);
-        }
+        board[S::A2] = Some(P::WHITE_PAWN);
+        board[S::B2] = Some(P::WHITE_PAWN);
+        board[S::C2] = Some(P::WHITE_PAWN);
+        board[S::D2] = Some(P::WHITE_PAWN);
+        board[S::E2] = Some(P::WHITE_PAWN);
+        board[S::F2] = Some(P::WHITE_PAWN);
+        board[S::G2] = Some(P::WHITE_PAWN);
+        board[S::H2] = Some(P::WHITE_PAWN);
+
+        board[S::A7] = Some(P::BLACK_PAWN);
+        board[S::B7] = Some(P::BLACK_PAWN);
+        board[S::C7] = Some(P::BLACK_PAWN);
+        board[S::D7] = Some(P::BLACK_PAWN);
+        board[S::E7] = Some(P::BLACK_PAWN);
+        board[S::F7] = Some(P::BLACK_PAWN);
+        board[S::G7] = Some(P::BLACK_PAWN);
+        board[S::H7] = Some(P::BLACK_PAWN);
 
         board
     }
@@ -106,7 +119,7 @@ impl Board {
         piece_counts
     }
 }
-impl Default for Board {
+impl const Default for Board {
     fn default() -> Self {
         Self::new()
     }
